@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as Sentry from '@sentry/react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { testSupabaseConnection } from './lib/supabase';
 import { supabase } from './lib/supabase';
-import { getCurrentUserId } from './lib/storage';
+import { getCurrentUserId, getLastAssessmentDate } from './lib/storage';
+import { scheduleNotificationAsync } from 'expo-notifications';
 import AppNavigator from './navigation/AppNavigator';
 
 async function testGeminiConnection() {
@@ -25,7 +26,13 @@ async function testGeminiConnection() {
   }
 }
 
+// Global ref for synchronous access to answers
+const globalAnswersRef = { current: null as string | null };
+
 export default Sentry.wrap(function App() {
+  const [currentProfile, setCurrentProfile] = useState(null);
+  const [currentAnswers, setCurrentAnswers] = useState(null);
+
   useEffect(() => {
     testGeminiConnection();
     testSupabaseConnection();
@@ -66,11 +73,54 @@ export default Sentry.wrap(function App() {
     } else if (!revenueCatKey) {
       console.warn('RevenueCat API key not found');
     }
+
+    // Check for 30-day reassessment
+    checkReassessment();
   }, []);
+
+  const checkReassessment = async () => {
+    try {
+      const userId = await getCurrentUserId();
+      if (!userId) return;
+
+      const lastAssessmentDate = await getLastAssessmentDate(userId);
+      if (!lastAssessmentDate) return;
+
+      const lastDate = new Date(lastAssessmentDate);
+      const today = new Date();
+      const daysDiff = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysDiff >= 30) {
+        console.log('30+ days since last assessment, showing reassessment');
+        
+        // Schedule notification for reassessment
+        await scheduleNotificationAsync({
+          content: {
+            title: "Time for your 30-day check-in",
+            body: "See how your FounderType has evolved in the last month.",
+            sound: true,
+          },
+          trigger: null, // Show immediately
+        });
+
+        // Note: The navigation to ReassessmentScreen would be handled by AppNavigator
+        // based on app state or user interaction
+      }
+    } catch (error) {
+      console.error('Error checking reassessment:', error);
+      Sentry.captureException(error);
+    }
+  };
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AppNavigator />
+      <AppNavigator 
+        currentProfile={currentProfile}
+        setCurrentProfile={setCurrentProfile}
+        currentAnswers={currentAnswers}
+        setCurrentAnswers={setCurrentAnswers}
+        globalAnswersRef={globalAnswersRef}
+      />
     </GestureHandlerRootView>
   );
 });

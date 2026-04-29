@@ -169,6 +169,74 @@ Return ONLY this JSON structure:
   return await callGeminiWithRetry(model, prompt);
 }
 
+export async function generateNextLevelProfile(
+  originalAnswers: Record<number, string>,
+  nextLevelAnswers: Record<number, string>
+) {
+  if (!apiKey) {
+    console.error('Gemini API key not found');
+    return null;
+  }
+
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+  console.log('Sending Next Level answers to Gemini:', {
+    original: originalAnswers,
+    nextLevel: nextLevelAnswers
+  });
+
+  const prompt = `
+You're a brutally honest mentor who's seen thousands of founders succeed and fail. I need you to analyze this person's situation at a deeper level using both their initial assessment and their Next Level answers.
+
+Here are their initial assessment answers (7 questions):
+${JSON.stringify(originalAnswers, null, 2)}
+
+Here are their Next Level answers (5 harder questions):
+${JSON.stringify(nextLevelAnswers, null, 2)}
+
+CRITICAL: Do NOT quote their answers. Never say things like "You said 'I lost interest when results didn't come fast enough'." Instead, interpret what their answers reveal about them as a person. Speak like a mentor who's reviewed their entire situation and is giving them direct, uncomfortably accurate feedback.
+
+The Next Level answers reveal deeper patterns about their past failures, vision for success, risk tolerance, discomfort zones, and actual barriers to action. Use these to provide a more precise and nuanced assessment.
+
+Your summary should sound like this: "You've walked away from things before when traction didn't come quickly. That pattern will define whether you succeed at this venture - not your skills or your ideas. Your Next Level answers show you've invested significant time in past attempts but struggle with..."
+
+Rules:
+1. NEVER use single quotes around their answers. Interpret the meaning behind their responses.
+2. Speak in natural, human language. No clinical analysis or psychological jargon.
+3. Be direct and uncomfortably accurate about their patterns and tendencies.
+4. The scores must reflect their actual situation - if they need income fast, score time-to-revenue accordingly.
+5. Use these dimensions: skillMatch, lifestyleFit, toleranceFit, timeToRevenue, growthCeiling (0-100 each).
+6. The Next Level assessment should be more precise and nuanced than the initial assessment.
+
+Return ONLY this JSON structure:
+{
+  "founderType": "string - their actual archetype (more precise than initial)",
+  "summary": "string - brutally honest assessment without quoted answers, incorporating insights from both assessment rounds",
+  "matches": [
+    {
+      "model": "string - specific business model",
+      "overallScore": number,
+      "dimensions": {
+        "skillMatch": number,
+        "lifestyleFit": number,
+        "toleranceFit": number,
+        "timeToRevenue": number,
+        "growthCeiling": number
+      },
+      "challenge": "string - their biggest obstacle with this model (more specific based on Next Level answers)"
+    }
+  ],
+  "archetypeComparison": {
+    "initialType": "string - their initial FounderType",
+    "nextLevelType": "string - their refined Next Level FounderType",
+    "insight": "string - explanation of how the deeper assessment refined their type"
+  }
+}
+  `;
+
+  return await callGeminiWithRetry(model, prompt);
+}
+
 export async function generateActionPlan(answers: Record<number, string>, founderType: string, topMatch: any) {
   if (!apiKey) {
     console.error('Gemini API key not found');

@@ -6,8 +6,9 @@ import { QUESTIONS } from '../constants/questions';
 import { UserAnswers } from '../types';
 import { useHaptics } from '../hooks/useHaptics';
 import { useProgressPersistence } from '../hooks/useProgressPersistence';
+import { globalAnswersRef } from '../lib/globalAnswers';
 
-export default function QuestionsScreen({ navigation }: { navigation: any }) {
+export default function QuestionsScreen({ navigation, setCurrentAnswers }: { navigation: any; setCurrentAnswers: (answers: any) => void }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<UserAnswers>({});
   const { selection, light } = useHaptics();
@@ -62,7 +63,13 @@ export default function QuestionsScreen({ navigation }: { navigation: any }) {
         level: 'info'
       });
       await clearProgress();
-      navigation.navigate('processing', { answers: JSON.stringify(newAnswers) });
+      console.log('QuestionsScreen - newAnswers:', newAnswers);
+      setCurrentAnswers(newAnswers);
+      const answersString = JSON.stringify(newAnswers);
+      console.log('QuestionsScreen - answersString:', answersString);
+      // Store in global ref for synchronous access
+      globalAnswersRef.current = answersString;
+      navigation.navigate('processing', { answers: answersString });
     }
   };
 

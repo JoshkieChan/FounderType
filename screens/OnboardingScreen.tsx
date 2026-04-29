@@ -13,7 +13,8 @@ export default function OnboardingScreen({ navigation }: { navigation: any }) {
               width: 80,
               height: 80,
               borderRadius: 18,
-              marginBottom: 24
+              marginBottom: 24,
+              backgroundColor: 'transparent'
             }}
           />
         </View>
@@ -73,6 +74,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     alignItems: 'center',
     marginBottom: 40,
+    backgroundColor: 'transparent',
   },
   icon: {
     width: 32,

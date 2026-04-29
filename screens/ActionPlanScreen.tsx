@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -7,6 +7,7 @@ import { RouteProp } from '@react-navigation/native';
 import { generateActionPlan } from '../lib/gemini';
 import { useHaptics } from '../hooks/useHaptics';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { requestPermissions, scheduleDailyReminder } from '../lib/notifications';
 
 type ActionPlanScreenNavigationProp = StackNavigationProp<RootStackParamList, 'actionPlan'>;
 type ActionPlanScreenRouteProp = RouteProp<RootStackParamList, 'actionPlan'>;
@@ -34,12 +35,19 @@ const ACTION_PLAN_KEY = 'foundertype_action_plan';
 
 export default function ActionPlanScreen({ 
   route, 
-  navigation 
+  navigation,
+  currentProfile,
+  currentAnswers
 }: { 
   route: ActionPlanScreenRouteProp; 
-  navigation: ActionPlanScreenNavigationProp 
+  navigation: ActionPlanScreenNavigationProp;
+  currentProfile: any;
+  currentAnswers: any;
 }) {
-  const { answers, founderType, topMatch } = route.params || {};
+  // Use props from App state, fall back to route params
+  const answers = currentAnswers || route.params?.answers;
+  const founderType = currentProfile?.founderType || route.params?.founderType;
+  const topMatch = currentProfile?.matches?.[0] || route.params?.topMatch;
   const [actionPlan, setActionPlan] = useState<ActionPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -49,7 +57,33 @@ export default function ActionPlanScreen({
     loadActionPlan();
   }, []);
 
-  const loadActionPlan = async () => {
+  const setupNotifications = async () => {
+  try {
+    Alert.alert(
+      'Daily Reminders',
+      'FounderType will remind you daily at 9am to check in on your progress. You can change this anytime in settings.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Enable', 
+          onPress: async () => {
+            const hasPermission = await requestPermissions();
+            if (hasPermission) {
+              await scheduleDailyReminder(9);
+              console.log('Daily reminders scheduled for 9am');
+            } else {
+              console.log('Notification permissions denied');
+            }
+          }
+        }
+      ]
+    );
+  } catch (error) {
+    console.error('Error setting up notifications:', error);
+  }
+};
+
+const loadActionPlan = async () => {
     try {
       // Try to load from AsyncStorage first
       const savedPlan = await AsyncStorage.getItem(ACTION_PLAN_KEY);
@@ -65,6 +99,9 @@ export default function ActionPlanScreen({
       if (plan) {
         setActionPlan(plan);
         await AsyncStorage.setItem(ACTION_PLAN_KEY, JSON.stringify(plan));
+        
+        // Setup daily notifications after plan unlock
+        await setupNotifications();
       } else {
         setError(true);
       }

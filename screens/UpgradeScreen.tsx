@@ -4,14 +4,43 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import Purchases from 'react-native-purchases';
 import * as Sentry from '@sentry/react-native';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { getStoredProfile } from '../lib/profileStorage';
 
 type UpgradeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'upgrade'>;
 
-export default function UpgradeScreen({ navigation }: { navigation: UpgradeScreenNavigationProp }) {
+interface UpgradeScreenProps {
+  navigation: UpgradeScreenNavigationProp;
+  route?: {
+    params?: {
+      profile?: string;
+      answers?: string;
+    };
+  };
+  currentProfile: any;
+  currentAnswers: any;
+}
+
+export default function UpgradeScreen({ navigation, route, currentProfile, currentAnswers }: UpgradeScreenProps) {
   const [loading, setLoading] = useState(false);
+  const DEV_BYPASS = __DEV__;
+
+  const onUpgrade = async () => {
+    // Use props from App state
+    if (currentProfile && currentAnswers) {
+      navigation.navigate('actionPlan', {
+        answers: currentAnswers,
+        founderType: currentProfile.founderType,
+        topMatch: currentProfile.matches?.[0] || null
+      });
+    } else {
+      Alert.alert('Profile not found', 'Please complete the assessment first to generate your action plan.');
+    }
+  };
 
   const handlePurchase = async () => {
+    if (DEV_BYPASS) {
+      onUpgrade();
+      return;
+    }
     Sentry.addBreadcrumb({
       message: 'upgrade_tapped',
       level: 'info'
@@ -24,13 +53,12 @@ export default function UpgradeScreen({ navigation }: { navigation: UpgradeScree
           offerings.current.availablePackages[0]
         );
         if (purchaseResult.customerInfo.entitlements.active['premium']) {
-          // Get stored profile data for action plan
-          const storedProfile = await getStoredProfile();
-          if (storedProfile) {
+          // Use props from App state
+          if (currentProfile && currentAnswers) {
             navigation.navigate('actionPlan', {
-              answers: storedProfile.answers,
-              founderType: storedProfile.founderType,
-              topMatch: storedProfile.topMatch
+              answers: currentAnswers,
+              founderType: currentProfile.founderType,
+              topMatch: currentProfile.matches?.[0] || null
             });
           } else {
             Alert.alert('Profile not found', 'Please complete the assessment first to generate your action plan.');
@@ -40,10 +68,13 @@ export default function UpgradeScreen({ navigation }: { navigation: UpgradeScree
         Alert.alert('Not available', 'The premium offering is not configured yet.');
       }
     } catch (e: any) {
-      Sentry.captureException(e);
-      if (!e.userCancelled) {
-        Alert.alert('Purchase failed', 'Please try again.');
+      if (e.userCancelled) {
+        // User cancelled - not an error, do nothing
+        return;
       }
+      // Only log real errors to Sentry
+      Sentry.captureException(e);
+      Alert.alert('Purchase failed', 'Please try again.');
     } finally {
       setLoading(false);
     }
@@ -59,6 +90,11 @@ export default function UpgradeScreen({ navigation }: { navigation: UpgradeScree
         Alert.alert('No purchases found', 'There are no previous purchases to restore.');
       }
     } catch (e: any) {
+      if (e.userCancelled) {
+        // User cancelled - not an error, do nothing
+        return;
+      }
+      // Only log real errors to Sentry
       Sentry.captureException(e);
       Alert.alert('Restore failed', 'Please try again.');
     } finally {
@@ -116,6 +152,24 @@ export default function UpgradeScreen({ navigation }: { navigation: UpgradeScree
             <Text style={styles.subscribeText}>Get Your Action Plan</Text>
           )}
         </TouchableOpacity>
+
+        {__DEV__ && (
+          <TouchableOpacity 
+            onPress={() => onUpgrade()}
+            style={{
+              marginTop: 16,
+              padding: 12,
+              borderWidth: 1,
+              borderColor: '#FF6B35',
+              borderRadius: 8,
+              alignItems: 'center'
+            }}
+          >
+            <Text style={{color: '#FF6B35', fontSize: 14}}>
+              Skip Payment (Dev Only)
+            </Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity onPress={handleRestore} disabled={loading}>
           <Text style={styles.restoreText}>Restore Purchases</Text>

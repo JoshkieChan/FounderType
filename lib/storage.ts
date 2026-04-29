@@ -9,7 +9,7 @@ export async function saveProfile(userId: string, answers: Record<number, string
         user_id: userId,
         answers,
         profile,
-        created_at: new Date().toISOString()
+        assessed_at: new Date().toISOString()
       });
 
     if (error) {
@@ -45,6 +45,29 @@ export async function loadProfile(userId: string) {
   } catch (error) {
     console.error('Error loading profile:', error);
     throw error;
+  }
+}
+
+// Get last assessment date for user
+export async function getLastAssessmentDate(userId: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('assessed_at')
+      .eq('user_id', userId)
+      .order('assessed_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) {
+      console.error('Failed to get last assessment date:', error);
+      return null;
+    }
+
+    return data?.assessed_at || null;
+  } catch (error) {
+    console.error('Error getting last assessment date:', error);
+    return null;
   }
 }
 

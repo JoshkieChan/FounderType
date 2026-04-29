@@ -1,8 +1,10 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Sentry from '@sentry/react-native';
 import ShareableProfileCard from '../components/ShareableProfileCard';
+import MilestoneModal from '../components/MilestoneModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { FounderProfile } from '../types';
@@ -12,6 +14,9 @@ import { useShareProfile } from '../hooks/useShareProfile';
 import { useHaptics } from '../hooks/useHaptics';
 import { saveProfile, loadProfile, getCurrentUserId } from '../lib/storage';
 import { useProgressPersistence } from '../hooks/useProgressPersistence';
+import { MILESTONES, hasMilestoneBeenShown } from '../lib/milestones';
+import { scheduleWeeklyInsight } from '../lib/notifications';
+import { getInsightForType } from '../lib/insights';
 
 const { saveProgress, clearProgress } = useProgressPersistence();
   const { shareProfile } = useShareProfile();
@@ -19,15 +24,22 @@ const { saveProgress, clearProgress } = useProgressPersistence();
 type ResultsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'results'>;
 type ResultsScreenRouteProp = RouteProp<RootStackParamList, 'results'>;
 
-export default function ResultsScreen({ route, navigation }: { 
+export default function ResultsScreen({ route, navigation, currentProfile, currentAnswers }: { 
   route: ResultsScreenRouteProp; 
-  navigation: ResultsScreenNavigationProp 
+  navigation: ResultsScreenNavigationProp;
+  currentProfile: any;
+  currentAnswers: any;
 }) {
-  // Null safety check for route.params
-  const profile = route?.params?.profile;
-  const answers = route?.params?.answers;
+  // Use props from App state, fall back to route params for backward compatibility
+  const profile = currentProfile || route?.params?.profile;
+  const answers = currentAnswers || route?.params?.answers;
   
   const { shareResults, shareSummary } = useShareProfile();
+  const [previousProfiles, setPreviousProfiles] = useState<any[]>([]);
+  const [showGrowth, setShowGrowth] = useState(false);
+  const [showMilestone, setShowMilestone] = useState(false);
+  const [currentMilestone, setCurrentMilestone] = useState<any>(null);
+  const [weeklyInsight, setWeeklyInsight] = useState<string>('');
   const { light, medium } = useHaptics();
 
   let founderProfile: FounderProfile | null = null;
@@ -51,6 +63,23 @@ export default function ResultsScreen({ route, navigation }: {
           const userId = await getCurrentUserId();
           if (userId) {
             await saveProfile(userId, parsedAnswers, founderProfile);
+            
+            // Store founderType for weekly insights
+            await AsyncStorage.setItem('foundertype_founder_type', founderType || '');
+            
+            // Schedule weekly insights
+            try {
+              await scheduleWeeklyInsight(founderType || '');
+            } catch (error) {
+              console.error('Error scheduling weekly insights:', error);
+            }
+            
+            // Check if assessment complete milestone should be shown
+            const hasBeenShown = await hasMilestoneBeenShown(MILESTONES.ASSESSMENT_COMPLETE.id);
+            if (!hasBeenShown) {
+              setCurrentMilestone(MILESTONES.ASSESSMENT_COMPLETE);
+              setShowMilestone(true);
+            }
           }
         }
       };
@@ -59,9 +88,56 @@ export default function ResultsScreen({ route, navigation }: {
     }
   }, [founderProfile]);
 
+  useEffect(() => {
+    loadPreviousProfiles();
+    loadWeeklyInsight();
+  }, []);
+
+  const loadWeeklyInsight = async () => {
+    try {
+      const storedFounderType = await AsyncStorage.getItem('foundertype_founder_type');
+      if (storedFounderType) {
+        const weekNumber = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+        const insight = getInsightForType(storedFounderType, weekNumber);
+        setWeeklyInsight(insight);
+      }
+    } catch (error) {
+      console.error('Error loading weekly insight:', error);
+    }
+  };
+
+  const loadPreviousProfiles = async () => {
+    try {
+      const userId = await getCurrentUserId();
+      if (!userId) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .order('assessed_at', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error('Error loading previous profiles:', error);
+        return;
+      }
+
+      if (data && data.length > 1) {
+        setPreviousProfiles(data);
+        setShowGrowth(true);
+      }
+    } catch (error) {
+      console.error('Error loading previous profiles:', error);
+    }
+  };
+
   const handleUpgrade = () => {
     medium();
-    navigation.navigate('upgrade');
+    navigation.navigate('upgrade', { 
+      profile: profile, 
+      answers: answers 
+    });
   };
 
   const handleRestart = () => {
@@ -217,12 +293,47 @@ export default function ResultsScreen({ route, navigation }: {
             )}
           </View>
 
+          {weeklyInsight && (
+            <View style={styles.weeklyInsightSection}>
+              <Text style={styles.weeklyInsightLabel}>This week's insight for {founderType}</Text>
+              <View style={styles.weeklyInsightCard}>
+                <Text style={styles.weeklyInsightText}>"{weeklyInsight}"</Text>
+              </View>
+            </View>
+          )}
+
+          {showGrowth && previousProfiles.length > 1 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Your Growth</Text>
+              <View style={styles.growthContainer}>
+                <View style={styles.growthItem}>
+                  <Text style={styles.previousType}>
+                    {JSON.parse(previousProfiles[1].profile).founderType}
+                  </Text>
+                </View>
+                <Text style={styles.growthArrow}>{"\u2192"}</Text>
+                <View style={styles.growthItem}>
+                  <Text style={styles.currentType}>
+                    {founderType}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.growthCaption}>
+                You've evolved. Here's what changed.
+              </Text>
+            </View>
+          )}
+
           <TouchableOpacity style={styles.shareButton} onPress={handleShareProfile}>
             <Text style={styles.shareButtonText}>Share Your FounderType</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.retakeButton} onPress={handleRetake}>
             <Text style={styles.retakeText}>Not accurate? Retake the assessment</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate('nextLevel')}>
+            <Text style={styles.goDeeperText}>Go Deeper →</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.upgradeButton} onPress={handleUpgrade}>
@@ -234,6 +345,19 @@ export default function ResultsScreen({ route, navigation }: {
           </TouchableOpacity>
         </ScrollView>
       </View>
+      
+      {/* Milestone Modal */}
+      {currentMilestone && (
+        <MilestoneModal
+          visible={showMilestone}
+          onClose={() => setShowMilestone(false)}
+          icon={currentMilestone.icon}
+          headline={currentMilestone.headline}
+          subtext={currentMilestone.subtext}
+          milestoneId={currentMilestone.id}
+          showShareButton={currentMilestone.showShareButton}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -465,5 +589,67 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  growthContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  growthItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  previousType: {
+    color: '#666666',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  growthArrow: {
+    fontSize: 24,
+    color: '#3B82F6',
+    marginHorizontal: 16,
+  },
+  currentType: {
+    color: '#3B82F6',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  growthCaption: {
+    color: '#888888',
+    fontSize: 14,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  weeklyInsightSection: {
+    marginBottom: 24,
+  },
+  weeklyInsightLabel: {
+    color: '#888888',
+    fontSize: 14,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  weeklyInsightCard: {
+    backgroundColor: '#1A1A1A',
+    borderLeftWidth: 4,
+    borderLeftColor: '#3B82F6',
+    padding: 16,
+    borderRadius: 8,
+  },
+  weeklyInsightText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontStyle: 'italic',
+    lineHeight: 24,
+    textAlign: 'center',
+  },
+  goDeeperText: {
+    color: '#3B82F6',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 8,
   },
 });

@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loadProfile, getCurrentUserId } from '../lib/storage';
 import * as Sentry from '@sentry/react-native';
 
 export default function LandingScreen({ navigation }: { navigation: any }) {
   const [hasSavedProfile, setHasSavedProfile] = useState(false);
+  const [hasActivePlan, setHasActivePlan] = useState(false);
 
   useEffect(() => {
-    const checkForSavedProfile = async () => {
+    const checkUserData = async () => {
       try {
         const userId = await getCurrentUserId();
         if (userId) {
@@ -16,12 +18,21 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
             setHasSavedProfile(true);
           }
         }
+
+        // Check for active action plan
+        const actionPlan = await AsyncStorage.getItem('foundertype_latest_profile');
+        if (actionPlan) {
+          const parsed = JSON.parse(actionPlan);
+          if (parsed.weeks && parsed.weeks.length > 0) {
+            setHasActivePlan(true);
+          }
+        }
       } catch (error) {
-        console.error('Error checking for saved profile:', error);
+        console.error('Error checking user data:', error);
       }
     };
 
-    checkForSavedProfile();
+    checkUserData();
   }, []);
 
   return (
@@ -50,6 +61,15 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
             onPress={() => navigation.navigate('results')}
           >
             <Text style={styles.secondaryButtonText}>View Your Last Results</Text>
+          </TouchableOpacity>
+        )}
+
+        {hasActivePlan && (
+          <TouchableOpacity 
+            style={styles.checkInButton}
+            onPress={() => navigation.navigate('dailyCheckIn')}
+          >
+            <Text style={styles.checkInButtonText}>Today's Check-In</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -114,6 +134,23 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: '#888888',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  checkInButton: {
+    backgroundColor: '#FF6B35',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 16,
+    shadowColor: '#FF6B35',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  checkInButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
