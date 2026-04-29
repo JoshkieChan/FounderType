@@ -1,7 +1,7 @@
 {
   "name": "foundertype",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -9,13 +9,32 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-navigation/native": "^7.2.2",
+    "@react-navigation/stack": "^7.8.11",
+    "@sentry/react-native": "~7.2.0",
+    "@supabase/supabase-js": "^2.105.1",
     "expo": "~54.0.33",
+    "expo-constants": "^55.0.15",
+    "expo-file-system": "~19.0.22",
+    "expo-haptics": "^55.0.14",
+    "expo-linking": "^55.0.14",
+    "expo-sharing": "~14.0.8",
     "expo-status-bar": "~3.0.9",
+    "nativewind": "^4.2.3",
     "react": "19.1.0",
-    "react-native": "0.81.5"
+    "react-native": "0.81.5",
+    "react-native-gesture-handler": "^2.31.1",
+    "react-native-purchases": "^10.0.1",
+    "react-native-safe-area-context": "^5.7.0",
+    "react-native-screens": "^4.24.0",
+    "react-native-view-shot": "4.0.3",
+    "tailwindcss": "^4.2.4"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "babel-preset-expo": "^55.0.18",
     "typescript": "~5.9.2"
   },
   "private": true

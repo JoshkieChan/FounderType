@@ -1,0 +1,31 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase credentials not found in environment variables');
+}
+
+export const supabase = createClient(supabaseUrl!, supabaseAnonKey!, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: true,
+  },
+});
+
+// Test connection
+export const testSupabaseConnection = async () => {
+  try {
+    const { data, error } = await supabase.from('profiles').select('count').single();
+    if (error) {
+      console.log('Supabase connection test failed:', error.message);
+      return false;
+    }
+    console.log('Supabase connection successful');
+    return true;
+  } catch (e) {
+    console.error('Supabase connection error:', e);
+    return false;
+  }
+};
