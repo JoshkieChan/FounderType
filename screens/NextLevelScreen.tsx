@@ -6,9 +6,19 @@ import * as Sentry from '@sentry/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useHaptics } from '../hooks/useHaptics';
 
-export default function NextLevelScreen({ navigation }: { navigation: any }) {
+export default function NextLevelScreen({ navigation, route }: { navigation: any; route?: any }) {
   const [loading, setLoading] = useState(false);
   const { medium } = useHaptics();
+
+  const profile = route?.params?.profile;
+  const answers = route?.params?.answers;
+
+  const onNextLevelUnlocked = () => {
+    navigation.navigate('nextLevelQuestions', {
+      profile,
+      answers
+    });
+  };
 
   const handlePurchase = async () => {
     medium();
@@ -27,7 +37,7 @@ export default function NextLevelScreen({ navigation }: { navigation: any }) {
         
         if (purchaseResult.customerInfo.entitlements.active.nextlevel) {
           // Purchase successful, navigate to next level questions
-          navigation.navigate('nextLevelQuestions');
+          onNextLevelUnlocked();
         }
       }
     } catch (e: any) {
@@ -49,7 +59,7 @@ export default function NextLevelScreen({ navigation }: { navigation: any }) {
       const customerInfo = await Purchases.restorePurchases();
       
       if (customerInfo.entitlements.active.nextlevel) {
-        navigation.navigate('nextLevelQuestions');
+        onNextLevelUnlocked();
       } else {
         Alert.alert('No purchases found', 'No Next Level purchases were found to restore.');
       }
@@ -123,6 +133,28 @@ export default function NextLevelScreen({ navigation }: { navigation: any }) {
             <Text style={styles.purchaseButtonText}>Unlock Next Level</Text>
           )}
         </TouchableOpacity>
+
+        {__DEV__ && (
+          <TouchableOpacity 
+            onPress={onNextLevelUnlocked}
+            style={{
+              marginTop: 12,
+              padding: 12,
+              borderWidth: 1,
+              borderColor: '#FF6B35',
+              borderRadius: 8,
+              alignItems: 'center',
+              marginBottom: 16
+            }}
+          >
+            <Text style={{
+              color: '#FF6B35', 
+              fontSize: 14
+            }}>
+              Skip Payment (Dev Only)
+            </Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity onPress={handleRestore} disabled={loading}>
           <Text style={styles.restoreText}>Restore Purchases</Text>

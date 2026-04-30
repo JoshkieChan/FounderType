@@ -64,7 +64,14 @@ export default function ResultsScreen({ route, navigation, currentProfile, curre
       // Store profile for action plan using new storage system
       const saveProfileData = async () => {
         if (answers && founderProfile) {
-          const parsedAnswers = JSON.parse(answers);
+          let parsedAnswers = {};
+          try {
+            parsedAnswers = typeof answers === 'string' 
+              ? (answers === 'undefined' ? {} : JSON.parse(answers)) 
+              : answers;
+          } catch (e) {
+            console.error('Error parsing answers:', e);
+          }
           const userId = await getCurrentUserId();
           if (userId) {
             await saveProfile(userId, parsedAnswers, founderProfile);
@@ -120,7 +127,7 @@ export default function ResultsScreen({ route, navigation, currentProfile, curre
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .order('assessed_at', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(10);
 
       if (error) {
@@ -317,7 +324,7 @@ export default function ResultsScreen({ route, navigation, currentProfile, curre
               <View style={styles.growthContainer}>
                 <View style={styles.growthItem}>
                   <Text style={styles.previousType}>
-                    {JSON.parse(previousProfiles[1].profile).founderType}
+                    {previousProfiles[1].founder_type || 'Unknown'}
                   </Text>
                 </View>
                 <Text style={styles.growthArrow}>{"\u2192"}</Text>

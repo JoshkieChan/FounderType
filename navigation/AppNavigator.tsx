@@ -12,6 +12,9 @@ import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import DailyCheckInScreen from '../screens/DailyCheckInScreen';
 import ReassessmentScreen from '../screens/ReassessmentScreen';
 import NextLevelScreen from '../screens/NextLevelScreen';
+import NextLevelQuestionsScreen from '../screens/NextLevelQuestionsScreen';
+import NextLevelProcessingScreen from '../screens/NextLevelProcessingScreen';
+import NextLevelResultsScreen from '../screens/NextLevelResultsScreen';
 import PublicFeedScreen from '../screens/PublicFeedScreen';
 
 type Screen =
@@ -27,6 +30,9 @@ type Screen =
   | 'dailyCheckIn'
   | 'reassessment'
   | 'nextLevel'
+  | 'nextLevelQuestions'
+  | 'nextLevelProcessing'
+  | 'nextLevelResults'
   | 'publicFeed';
 
 interface NavigationParams {
@@ -38,6 +44,9 @@ interface NavigationParams {
   commitment?: any;
   commitmentText?: string;
   isPublicCommitment?: boolean;
+  originalAnswers?: any;
+  nextLevelAnswers?: any;
+  originalProfile?: any;
 }
 
 interface AppNavigatorProps {
@@ -62,6 +71,9 @@ export type RootStackParamList = {
   dailyCheckIn: undefined;
   reassessment: undefined;
   nextLevel: undefined;
+  nextLevelQuestions: { profile?: string; answers?: string };
+  nextLevelProcessing: { profile?: string; originalAnswers?: any; nextLevelAnswers?: any };
+  nextLevelResults: { profile?: string; originalProfile?: string; originalAnswers?: any; nextLevelAnswers?: any };
   publicFeed: undefined;
 };
 
@@ -169,6 +181,27 @@ export default function AppNavigator({
         return <ReassessmentScreen navigation={navigation as any} />;
       case 'nextLevel':
         return <NextLevelScreen navigation={navigation as any} />;
+      case 'nextLevelQuestions':
+        return (
+          <NextLevelQuestionsScreen
+            navigation={navigation as any}
+            route={{ params: { profile: params.profile, answers: params.answersString } } as any}
+          />
+        );
+      case 'nextLevelProcessing':
+        return (
+          <NextLevelProcessingScreen
+            navigation={navigation as any}
+            route={{ params: { profile: params.profile, originalAnswers: params.originalAnswers, nextLevelAnswers: params.nextLevelAnswers } } as any}
+          />
+        );
+      case 'nextLevelResults':
+        return (
+          <NextLevelResultsScreen
+            navigation={navigation as any}
+            route={{ params: { profile: params.profile, originalProfile: params.originalProfile, originalAnswers: params.originalAnswers, nextLevelAnswers: params.nextLevelAnswers } } as any}
+          />
+        );
       case 'publicFeed':
         return <PublicFeedScreen navigation={navigation as any} />;
       default:

@@ -15,9 +15,9 @@ export async function scheduleDailyReminder(hour: number = 9) {
       sound: true,
     },
     trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DAILY,
       hour,
       minute: 0,
-      repeats: true,
     } as any,
   });
 }
@@ -37,10 +37,10 @@ export async function scheduleWeeklyInsight(founderType: string) {
       sound: true,
     },
     trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
       weekday: 2,
       hour: 8,
       minute: 0,
-      repeats: true,
     } as any,
   });
 }
@@ -81,10 +81,10 @@ export async function scheduleWeeklyMirror(
       sound: true,
     },
     trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
       weekday: 2,
       hour: 8,
       minute: 0,
-      repeats: true,
     } as any,
   });
 }
@@ -96,6 +96,9 @@ export async function sendMissedDaysAlert(daysMissed: number, commitmentText: st
       body: `${daysMissed} days without checking in. "${commitmentText.substring(0, 60)}..." Your commitment is still waiting.`,
       sound: true,
     },
-    trigger: { seconds: 1 } as any,
+    trigger: { 
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: 1 
+    } as any,
   });
 }

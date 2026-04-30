@@ -8,6 +8,11 @@ export interface FounderProfile {
   founderType: string;
   summary: string;
   matches: Match[];
+  archetypeComparison?: {
+    initialType: string;
+    nextLevelType: string;
+    insight: string;
+  };
 }
 
 export interface Match {

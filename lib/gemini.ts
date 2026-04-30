@@ -48,14 +48,79 @@ function extractJsonFromResponse(text: string): any | null {
   try {
     return JSON.parse(text.trim());
   } catch {
-    return null;
+    // Try to fix truncated JSON by completing incomplete structures
+    try {
+      const fixedText = fixTruncatedJson(text);
+      return JSON.parse(fixedText);
+    } catch {
+      return null;
+    }
   }
+}
+
+function fixTruncatedJson(text: string): string {
+  let fixedText = text.trim();
+  
+  // Remove markdown code block markers if present
+  fixedText = fixedText.replace(/```(?:json)?\s*/, '').replace(/```\s*$/, '');
+  
+  // Count braces to see if JSON is incomplete
+  let openBraces = 0;
+  let inString = false;
+  let escapeNext = false;
+  
+  for (let i = 0; i < fixedText.length; i++) {
+    const char = fixedText[i];
+    
+    if (escapeNext) {
+      escapeNext = false;
+      continue;
+    }
+    
+    if (char === '\\') {
+      escapeNext = true;
+      continue;
+    }
+    
+    if (char === '"' && !escapeNext) {
+      inString = !inString;
+      continue;
+    }
+    
+    if (!inString) {
+      if (char === '{') openBraces++;
+      else if (char === '}') openBraces--;
+    }
+  }
+  
+  // If there are more open braces than closed, complete the JSON
+  while (openBraces > 0) {
+    // Try to close the most recent incomplete structure
+    if (fixedText.endsWith(',') || fixedText.endsWith(':')) {
+      fixedText = fixedText.slice(0, -1); // Remove trailing comma or colon
+    }
+    fixedText += '}';
+    openBraces--;
+  }
+  
+  // Try to fix incomplete arrays
+  if (fixedText.includes('[') && !fixedText.includes(']')) {
+    fixedText += ']';
+  }
+  
+  // Try to fix incomplete strings
+  if (inString && !fixedText.endsWith('"')) {
+    fixedText += '"';
+  }
+  
+  return fixedText;
 }
 
 async function callGeminiWithRetry(
   model: any,
   prompt: string,
-  maxRetries = 5
+  maxRetries = 5,
+  generationConfig?: any
 ): Promise<any | null> {
   // Check circuit breaker first
   if (shouldUseCircuitBreaker()) {
@@ -69,7 +134,10 @@ async function callGeminiWithRetry(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const result = await model.generateContent(prompt);
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        ...(generationConfig && { generationConfig })
+      });
       const response = await result.response;
       const text = response.text();
       console.log('Raw Gemini response:', JSON.stringify(result).substring(0, 500));
@@ -139,7 +207,18 @@ export async function generateFounderProfile(answers: Record<number, string>) {
 
   console.log('Sending answers to Gemini:', JSON.stringify(answers, null, 2));
 
-  const prompt = `
+  const prompt = `CONSISTENCY INSTRUCTION: You are generating a profile for someone with these exact answers. Generate the SAME founder type name and assessment every time these answers are provided. Do not vary the output based on randomness. The founder type name, scores, and summary must be consistent for identical answer combinations.
+
+FounderType naming guide:
+- Builder who needs fast money + avoids selling = 'The Unmonetized Maker'
+- Builder with long-term vision + works solo + technical skills = 'The Persistent Technical Builder'
+- Has ideas but keeps stopping + needs quick results = 'The Sprint Seeker'
+- Works alone + uncomfortable being visible + limited money = 'The Reluctant Creator'
+- Has vision but execution gaps = 'The Unfulfilled Architect'
+- Needs comfort + avoids risk = 'The Comfort Zone Builder'
+
+Always use these exact names for these exact patterns. Do not invent new names for combinations that match these patterns.
+
 You're a brutally honest mentor who's seen thousands of founders succeed and fail. I need you to analyze this person's situation and tell them the uncomfortable truth about who they really are as a builder.
 
 Here are their raw answers about themselves:
@@ -177,7 +256,14 @@ Return ONLY this JSON structure:
 }
     `;
 
-  return await callGeminiWithRetry(model, prompt);
+  const generationConfig = {
+    temperature: 0.1,
+    topP: 0.8,
+    topK: 10,
+    maxOutputTokens: 4096,
+  };
+
+  return await callGeminiWithRetry(model, prompt, 5, generationConfig);
 }
 
 export async function generateNextLevelProfile(
@@ -245,7 +331,14 @@ Return ONLY this JSON structure:
 }
   `;
 
-  return await callGeminiWithRetry(model, prompt);
+  const generationConfig = {
+    temperature: 0.1,
+    topP: 0.8,
+    topK: 10,
+    maxOutputTokens: 4096,
+  };
+
+  return await callGeminiWithRetry(model, prompt, 5, generationConfig);
 }
 
 export async function generateActionPlan(answers: Record<number, string>, founderType: string, topMatch: any) {
@@ -377,5 +470,12 @@ Structure your response as JSON:
 Make the actions specific to their situation. If they need income fast, focus on revenue-generating actions. If they work best alone, focus on solo activities. If they struggle with consistency, include accountability measures.
   `;
 
-  return await callGeminiWithRetry(model, prompt);
+  const generationConfig = {
+    temperature: 0.1,
+    topP: 0.8,
+    topK: 10,
+    maxOutputTokens: 4096,
+  };
+
+  return await callGeminiWithRetry(model, prompt, 5, generationConfig);
 }
