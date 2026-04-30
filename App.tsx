@@ -4,8 +4,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { testSupabaseConnection } from './lib/supabase';
 import { supabase } from './lib/supabase';
-import { getCurrentUserId, getLastAssessmentDate } from './lib/storage';
+import { getCurrentUserId, getLastAssessmentDate, getCachedActiveCommitment, getActiveCommitment } from './lib/storage';
 import { scheduleNotificationAsync } from 'expo-notifications';
+import { sendMissedDaysAlert } from './lib/notifications';
 import AppNavigator from './navigation/AppNavigator';
 
 async function testGeminiConnection() {
@@ -76,6 +77,9 @@ export default Sentry.wrap(function App() {
 
     // Check for 30-day reassessment
     checkReassessment();
+
+    // Check for missed commitment check-in days
+    checkMissedCommitmentDays();
   }, []);
 
   const checkReassessment = async () => {
@@ -109,6 +113,38 @@ export default Sentry.wrap(function App() {
     } catch (error) {
       console.error('Error checking reassessment:', error);
       Sentry.captureException(error);
+    }
+  };
+
+  const checkMissedCommitmentDays = async () => {
+    try {
+      const userId = await getCurrentUserId();
+      if (!userId) return;
+
+      // Try cached first, then fetch from Supabase
+      let commitment = await getCachedActiveCommitment();
+      if (!commitment) {
+        commitment = await getActiveCommitment(userId);
+      }
+      if (!commitment) return;
+
+      const checkIns: string[] = commitment.check_ins || [];
+      if (checkIns.length === 0) return;
+
+      // Find the most recent check-in date
+      const sorted = [...checkIns].sort();
+      const lastCheckIn = new Date(sorted[sorted.length - 1]);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const daysSinceLast = Math.floor(
+        (today.getTime() - lastCheckIn.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      if (daysSinceLast >= 3) {
+        await sendMissedDaysAlert(daysSinceLast, commitment.commitment_text);
+      }
+    } catch (error) {
+      console.error('Error checking missed commitment days:', error);
     }
   };
 

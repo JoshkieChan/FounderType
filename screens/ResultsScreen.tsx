@@ -18,6 +18,7 @@ import { MILESTONES, hasMilestoneBeenShown } from '../lib/milestones';
 import { scheduleWeeklyInsight } from '../lib/notifications';
 import { getInsightForType } from '../lib/insights';
 
+
 type ResultsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'results'>;
 type ResultsScreenRouteProp = RouteProp<RootStackParamList, 'results'>;
 
@@ -41,15 +42,16 @@ export default function ResultsScreen({ route, navigation, currentProfile, curre
   const { light, medium } = useHaptics();
 
   let founderProfile: FounderProfile | null = null;
-  try {
-    // Profile might be a string or already an object
+  if (profile) {
     if (typeof profile === 'string') {
-      founderProfile = JSON.parse(profile);
+      try {
+        founderProfile = JSON.parse(profile);
+      } catch {
+        founderProfile = null;
+      }
     } else {
-      founderProfile = profile;
+      founderProfile = profile as FounderProfile;
     }
-  } catch {
-    founderProfile = null;
   }
 
   useEffect(() => {
@@ -137,9 +139,10 @@ export default function ResultsScreen({ route, navigation, currentProfile, curre
 
   const handleUpgrade = () => {
     medium();
-    navigation.navigate('upgrade', { 
-      profile: profile, 
-      answers: answers 
+    // Route through CommitmentScreen before the paywall
+    navigation.navigate('commitment', {
+      profile: profile,
+      answers: answers,
     });
   };
 

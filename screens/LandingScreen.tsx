@@ -48,6 +48,13 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
           <Text style={styles.ctaText}>Discover Your FounderType</Text>
         </TouchableOpacity>
         
+        <TouchableOpacity
+          style={styles.feedLink}
+          onPress={() => navigation.navigate('publicFeed')}
+        >
+          <Text style={styles.feedLinkText}>See Who's Building →</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity 
           style={styles.privacyLink}
           onPress={() => navigation.navigate('privacy')}
@@ -114,6 +121,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     letterSpacing: 0.5,
+  },
+  feedLink: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  feedLinkText: {
+    color: '#3B82F6',
+    fontSize: 15,
+    fontWeight: '600',
   },
   privacyLink: {
     padding: 8,
