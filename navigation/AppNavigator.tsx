@@ -59,7 +59,7 @@ export default function AppNavigator({
       case 'questions':
         return <QuestionsScreen navigation={navigation as any} setCurrentAnswers={setCurrentAnswers} />;
       case 'processing':
-        return <ProcessingScreen navigation={navigation as any} route={{ params: { answers: directParams?.answers || params.answers } } as any} setCurrentProfile={setCurrentProfile} />;
+        return <ProcessingScreen navigation={navigation as any} route={{ params: { answers: directParams?.answers || params.answers } } as any} setCurrentProfile={setCurrentProfile} setCurrentAnswers={setCurrentAnswers} />;
       case 'results':
         return <ResultsScreen navigation={navigation as any} route={{ params: { profile: params.profile, answers: params.answersString } } as any} currentProfile={currentProfile} currentAnswers={currentAnswers} />;
       case 'upgrade':

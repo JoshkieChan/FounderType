@@ -18,9 +18,6 @@ import { MILESTONES, hasMilestoneBeenShown } from '../lib/milestones';
 import { scheduleWeeklyInsight } from '../lib/notifications';
 import { getInsightForType } from '../lib/insights';
 
-const { saveProgress, clearProgress } = useProgressPersistence();
-  const { shareProfile } = useShareProfile();
-
 type ResultsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'results'>;
 type ResultsScreenRouteProp = RouteProp<RootStackParamList, 'results'>;
 
@@ -33,8 +30,9 @@ export default function ResultsScreen({ route, navigation, currentProfile, curre
   // Use props from App state, fall back to route params for backward compatibility
   const profile = currentProfile || route?.params?.profile;
   const answers = currentAnswers || route?.params?.answers;
-  
-  const { shareResults, shareSummary } = useShareProfile();
+
+  const { saveProgress, clearProgress } = useProgressPersistence();
+  const { shareProfile, shareResults, shareSummary } = useShareProfile();
   const [previousProfiles, setPreviousProfiles] = useState<any[]>([]);
   const [showGrowth, setShowGrowth] = useState(false);
   const [showMilestone, setShowMilestone] = useState(false);
@@ -44,7 +42,12 @@ export default function ResultsScreen({ route, navigation, currentProfile, curre
 
   let founderProfile: FounderProfile | null = null;
   try {
-    founderProfile = profile ? JSON.parse(profile) : null;
+    // Profile might be a string or already an object
+    if (typeof profile === 'string') {
+      founderProfile = JSON.parse(profile);
+    } else {
+      founderProfile = profile;
+    }
   } catch {
     founderProfile = null;
   }
@@ -172,15 +175,18 @@ export default function ResultsScreen({ route, navigation, currentProfile, curre
   };
 
   const handleShareProfile = async () => {
-    if (!founderProfile) return;
-    
+    if (!founderProfile) {
+      Alert.alert('Error', 'No profile data available');
+      return;
+    }
+
     light();
     const result = await shareProfile({ profile: founderProfile, includeDetails: true });
-    
+
     if (result?.success) {
       console.log('Profile shared successfully!');
     } else {
-      console.log('Failed to share profile');
+      console.log('Failed to share profile:', result?.error);
     }
   };
 
@@ -345,19 +351,6 @@ export default function ResultsScreen({ route, navigation, currentProfile, curre
           </TouchableOpacity>
         </ScrollView>
       </View>
-      
-      {/* Milestone Modal */}
-      {currentMilestone && (
-        <MilestoneModal
-          visible={showMilestone}
-          onClose={() => setShowMilestone(false)}
-          icon={currentMilestone.icon}
-          headline={currentMilestone.headline}
-          subtext={currentMilestone.subtext}
-          milestoneId={currentMilestone.id}
-          showShareButton={currentMilestone.showShareButton}
-        />
-      )}
     </SafeAreaView>
   );
 }

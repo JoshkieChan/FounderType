@@ -4,16 +4,16 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { generateFounderProfile } from '../lib/gemini';
 import { useProgressPersistence } from '../hooks/useProgressPersistence';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import { globalAnswersRef } from '../lib/globalAnswers';
 
-type ProcessingScreenNavigationProp = StackNavigationProp<RootStackParamList, 'processing'>;
-type ProcessingScreenRouteProp = RouteProp<RootStackParamList, 'processing'>;
+type ProcessingScreenNavigationProp = any;
+type ProcessingScreenRouteProp = any;
 
-export default function ProcessingScreen({ route, navigation, setCurrentProfile }: { 
+export default function ProcessingScreen({ route, navigation, setCurrentProfile, setCurrentAnswers }: { 
   route: ProcessingScreenRouteProp; 
   navigation: ProcessingScreenNavigationProp;
   setCurrentProfile: (profile: any) => void;
+  setCurrentAnswers: (answers: any) => void;
 }) {
   const { answers } = route.params;
   
@@ -22,6 +22,7 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile 
   const [retryCount, setRetryCount] = useState(0);
   const [subtitleIndex, setSubtitleIndex] = useState(0);
   const [profileGenerated, setProfileGenerated] = useState(false);
+  const { clearProgress } = useProgressPersistence();
 
   const pulse1 = useRef(new Animated.Value(0)).current;
   const pulse2 = useRef(new Animated.Value(0)).current;
@@ -89,7 +90,8 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile 
 
         setTimeout(() => {
           setCurrentProfile(profile);
-          navigation.navigate('results', { profile: JSON.stringify(profile) });
+          setCurrentAnswers(answers);
+          navigation.navigate('results', { profile: JSON.stringify(profile), answersString: answers });
         }, 1000);
       } catch (e) {
         console.error('Error generating profile:', e);

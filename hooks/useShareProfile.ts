@@ -11,10 +11,10 @@ export function useShareProfile() {
   const shareProfile = async ({ profile, answers, includeDetails = false }: ShareProfileOptions) => {
     try {
       let shareText = `My FounderType: ${profile.founderType}\n\n`;
-      
+
       if (includeDetails) {
         shareText += `${profile.summary}\n\n`;
-        
+
         if (profile.matches.length > 0) {
           shareText += 'Top Matches:\n';
           profile.matches.slice(0, 3).forEach((match, index) => {
@@ -44,7 +44,7 @@ export function useShareProfile() {
         await Share.share({
           title: `My FounderType: ${profile.founderType}`,
           message: shareText,
-          url: 'https://foundertype.app', // Replace with actual URL
+          url: 'https://foundertype.app',
         });
 
         return { success: true, method: 'native' };

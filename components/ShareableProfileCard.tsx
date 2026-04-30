@@ -25,7 +25,8 @@ export default function ShareableProfileCard({
       // Capture the card as an image
       const uri = await captureRef(cardRef, {
         format: 'png',
-        quality: 0.9,
+        quality: 1.0,
+        result: 'tmpfile'
       });
 
       // Share the image
@@ -39,7 +40,7 @@ export default function ShareableProfileCard({
   };
 
   return (
-    <View ref={cardRef} style={styles.card}>
+    <View ref={cardRef} collapsable={false} style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.label}>YOUR FOUNDERTYPE</Text>
       </View>

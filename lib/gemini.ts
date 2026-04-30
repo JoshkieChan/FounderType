@@ -72,6 +72,7 @@ async function callGeminiWithRetry(
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
+      console.log('Raw Gemini response:', JSON.stringify(result).substring(0, 500));
       console.log(`Gemini raw response (attempt ${attempt}):`, text.substring(0, 500));
 
       const parsed = extractJsonFromResponse(text);
@@ -81,6 +82,10 @@ async function callGeminiWithRetry(
 
       console.warn(`Attempt ${attempt}: Could not extract valid JSON`);
     } catch (error: any) {
+      console.log('=== GEMINI ERROR ===');
+      console.log('Error type:', typeof error);
+      console.log('Error message:', error?.message);
+      console.log('Error details:', JSON.stringify(error));
       const status = error?.status || error?.message?.match(/\[(\d+)/)?.[1];
       console.warn(`Attempt ${attempt} failed:`, status || error.message);
       Sentry.captureException(error);
@@ -119,6 +124,12 @@ async function callGeminiWithRetry(
 }
 
 export async function generateFounderProfile(answers: Record<number, string>) {
+  console.log('=== GEMINI DEBUG ===');
+  console.log('API Key exists:', !!process.env.EXPO_PUBLIC_GEMINI_API_KEY);
+  console.log('API Key prefix:', process.env.EXPO_PUBLIC_GEMINI_API_KEY?.substring(0, 12));
+  console.log('Answers received:', JSON.stringify(answers));
+  console.log('Answers count:', Object.keys(answers).length);
+
   if (!apiKey) {
     console.error('Gemini API key not found');
     return null;
