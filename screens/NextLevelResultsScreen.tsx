@@ -43,7 +43,7 @@ export default function NextLevelResultsScreen({ navigation, route }: { navigati
         <View style={styles.dimensionBarContainer}>
           <View style={[styles.dimensionBar, { width: `${score}%` }]} />
         </View>
-        <Text style={styles.dimensionValue}>{score}</Text>
+        <Text style={styles.dimensionValue}>{score}%</Text>
       </View>
     );
   };
@@ -124,7 +124,7 @@ export default function NextLevelResultsScreen({ navigation, route }: { navigati
                   </View>
 
                   <View style={styles.warningContainer}>
-                    <Text style={styles.warningLabel}>Challenge</Text>
+                    <Text style={styles.warningLabel}>⚠️ Challenge</Text>
                     <Text style={styles.warningText}>{model?.challenge || 'No challenge available.'}</Text>
                   </View>
                 </View>
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   warningLabel: {
-    color: '#FF6B6B',
+    color: '#EF4444',
     fontSize: 12,
     fontWeight: '600',
     marginBottom: 4,
