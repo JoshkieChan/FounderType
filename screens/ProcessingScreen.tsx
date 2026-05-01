@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import { generateFounderProfile } from '../lib/gemini';
+import { calculateFounderType, FOUNDER_TYPE_RESULTS } from '../constants/founderTypeQuestions';
 import { useProgressPersistence } from '../hooks/useProgressPersistence';
 import { globalAnswersRef } from '../lib/globalAnswers';
 
@@ -81,17 +81,19 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
           return;
         }
         
-        const profile = await generateFounderProfile(parsedAnswers);
+        // Calculate Founder Type locally
+        const founderType = calculateFounderType(parsedAnswers);
+        const profile = FOUNDER_TYPE_RESULTS[founderType as keyof typeof FOUNDER_TYPE_RESULTS];
 
-        if (!profile || profile.error) {
+        if (!profile) {
           setError(true);
           return;
         }
 
         setTimeout(() => {
-          setCurrentProfile(profile);
+          setCurrentProfile({ founderType, ...profile });
           setCurrentAnswers(answers);
-          navigation.navigate('results', { profile: JSON.stringify(profile), answersString: answers });
+          navigation.navigate('results', { profile: JSON.stringify({ founderType, ...profile }), answers: answers });
         }, 1000);
       } catch (e) {
         console.error('Error generating profile:', e);
@@ -136,17 +138,19 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
               return;
             }
             
-            const profile = await generateFounderProfile(parsedAnswers);
+            // Calculate Founder Type locally
+            const founderType = calculateFounderType(parsedAnswers);
+            const profile = FOUNDER_TYPE_RESULTS[founderType as keyof typeof FOUNDER_TYPE_RESULTS];
             setProfileGenerated(true);
 
-            if (!profile || profile.error) {
+            if (!profile) {
               setError(true);
               return;
             }
 
             setTimeout(() => {
-              setCurrentProfile(profile);
-              navigation.navigate('results', { profile: JSON.stringify(profile) });
+              setCurrentProfile({ founderType, ...profile });
+              navigation.navigate('results', { profile: JSON.stringify({ founderType, ...profile }) });
             }, 1000);
           } catch (e) {
             console.error('Error generating profile:', e);
@@ -205,7 +209,9 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
       const generateProfile = async () => {
         try {
           const parsedAnswers = JSON.parse(answers || '{}');
-          const profile = await generateFounderProfile(parsedAnswers);
+          // Calculate Founder Type locally
+          const founderType = calculateFounderType(parsedAnswers);
+          const profile = FOUNDER_TYPE_RESULTS[founderType as keyof typeof FOUNDER_TYPE_RESULTS];
 
           if (!profile) {
             setError(true);
@@ -213,7 +219,7 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
           }
 
           setTimeout(() => {
-            navigation.navigate('results', { profile: JSON.stringify(profile) });
+            navigation.navigate('results', { profile: JSON.stringify({ founderType, ...profile }) });
           }, 1000);
         } catch (e) {
           console.error('Error generating profile:', e);

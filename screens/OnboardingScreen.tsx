@@ -5,6 +5,13 @@ import * as Sentry from '@sentry/react-native';
 export default function OnboardingScreen({ navigation }: { navigation: any }) {
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={{ position: 'absolute', top: 20, left: 20, zIndex: 10 }}
+      >
+        <Text style={{ color: '#3B82F6', fontSize: 16 }}>← Back</Text>
+      </TouchableOpacity>
+
       <View style={styles.content}>
         <View style={styles.iconContainer}>
           <Image 

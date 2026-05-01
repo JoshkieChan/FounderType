@@ -1,5 +1,4 @@
 import * as Notifications from 'expo-notifications';
-import { getInsightForType } from './insights';
 
 export async function requestPermissions() {
   const { status } = await Notifications.requestPermissionsAsync();
@@ -27,13 +26,10 @@ export async function cancelReminders() {
 }
 
 export async function scheduleWeeklyInsight(founderType: string) {
-  const weekNumber = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
-  const insight = getInsightForType(founderType, weekNumber);
-
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: 'Your weekly insight',
-      body: insight,
+      title: 'Your weekly check-in',
+      body: 'How is your commitment going? Stay accountable and keep building.',
       sound: true,
     },
     trigger: {

@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import MilestoneModal from '../components/MilestoneModal';
-import { checkMilestones } from '../lib/milestones';
 import { supabase } from '../lib/supabase';
-import { getCurrentUserId, updateCommitmentCheckIn, getCachedActiveCommitment } from '../lib/storage';
-import { scheduleWeeklyMirror } from '../lib/notifications';
+import { getCurrentUserId } from '../lib/storage';
 
 const CHECK_IN_KEY = 'foundertype_daily_checkin';
 
@@ -17,7 +13,7 @@ interface CheckInData {
   lastCheckInDate: string | null;
 }
 
-export default function DailyCheckInScreen({ navigation }: { navigation: any }) {
+export default function DailyCheckInScreen({ navigation, route }: { navigation: any; route: any }) {
   const [checkInData, setCheckInData] = useState<CheckInData>({
     currentDay: 1,
     completedDays: [],
@@ -26,10 +22,10 @@ export default function DailyCheckInScreen({ navigation }: { navigation: any }) 
   });
   const [todayAction, setTodayAction] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [showMilestone, setShowMilestone] = useState(false);
-  const [currentMilestone, setCurrentMilestone] = useState<any>(null);
   const [activeCommitment, setActiveCommitment] = useState<any>(null);
   const [todayAlreadyCheckedIn, setTodayAlreadyCheckedIn] = useState(false);
+  const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
+  const [daysSinceStart, setDaysSinceStart] = useState(0);
 
   useEffect(() => {
     loadCheckInData();
@@ -38,12 +34,29 @@ export default function DailyCheckInScreen({ navigation }: { navigation: any }) 
   }, []);
 
   const loadActiveCommitment = async () => {
-    const commitment = await getCachedActiveCommitment();
-    if (commitment) {
-      setActiveCommitment(commitment);
+    // Get commitment from route params
+    const passedCommitment = route?.params?.commitment;
+    if (passedCommitment) {
+      console.log('Received commitment in screen:', passedCommitment);
+      setActiveCommitment(passedCommitment);
+      setTodayAction(passedCommitment.daily_action || '');
       const today = new Date().toISOString().split('T')[0];
-      setTodayAlreadyCheckedIn((commitment.check_ins || []).includes(today));
+      setTodayAlreadyCheckedIn((passedCommitment.check_ins || []).includes(today));
+
+      if (passedCommitment.deadline) {
+        const deadline = new Date(passedCommitment.deadline);
+        const now = new Date();
+        setIsDeadlinePassed(now > deadline);
+      }
+      if (passedCommitment.created_at) {
+        const created = new Date(passedCommitment.created_at);
+        const days = Math.floor((Date.now() - created.getTime()) / (1000 * 60 * 60 * 24));
+        setDaysSinceStart(days);
+      }
+      return;
     }
+    
+    console.error('No commitment passed to DailyCheckIn screen');
   };
 
   const loadCheckInData = async () => {
@@ -73,20 +86,28 @@ export default function DailyCheckInScreen({ navigation }: { navigation: any }) 
 
   const loadTodayAction = async () => {
     try {
-      const storedProfile = await AsyncStorage.getItem('foundertype_latest_profile');
-      if (storedProfile) {
-        const profile = JSON.parse(storedProfile);
-        const day = checkInData.currentDay;
-        const weekIndex = Math.floor((day - 1) / 7);
-        const dayInWeek = ((day - 1) % 7) + 1;
-
-        if (profile.weeks && profile.weeks[weekIndex] && profile.weeks[weekIndex].days[dayInWeek - 1]) {
-          setTodayAction(profile.weeks[weekIndex].days[dayInWeek - 1]);
+      // Load daily_action from active commitment
+      const storedCommitment = await AsyncStorage.getItem('foundertype_active_commitment');
+      if (storedCommitment) {
+        const commitment = JSON.parse(storedCommitment);
+        if (commitment.daily_action) {
+          setTodayAction(commitment.daily_action);
         }
       }
     } catch (error) {
       console.error('Error loading today action:', error);
     }
+  };
+
+  const handleEditCommitment = () => {
+    const commitment = activeCommitment || route?.params?.commitment;
+    navigation.navigate('commitment', {
+      editMode: true,
+      commitmentId: commitment?.id,
+      initialText: commitment?.commitment_text || '',
+      initialDailyAction: todayAction || commitment?.daily_action || '',
+      initialDeadline: commitment?.deadline,
+    });
   };
 
   const saveCheckInData = async (newData: CheckInData) => {
@@ -117,18 +138,10 @@ export default function DailyCheckInScreen({ navigation }: { navigation: any }) 
     if (activeCommitment) {
       try {
         const userId = await getCurrentUserId();
-        if (userId) {
-          const updatedCount = await updateCommitmentCheckIn(activeCommitment.id, userId);
-          const createdAt = new Date(activeCommitment.created_at);
-          const daysSince = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
-
-          await scheduleWeeklyMirror(
-            activeCommitment.commitment_text,
-            activeCommitment.founder_type,
-            updatedCount,
-            daysSince
-          );
-
+        if (userId && activeCommitment?.id) {
+          await supabase.from('commitments').update({
+            check_ins: [...(activeCommitment.check_ins || []), new Date().toISOString().split('T')[0]],
+          }).eq('id', activeCommitment.id);
           setTodayAlreadyCheckedIn(true);
         }
       } catch (err) {
@@ -136,83 +149,241 @@ export default function DailyCheckInScreen({ navigation }: { navigation: any }) 
       }
     }
 
-    // Check for milestones
-    const newMilestones = await checkMilestones(newCompletedDays);
-    if (newMilestones.length > 0) {
-      const milestoneId = newMilestones[0];
-      const milestone = {
-        id: milestoneId,
-        icon: milestoneId === 'FIRST_ACTION_COMPLETE' ? '🎯' :
-              milestoneId === 'WEEK_1_COMPLETE' ? '🔥' :
-              milestoneId === 'FULL_30_DAYS_COMPLETE' ? '🏆' : '⭐',
-        headline: milestoneId === 'FIRST_ACTION_COMPLETE' ? 'Day 1 done.' :
-                 milestoneId === 'WEEK_1_COMPLETE' ? 'One week in.' :
-                 milestoneId === 'FULL_30_DAYS_COMPLETE' ? 'You finished.' : '',
-        subtext: milestoneId === 'FIRST_ACTION_COMPLETE' ? "That's more than 80% of people who downloaded this app." :
-                milestoneId === 'WEEK_1_COMPLETE' ? "You're building real momentum. Most people quit by now." :
-                milestoneId === 'FULL_30_DAYS_COMPLETE' ? "30 days of consistent action. You're not the same founder you were when you started." : '',
-        showShareButton: milestoneId === 'FULL_30_DAYS_COMPLETE',
-      };
-      setCurrentMilestone(milestone);
-      setShowMilestone(true);
+    // Simple milestone detection
+    if (newCompletedDays.length === 1) {
+      // Day 1 milestone
+    } else if (newCompletedDays.length === 7) {
+      // Week 1 milestone
     }
 
     if (nextDay > 30) {
-      // Mark commitment complete in Supabase
-      if (activeCommitment) {
-        try {
-          const userId = await getCurrentUserId();
-          if (userId) {
-            await supabase
-              .from('commitments')
-              .update({ completed: true, status: 'completed' })
-              .eq('id', activeCommitment.id);
-          }
-        } catch (err) {
-          console.error('Error marking commitment complete:', err);
-        }
+      // Day 30 reached — show completion prompt instead of auto-completing
+      if (Platform.OS === 'web') {
+        window.alert('Day 30 reached. Time to mark your commitment complete or abandon it.');
+      } else {
+        Alert.alert('Day 30', 'Time to mark your commitment complete or abandon it.');
       }
-      Alert.alert(
-        'Congratulations! 🏆',
-        "You've completed your 30-day action plan! Your streak: " + newStreak + ' days',
-        [{ text: 'OK', onPress: () => navigation.navigate('nextLevel') }]
-      );
+      return;
     } else {
-      Alert.alert('Great job!', 'Come back tomorrow for your next action!');
+      if (Platform.OS === 'web') {
+        window.alert('Day ' + checkInData.currentDay + ' done. Come back tomorrow.');
+      } else {
+        Alert.alert('Great job!', 'Come back tomorrow for your next action!');
+      }
     }
   };
 
-  const handleDoItTomorrow = () => {
-    Alert.alert('No problem!', 'Come back tomorrow to complete this action.');
+  
+  const handleDeleteBroken = async () => {
+    console.log('Delete button pressed');
+    
+    // Get commitment from state or route params
+    const commitment = activeCommitment || route?.params?.commitment;
+    console.log('Using commitment:', commitment);
+    
+    const commitmentId = commitment?.id;
+    
+    if (!commitmentId) {
+      console.error('No commitment ID found');
+      if (Platform.OS === 'web') {
+        window.alert('Cannot find commitment to delete');
+      } else {
+        Alert.alert('Error', 'Cannot find commitment to delete');
+      }
+      return;
+    }
+    
+    console.log('Deleting commitment with ID:', commitmentId);
+    
+    try {
+      const userId = await getCurrentUserId();
+      console.log('User ID:', userId);
+      
+      // Hard delete commitment
+      const { error } = await supabase
+        .from('commitments')
+        .delete()
+        .eq('id', commitmentId);
+      
+      if (error) {
+        console.error('Supabase delete error:', error);
+        throw error;
+      }
+      
+      console.log('Commitment deleted from database');
+
+      // Clear ALL commitment-related storage
+      await AsyncStorage.multiRemove([
+        'foundertype_has_active_commitment',
+        'foundertype_active_commitment_text',
+        'foundertype_active_deadline',
+        'foundertype_active_commitment',
+        'foundertype_commitment',
+      ]);
+      
+      console.log('Storage cleared, navigating to landing');
+
+      // Show success and redirect to home
+      if (Platform.OS === 'web') {
+        window.alert('Commitment deleted successfully');
+      } else {
+        Alert.alert('Success', 'Commitment deleted successfully');
+      }
+      
+      navigation.navigate('landing');
+    } catch (err) {
+      console.error('Error deleting commitment:', err);
+      if (Platform.OS === 'web') {
+        window.alert('Failed to delete commitment: ' + (err as Error).message);
+      } else {
+        Alert.alert('Error', 'Failed to delete commitment: ' + (err as Error).message);
+      }
+    }
   };
 
   const handleAbandon = () => {
-    Alert.alert(
-      'Abandon your commitment?',
-      "This will be marked as abandoned in the public feed. Everyone who made a commitment and abandoned it became part of the 66% they said they were different from. Are you sure?",
-      [
-        { text: 'Keep Going', style: 'cancel' },
-        {
-          text: 'Yes, Abandon',
-          style: 'destructive',
-          onPress: async () => {
-            if (!activeCommitment) return;
-            try {
-              const userId = await getCurrentUserId();
-              if (userId) {
-                await supabase
-                  .from('commitments')
-                  .update({ status: 'abandoned', abandoned: true })
-                  .eq('id', activeCommitment.id);
-              }
-            } catch (err) {
-              console.error('Error abandoning commitment:', err);
-            }
-            navigation.navigate('landing');
-          },
-        },
-      ]
-    );
+    const message = "This will be marked as ABANDONED and stay visible in the public feed forever. Everyone will see you gave up.";
+    if (Platform.OS === 'web') {
+      if (window.confirm(message + ' Are you sure?')) {
+        doAbandon();
+      }
+    } else {
+      Alert.alert(
+        'Abandon This Commitment?',
+        message,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: "Yes, I'm Abandoning It", style: 'destructive', onPress: doAbandon },
+        ]
+      );
+    }
+  };
+
+  const doAbandon = async () => {
+    console.log('Abandon confirmed, starting process...');
+    
+    // Get commitment from state or route params
+    const commitment = activeCommitment || route?.params?.commitment;
+    console.log('Using commitment for abandon:', commitment);
+    
+    const commitmentId = commitment?.id;
+    const commitmentText = commitment?.commitment_text || '';
+    
+    if (!commitmentId) {
+      console.error('No commitment ID found for abandon');
+      if (Platform.OS === 'web') {
+        window.alert('Cannot find commitment to abandon');
+      } else {
+        Alert.alert('Error', 'Cannot find commitment to abandon');
+      }
+      return;
+    }
+    
+    console.log('Abandoning commitment with ID:', commitmentId);
+    
+    try {
+      const userId = await getCurrentUserId();
+      console.log('User ID:', userId);
+      
+      // Calculate which day they abandoned on
+      const abandonedOnDay = daysSinceStart + 1; // Current day they're abandoning
+      console.log('Abandoned on day:', abandonedOnDay);
+      
+      const { error } = await supabase
+        .from('commitments')
+        .update({ 
+          status: 'abandoned', 
+          abandoned: true,
+          abandoned_at: new Date().toISOString(),
+          abandoned_on_day: abandonedOnDay
+        })
+        .eq('id', commitmentId);
+      
+      if (error) {
+        console.error('Supabase abandon error:', error);
+        throw error;
+      }
+      
+      console.log('Commitment marked as abandoned in database');
+
+      // Set 90-day lockout
+      const lockoutUntil = new Date();
+      lockoutUntil.setDate(lockoutUntil.getDate() + 90);
+      await AsyncStorage.setItem('foundertype_lockout_until', lockoutUntil.toISOString());
+      await AsyncStorage.setItem('foundertype_abandoned_commitment_text', commitmentText);
+      await AsyncStorage.setItem('foundertype_abandoned_date', new Date().toISOString());
+
+      // Clear ALL commitment-related storage
+      await AsyncStorage.multiRemove([
+        'foundertype_has_active_commitment',
+        'foundertype_active_commitment_text',
+        'foundertype_active_deadline',
+        'foundertype_active_commitment',
+        'foundertype_commitment',
+      ]);
+
+      // Award The Ghost badge if applicable
+      await awardBadge('ghost');
+      
+      console.log('Abandon complete, navigating to feed');
+
+      // Show success and redirect to feed
+      if (Platform.OS === 'web') {
+        window.alert('Commitment marked as ABANDONED permanently');
+      } else {
+        Alert.alert('Abandoned', 'Commitment marked as ABANDONED permanently');
+      }
+      
+      navigation.navigate('publicFeed');
+    } catch (err) {
+      console.error('Error abandoning commitment:', err);
+      if (Platform.OS === 'web') {
+        window.alert('Failed to abandon commitment: ' + (err as Error).message);
+      } else {
+        Alert.alert('Error', 'Failed to abandon commitment: ' + (err as Error).message);
+      }
+    }
+  };
+
+  const handleMarkComplete = async () => {
+    if (!activeCommitment) return;
+    try {
+      const userId = await getCurrentUserId();
+      if (userId) {
+        await supabase
+          .from('commitments')
+          .update({ status: 'completed', completed: true, completed_at: new Date().toISOString() })
+          .eq('id', activeCommitment.id);
+      }
+
+      // Set completion flag
+      await AsyncStorage.setItem('foundertype_has_completed_commitment', 'true');
+      await AsyncStorage.removeItem('foundertype_has_active_commitment');
+      await AsyncStorage.removeItem('foundertype_active_commitment_text');
+      await AsyncStorage.removeItem('foundertype_active_deadline');
+
+      // Award completion badges
+      await awardBadge('confirmed');
+      const days = daysSinceStart;
+      if (days <= 15) {
+        await awardBadge('sprinter');
+      }
+
+      navigation.navigate('unlockScreen');
+    } catch (err) {
+      console.error('Error marking complete:', err);
+    }
+  };
+
+  const awardBadge = async (badge: string) => {
+    try {
+      const existing = await AsyncStorage.getItem('foundertype_badges');
+      const badges = existing ? JSON.parse(existing) : [];
+      if (!badges.includes(badge)) {
+        badges.push(badge);
+        await AsyncStorage.setItem('foundertype_badges', JSON.stringify(badges));
+      }
+    } catch (e) { /* ignore */ }
   };
 
   const renderDayGrid = () => {
@@ -241,14 +412,14 @@ export default function DailyCheckInScreen({ navigation }: { navigation: any }) 
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <Text style={styles.loadingText}>Loading...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <TouchableOpacity onPress={() => navigation.navigate('landing')} style={styles.backButton}>
           <Text style={styles.backText}>×</Text>
@@ -268,22 +439,56 @@ export default function DailyCheckInScreen({ navigation }: { navigation: any }) 
 
         <View style={styles.actionContainer}>
           <Text style={styles.actionLabel}>Today's Action</Text>
-          <Text style={styles.actionText}>{todayAction || 'No action available'}</Text>
+          {todayAction ? (
+            <View>
+              <Text style={styles.actionText}>{todayAction}</Text>
+              <TouchableOpacity style={styles.editActionButton} onPress={handleEditCommitment}>
+                <Text style={styles.editActionButtonText}>Edit Commitment</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View>
+              <Text style={styles.actionText}>Add a daily action to start checking in.</Text>
+              <TouchableOpacity style={styles.editActionButton} onPress={handleEditCommitment}>
+                <Text style={styles.editActionButtonText}>Add Daily Action</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.deleteBrokenButton} onPress={() => { console.log('Delete button pressed'); handleDeleteBroken(); }}>
+                <Text style={styles.deleteBrokenButtonText}>Delete Commitment</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
+
+        {/* Day 30 Decision Section */}
+        {(isDeadlinePassed || daysSinceStart >= 30) && (
+          <View style={styles.decisionCard}>
+            <Text style={styles.decisionTitle}>Time's Up</Text>
+            <Text style={styles.decisionText}>
+              Your 30-day deadline has passed. Mark it complete or abandon it.
+            </Text>
+            <View style={styles.decisionButtons}>
+              <TouchableOpacity style={styles.completeButton} onPress={handleMarkComplete}>
+                <Text style={styles.completeButtonText}>Mark Complete ✓</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.abandonBigButton} onPress={() => { console.log('Abandon big button pressed'); handleAbandon(); }}>
+                <Text style={styles.abandonBigText}>I Didn't Finish ✕</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.decisionNote}>
+              48 hours to respond. No response = automatic abandon.
+            </Text>
+          </View>
+        )}
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[styles.doneButton, todayAlreadyCheckedIn && styles.doneButtonDisabled]}
+            style={[styles.doneButton, (todayAlreadyCheckedIn || !todayAction) && styles.doneButtonDisabled]}
             onPress={handleDoneToday}
-            disabled={todayAlreadyCheckedIn}
+            disabled={todayAlreadyCheckedIn || !todayAction}
           >
             <Text style={styles.doneButtonText}>
-              {todayAlreadyCheckedIn ? '✓ Done Today' : ' Done Today'}
+              {todayAlreadyCheckedIn ? '✓ Completed Today' : !todayAction ? 'No Action Defined' : 'Done Today'}
             </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.tomorrowButton} onPress={handleDoItTomorrow}>
-            <Text style={styles.tomorrowButtonText}> Do It Tomorrow</Text>
           </TouchableOpacity>
         </View>
 
@@ -297,23 +502,11 @@ export default function DailyCheckInScreen({ navigation }: { navigation: any }) 
         </View>
 
         {/* Abandon link */}
-        <TouchableOpacity style={styles.abandonLink} onPress={handleAbandon}>
+        <TouchableOpacity style={styles.abandonLink} onPress={() => { console.log('Abandon link pressed'); handleAbandon(); }}>
           <Text style={styles.abandonText}>I'm abandoning this commitment</Text>
         </TouchableOpacity>
       </ScrollView>
-
-      {currentMilestone && (
-        <MilestoneModal
-          visible={showMilestone}
-          onClose={() => setShowMilestone(false)}
-          icon={currentMilestone.icon}
-          headline={currentMilestone.headline}
-          subtext={currentMilestone.subtext}
-          milestoneId={currentMilestone.id}
-          showShareButton={currentMilestone.showShareButton}
-        />
-      )}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -354,9 +547,7 @@ const styles = StyleSheet.create({
   },
   doneButtonDisabled: { backgroundColor: '#1E3A5F' },
   doneButtonText: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
-  tomorrowButton: { backgroundColor: '#2A2A2A', padding: 18, borderRadius: 12, alignItems: 'center' },
-  tomorrowButtonText: { color: '#888888', fontSize: 18, fontWeight: 'bold' },
-  streakText: { fontSize: 18, color: '#FF6B35', textAlign: 'center', marginBottom: 20 },
+    streakText: { fontSize: 18, color: '#FF6B35', textAlign: 'center', marginBottom: 20 },
   gridContainer: { marginTop: 20 },
   gridLabel: { fontSize: 16, color: '#888888', textAlign: 'center', marginBottom: 15 },
   dayGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
@@ -374,4 +565,83 @@ const styles = StyleSheet.create({
   completedDayText: { color: '#FFFFFF' },
   abandonLink: { alignItems: 'center', paddingTop: 32, paddingBottom: 8 },
   abandonText: { color: '#444444', fontSize: 13, textDecorationLine: 'underline' },
+  decisionCard: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#333333',
+  },
+  decisionTitle: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  decisionText: {
+    color: '#CCCCCC',
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 20,
+  },
+  decisionButtons: {
+    gap: 12,
+    marginBottom: 16,
+  },
+  completeButton: {
+    backgroundColor: '#10B981',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  completeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  abandonBigButton: {
+    backgroundColor: '#1A0A0A',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#EF4444',
+  },
+  abandonBigText: {
+    color: '#EF4444',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  decisionNote: {
+    color: '#555555',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  deleteBrokenButton: {
+    backgroundColor: '#EF4444',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  deleteBrokenButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  editActionButton: {
+    backgroundColor: '#3B82F6',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  editActionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
 });

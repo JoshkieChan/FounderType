@@ -85,6 +85,7 @@ export async function getLastAssessmentDate(userId: string): Promise<string | nu
 
 // Get current authenticated user ID, or create anonymous session if none exists
 export async function getCurrentUserId(): Promise<string | null> {
+  // Check if already signed in
   const { data: { user } } = await supabase.auth.getUser();
   if (user?.id) return user.id;
   

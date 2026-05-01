@@ -3,11 +3,11 @@ import * as Sentry from '@sentry/react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { testSupabaseConnection } from './lib/supabase';
-import { supabase } from './lib/supabase';
 import { getCurrentUserId, getLastAssessmentDate, getCachedActiveCommitment, getActiveCommitment } from './lib/storage';
 import { scheduleNotificationAsync } from 'expo-notifications';
 import { sendMissedDaysAlert } from './lib/notifications';
 import AppNavigator from './navigation/AppNavigator';
+import { supabase } from './lib/supabase';
 
 async function testGeminiConnection() {
   const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
@@ -39,30 +39,27 @@ export default Sentry.wrap(function App() {
     testSupabaseConnection();
     
     // Initialize Sentry
-  Sentry.init({
-    dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-    enableInExpoDevelopment: __DEV__,
-    debug: false,
-    tracesSampleRate: 0.2,
-  } as any);
+    Sentry.init({
+      dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+      enableInExpoDevelopment: __DEV__,
+      debug: false,
+      tracesSampleRate: 0.2,
+    } as any);
 
-  // Initialize anonymous auth
-  const initializeAuth = async () => {
+    // Initialize anonymous auth
+    const initAuth = async () => {
       try {
         const { data, error } = await supabase.auth.signInAnonymously();
         if (error) {
           console.error('Anonymous auth failed:', error);
-          Sentry.captureException(error);
-          return;
+        } else {
+          console.log('Anonymous auth successful:', data.user?.id);
         }
-        console.log('Anonymous auth successful, user ID:', data.user?.id);
-        return data.user?.id;
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        Sentry.captureException(error);
-        return null;
+      } catch (err) {
+        console.error('Auth init error:', err);
       }
     };
+    initAuth();
 
     // Initialize RevenueCat only once using a flag
     const revenueCatKey = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY;

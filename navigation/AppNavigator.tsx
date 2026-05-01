@@ -6,16 +6,11 @@ import QuestionsScreen from '../screens/QuestionsScreen';
 import ProcessingScreen from '../screens/ProcessingScreen';
 import ResultsScreen from '../screens/ResultsScreen';
 import CommitmentScreen from '../screens/CommitmentScreen';
-import UpgradeScreen from '../screens/UpgradeScreen';
-import ActionPlanScreen from '../screens/ActionPlanScreen';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import DailyCheckInScreen from '../screens/DailyCheckInScreen';
-import ReassessmentScreen from '../screens/ReassessmentScreen';
-import NextLevelScreen from '../screens/NextLevelScreen';
-import NextLevelQuestionsScreen from '../screens/NextLevelQuestionsScreen';
-import NextLevelProcessingScreen from '../screens/NextLevelProcessingScreen';
-import NextLevelResultsScreen from '../screens/NextLevelResultsScreen';
 import PublicFeedScreen from '../screens/PublicFeedScreen';
+import UnlockScreen from '../screens/UnlockScreen';
+import LockoutScreen from '../screens/LockoutScreen';
 
 type Screen =
   | 'landing'
@@ -24,16 +19,11 @@ type Screen =
   | 'processing'
   | 'results'
   | 'commitment'
-  | 'upgrade'
-  | 'actionPlan'
   | 'privacy'
   | 'dailyCheckIn'
-  | 'reassessment'
-  | 'nextLevel'
-  | 'nextLevelQuestions'
-  | 'nextLevelProcessing'
-  | 'nextLevelResults'
-  | 'publicFeed';
+  | 'publicFeed'
+  | 'unlockScreen'
+  | 'lockoutScreen';
 
 interface NavigationParams {
   answers?: string;
@@ -44,9 +34,11 @@ interface NavigationParams {
   commitment?: any;
   commitmentText?: string;
   isPublicCommitment?: boolean;
-  originalAnswers?: any;
-  nextLevelAnswers?: any;
-  originalProfile?: any;
+  editMode?: boolean;
+  commitmentId?: string;
+  initialText?: string;
+  initialDailyAction?: string;
+  initialDeadline?: string;
 }
 
 interface AppNavigatorProps {
@@ -64,17 +56,20 @@ export type RootStackParamList = {
   questions: undefined;
   processing: { answers: string };
   results: { profile?: string; answers?: string };
-  commitment: { profile?: string; answers?: string };
-  upgrade: { profile?: string; answers?: string; commitment?: any; commitmentText?: string; isPublicCommitment?: boolean };
-  actionPlan: { answers?: string; founderType?: string; topMatch?: any };
+  commitment: {
+    profile?: string;
+    answers?: string;
+    editMode?: boolean;
+    commitmentId?: string;
+    initialText?: string;
+    initialDailyAction?: string;
+    initialDeadline?: string;
+  };
   privacy: undefined;
-  dailyCheckIn: undefined;
-  reassessment: undefined;
-  nextLevel: undefined;
-  nextLevelQuestions: { profile?: string; answers?: string };
-  nextLevelProcessing: { profile?: string; originalAnswers?: any; nextLevelAnswers?: any };
-  nextLevelResults: { profile?: string; originalProfile?: string; originalAnswers?: any; nextLevelAnswers?: any };
+  dailyCheckIn: { commitment?: any } | undefined;
   publicFeed: undefined;
+  unlockScreen: undefined;
+  lockoutScreen: undefined;
 };
 
 export default function AppNavigator({
@@ -144,66 +139,34 @@ export default function AppNavigator({
         return (
           <CommitmentScreen
             navigation={navigation as any}
-            route={{ params: { profile: params.profile, answers: params.answersString } } as any}
-          />
-        );
-      case 'upgrade':
-        return (
-          <UpgradeScreen
-            navigation={navigation as any}
             route={{
               params: {
                 profile: params.profile,
                 answers: params.answersString,
-                commitment: params.commitment,
-                commitmentText: params.commitmentText,
-                isPublicCommitment: params.isPublicCommitment,
+                editMode: params.editMode,
+                commitmentId: params.commitmentId,
+                initialText: params.initialText,
+                initialDailyAction: params.initialDailyAction,
+                initialDeadline: params.initialDeadline,
               },
             } as any}
-            currentProfile={currentProfile}
-            currentAnswers={currentAnswers}
-          />
-        );
-      case 'actionPlan':
-        return (
-          <ActionPlanScreen
-            navigation={navigation as any}
-            route={{ params: { answers: params.answers, founderType: params.founderType, topMatch: params.topMatch } } as any}
-            currentProfile={currentProfile}
-            currentAnswers={currentAnswers}
           />
         );
       case 'privacy':
         return <PrivacyPolicyScreen navigation={navigation as any} />;
       case 'dailyCheckIn':
-        return <DailyCheckInScreen navigation={navigation as any} />;
-      case 'reassessment':
-        return <ReassessmentScreen navigation={navigation as any} />;
-      case 'nextLevel':
-        return <NextLevelScreen navigation={navigation as any} />;
-      case 'nextLevelQuestions':
         return (
-          <NextLevelQuestionsScreen
+          <DailyCheckInScreen
             navigation={navigation as any}
-            route={{ params: { profile: params.profile, answers: params.answersString } } as any}
-          />
-        );
-      case 'nextLevelProcessing':
-        return (
-          <NextLevelProcessingScreen
-            navigation={navigation as any}
-            route={{ params: { profile: params.profile, originalAnswers: params.originalAnswers, nextLevelAnswers: params.nextLevelAnswers } } as any}
-          />
-        );
-      case 'nextLevelResults':
-        return (
-          <NextLevelResultsScreen
-            navigation={navigation as any}
-            route={{ params: { profile: params.profile, originalProfile: params.originalProfile, originalAnswers: params.originalAnswers, nextLevelAnswers: params.nextLevelAnswers } } as any}
+            route={{ params: { commitment: params.commitment } } as any}
           />
         );
       case 'publicFeed':
         return <PublicFeedScreen navigation={navigation as any} />;
+      case 'unlockScreen':
+        return <UnlockScreen navigation={navigation as any} />;
+      case 'lockoutScreen':
+        return <LockoutScreen navigation={navigation as any} />;
       default:
         return <LandingScreen navigation={navigation as any} />;
     }

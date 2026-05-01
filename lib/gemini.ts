@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as Sentry from '@sentry/react-native';
 
 const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
-const genAI = new GoogleGenerativeAI(apiKey);
+const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 // Circuit breaker to stop hammering API when it's clearly down
 let circuitBreakerOpen = false;
@@ -198,8 +198,8 @@ export async function generateFounderProfile(answers: Record<number, string>) {
   console.log('Answers received:', JSON.stringify(answers));
   console.log('Answers count:', Object.keys(answers).length);
 
-  if (!apiKey) {
-    console.error('Gemini API key not found');
+  if (!apiKey || !genAI) {
+    console.error('Gemini API key not found or genAI not initialized');
     return null;
   }
 
@@ -270,8 +270,8 @@ export async function generateNextLevelProfile(
   originalAnswers: Record<number, string>,
   nextLevelAnswers: Record<number, string>
 ) {
-  if (!apiKey) {
-    console.error('Gemini API key not found');
+  if (!apiKey || !genAI) {
+    console.error('Gemini API key not found or genAI not initialized');
     return null;
   }
 
@@ -341,21 +341,20 @@ Return ONLY this JSON structure:
   return await callGeminiWithRetry(model, prompt, 5, generationConfig);
 }
 
-export async function generateActionPlan(answers: Record<number, string>, founderType: string, topMatch: any) {
-  if (!apiKey) {
-    console.error('Gemini API key not found');
+export async function generateActionPlan(founderType: string, answers: Record<number, string>) {
+  if (!apiKey || !genAI) {
+    console.error('Gemini API key not found or genAI not initialized');
     return null;
   }
 
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-  console.log('Generating action plan for:', { founderType, topMatch, answers });
+  console.log('Generating action plan for:', { founderType, answers });
 
   const prompt = `
 You're creating a personalized 30-day action plan for a founder. Based on their profile:
 
 Founder Type: ${founderType}
-Top Business Model Match: ${topMatch.model || 'Unknown'}
 
 Their answers reveal their patterns:
 ${JSON.stringify(answers, null, 2)}
