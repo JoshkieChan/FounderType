@@ -1,7 +1,7 @@
 export const FOUNDER_TYPE_QUESTIONS = [
   {
     id: 'q1',
-    text: "Be honest: How many things have you started but not finished in the last year?",
+    text: "How many unfinished projects do you have from the last year?",
     options: [
       "0-1: I finish what I start",
       "2-3: I have a couple in progress", 
@@ -65,34 +65,34 @@ export const FOUNDER_TYPE_QUESTIONS = [
   },
   {
     id: 'q5',
-    text: "When do you feel confident enough to launch and charge money?",
+    text: "When are you confident enough to charge money for something?",
     options: [
       "After I've talked to 20+ people who say they'd pay",
       "After I've built something working that people can use",
-      "After I see others successfully doing something similar",
-      "Never—I just ship it despite the doubt"
+      "After I see other people succeeding with similar things",
+      "I ship it anyway despite having doubts"
     ],
     scoring: {
       "After I've talked to 20+ people who say they'd pay": { type: 'The Researcher', points: 0 },
       "After I've built something working that people can use": { type: 'Builder', points: 0 },
-      "After I see others successfully doing something similar": { type: 'Follower', points: 0 },
-      "Never—I just ship it despite the doubt": { type: 'Confident Shipper', points: 0 }
+      "After I see other people succeeding with similar things": { type: 'Follower', points: 0 },
+      "I ship it anyway despite having doubts": { type: 'Confident Shipper', points: 0 }
     }
   },
   {
     id: 'q6',
-    text: "You launch. Nobody buys. What's your honest next move?",
+    text: "You launch something and nobody buys. What's your first move?",
     options: [
-      "Quit and try something completely different",
-      "Panic and rebuild the whole thing from scratch",
+      "Assume it's not working and start something new",
+      "Panic and rebuild the whole thing",
       "Talk to the few people who tried it and adjust",
-      "Double down on marketing—people just don't know about it"
+      "Double down on marketing and push harder"
     ],
     scoring: {
-      "Quit and try something completely different": { type: 'Low Resilience', points: 0 },
-      "Panic and rebuild the whole thing from scratch": { type: 'Overreactor', points: 0 },
+      "Assume it's not working and start something new": { type: 'Low Resilience', points: 0 },
+      "Panic and rebuild the whole thing": { type: 'Overreactor', points: 0 },
       "Talk to the few people who tried it and adjust": { type: 'Learner', points: 0 },
-      "Double down on marketing—people just don't know about it": { type: 'Stubborn Optimist', points: 0 }
+      "Double down on marketing and push harder": { type: 'Stubborn Optimist', points: 0 }
     }
   },
   {
@@ -116,8 +116,8 @@ export const FOUNDER_TYPE_QUESTIONS = [
 export const FOUNDER_TYPE_RESULTS = {
   'The Sprint Starter': {
     triggers: [
-      { question: 'q4', answer: "1-7 days: I need fast results or I lose steam" },
-      { question: 'q1', answer: ["0-1: I finish what I start", "2-3: I have a couple in progress"] }
+      { question: 'q4', answer: 'A' }, // 1-7 days timeline
+      { question: 'q7', answer: 'C' }  // Lost momentum halfway
     ],
     headline: "You're a Sprint Starter",
     truth: "You need fast wins or you lose steam. Long-term projects kill your momentum. You're wired for speed, not patience.",
@@ -134,10 +134,11 @@ export const FOUNDER_TYPE_RESULTS = {
     ],
     nextMove: "Post a 7-day sprint commitment. Make it public so you actually finish one thing."
   },
+  
   'The 30-Day Executor': {
     triggers: [
-      { question: 'q4', answer: "30 days: Enough time to build something real without burning out" },
-      { question: 'q2', answer: "I feel bad but no one's waiting, so I let it slide" }
+      { question: 'q4', answer: 'B' }, // 30 days timeline
+      { question: 'q2', answer: 'C' }  // Let it slide when no one's waiting
     ],
     headline: "You're a 30-Day Executor",
     truth: "You can finish things when there's a deadline and someone's watching. Without accountability, you let deadlines slide.",
@@ -154,10 +155,11 @@ export const FOUNDER_TYPE_RESULTS = {
     ],
     nextMove: "Post a 30-day commitment right now. Make it public or you'll quit like you always do."
   },
+  
   'The Patient Builder': {
     triggers: [
-      { question: 'q4', answer: "3-6 months: I'm patient and can work toward something bigger" },
-      { question: 'q6', answer: "Talk to the few people who tried it and adjust" }
+      { question: 'q4', answer: 'C' }, // 3-6 months timeline
+      { question: 'q6', answer: 'C' }  // Talk to users and adjust
     ],
     headline: "You're a Patient Builder",
     truth: "You're wired for long-term plays. You don't need quick wins. You can grind for months without instant gratification.",
@@ -174,10 +176,11 @@ export const FOUNDER_TYPE_RESULTS = {
     ],
     nextMove: "Post a 90-day commitment with weekly milestones. You can handle the grind."
   },
+  
   'The Giver': {
     triggers: [
-      { question: 'q3', answer: "Uncomfortable—feels weird to charge before it's perfect" },
-      { question: 'q5', answer: ["After I've talked to 20+ people who say they'd pay", "After I've built something working that people can use"] }
+      { question: 'q3', answer: 'C' }, // Uncomfortable charging
+      { question: 'q5', answer: 'B' }  // Launch after building working product
     ],
     headline: "You're a Giver",
     truth: "You love building and helping people. You hate charging money. You'll work for free forever if no one forces you to monetize.",
@@ -194,10 +197,11 @@ export const FOUNDER_TYPE_RESULTS = {
     ],
     nextMove: "Post a commitment to charge $1 for something this week. Force yourself to monetize before you build anything else."
   },
+  
   'The Researcher': {
     triggers: [
-      { question: 'q5', answer: "After I've talked to 20+ people who say they'd pay" },
-      { question: 'q1', answer: ["4-6: I start a lot but struggle to finish", "7+: I have a graveyard of half-started ideas"] }
+      { question: 'q5', answer: 'A' }, // Need 20+ validations
+      { question: 'q1', answer: ['C', 'D'] } // 4-6 or 7+ unfinished
     ],
     headline: "You're a Researcher",
     truth: "You're stuck in validation mode. You research, plan, and talk to people instead of building. You'll never feel \"ready enough\" to launch.",
@@ -211,10 +215,11 @@ export const FOUNDER_TYPE_RESULTS = {
     ],
     nextMove: "Post a 7-day build sprint with ZERO customer interviews allowed. Ship something broken, then iterate."
   },
+  
   'The Scattered Starter': {
     triggers: [
-      { question: 'q1', answer: "7+: I have a graveyard of half-started ideas" },
-      { question: 'q7', answer: "I switched to a different idea before finishing" }
+      { question: 'q1', answer: 'D' }, // 7+ unfinished graveyard
+      { question: 'q7', answer: 'D' }  // Switched to different idea
     ],
     headline: "You're a Scattered Starter",
     truth: "You have a graveyard of half-built ideas. You start strong, then switch to something newer and shinier. You've never finished anything.",
@@ -230,10 +235,12 @@ export const FOUNDER_TYPE_RESULTS = {
     ],
     nextMove: "Post ONE 30-day commitment. Delete every other idea. If you abandon this, it stays public forever."
   },
+  
   'The Perfectionist': {
     triggers: [
-      { question: 'q4', answer: "I don't finish—I keep improving things forever" },
-      { question: 'q3', answer: "Nervous—I don't think it's good enough yet" }
+      { question: 'q4', answer: 'D' }, // Never finish, keep improving
+      { question: 'q3', answer: 'B' }, // Nervous, not good enough
+      { question: 'q7', answer: 'B' }  // Built most but never launched
     ],
     headline: "You're a Perfectionist",
     truth: "You never ship because it's \"not ready yet.\" You keep improving things forever. Your fear of launching broken work is killing your progress.",
@@ -258,10 +265,12 @@ export function calculateFounderType(answers: Record<string, string>): string {
     let matches = 0;
     result.triggers.forEach(trigger => {
       const userAnswer = answers[trigger.question];
+      // Convert user answer to letter key (A, B, C, D)
+      const answerKey = getAnswerKey(trigger.question, userAnswer);
       if (Array.isArray(trigger.answer)) {
-        if (trigger.answer.includes(userAnswer)) matches++;
+        if (trigger.answer.includes(answerKey)) matches++;
       } else {
-        if (userAnswer === trigger.answer) matches++;
+        if (answerKey === trigger.answer) matches++;
       }
     });
     typeScores[type] = matches;
@@ -279,4 +288,16 @@ export function calculateFounderType(answers: Record<string, string>): string {
   });
   
   return bestType;
+}
+
+// Helper function to convert answer text to letter key
+function getAnswerKey(questionId: string, answerText: string): string {
+  const question = FOUNDER_TYPE_QUESTIONS.find(q => q.id === questionId);
+  if (!question) return '';
+  
+  const answerIndex = question.options.indexOf(answerText);
+  if (answerIndex === -1) return '';
+  
+  // Convert index to letter: 0 -> A, 1 -> B, 2 -> C, 3 -> D
+  return String.fromCharCode(65 + answerIndex);
 }
