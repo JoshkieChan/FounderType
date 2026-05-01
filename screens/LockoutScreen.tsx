@@ -11,17 +11,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LockoutScreen({ navigation }: { navigation: any }) {
   const [daysRemaining, setDaysRemaining] = useState(0);
-  const [abandonedCommitment, setAbandonedCommitment] = useState<string>('');
-  const [abandonedDate, setAbandonedDate] = useState<string>('');
 
   useEffect(() => {
     (async () => {
-      const until = await AsyncStorage.getItem('foundertype_lockout_until');
-      const commitment = await AsyncStorage.getItem('foundertype_abandoned_commitment_text');
-      const date = await AsyncStorage.getItem('foundertype_abandoned_date');
-
-      if (commitment) setAbandonedCommitment(commitment);
-      if (date) setAbandonedDate(date);
+      const until = await AsyncStorage.getItem('foundertype_diagnostic_lockout_until');
 
       if (until) {
         const lockoutEnd = new Date(until);
@@ -29,7 +22,7 @@ export default function LockoutScreen({ navigation }: { navigation: any }) {
         const diff = Math.ceil((lockoutEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         setDaysRemaining(Math.max(0, diff));
       } else {
-        setDaysRemaining(90);
+        setDaysRemaining(7);
       }
     })();
   }, []);
@@ -41,39 +34,25 @@ export default function LockoutScreen({ navigation }: { navigation: any }) {
           <Text style={styles.badgeEmoji}>✕</Text>
         </View>
 
-        <Text style={styles.headline}>You Abandoned Your Commitment.</Text>
+        <Text style={styles.headline}>Diagnostic Locked For Now.</Text>
 
         <View style={styles.divider} />
 
-        {abandonedCommitment ? (
-          <View style={styles.abandonedCard}>
-            <View style={styles.abandonedBadge}>
-              <Text style={styles.abandonedBadgeText}>ABANDONED</Text>
-            </View>
-            <Text style={styles.abandonedText}>"{abandonedCommitment}"</Text>
-            {abandonedDate ? (
-              <Text style={styles.abandonedDate}>Abandoned on {new Date(abandonedDate).toLocaleDateString()}</Text>
-            ) : null}
-          </View>
-        ) : null}
-
         <Text style={styles.body}>
-          Your abandoned commitment is permanently visible in the public feed.{' '}
-          <Text style={styles.red}>There is no delete button.</Text>
+          You can retake the FounderType diagnostic after the cooldown. Your current commitment flow stays available.
         </Text>
 
         <View style={styles.lockoutCard}>
-          <Text style={styles.lockoutLabel}>LOCKOUT PERIOD</Text>
+          <Text style={styles.lockoutLabel}>DIAGNOSTIC COOLDOWN</Text>
           <Text style={styles.lockoutNumber}>{daysRemaining}</Text>
           <Text style={styles.lockoutUnit}>days remaining</Text>
           <Text style={styles.lockoutSub}>
-            You can post a new commitment when the lockout expires.
+            Retake the diagnostic when this reaches zero.
           </Text>
         </View>
 
         <Text style={styles.body}>
-          If you had paid $29 for that commitment, the money would be gone forever.{' '}
-          Your first commitment was free. The next one won't be.
+          FounderType is stricter when the answers have time to mean something. Commitments remain public either way.
         </Text>
 
         <TouchableOpacity

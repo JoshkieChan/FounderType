@@ -139,9 +139,27 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
       try {
         const userId = await getCurrentUserId();
         if (userId && activeCommitment?.id) {
+          const completedAt = new Date().toISOString();
+          const todayIso = completedAt.split('T')[0];
+          const updatedCheckIns = [...(activeCommitment.check_ins || []), todayIso];
+
           await supabase.from('commitments').update({
-            check_ins: [...(activeCommitment.check_ins || []), new Date().toISOString().split('T')[0]],
+            check_ins: updatedCheckIns,
+            days_completed: newCompletedDays.length,
           }).eq('id', activeCommitment.id);
+
+          await supabase.from('daily_progress').upsert({
+            commitment_id: activeCommitment.id,
+            day_number: checkInData.currentDay,
+            completed: true,
+            completed_at: completedAt,
+          }, { onConflict: 'commitment_id,day_number' });
+
+          setActiveCommitment({
+            ...activeCommitment,
+            check_ins: updatedCheckIns,
+            days_completed: newCompletedDays.length,
+          });
           setTodayAlreadyCheckedIn(true);
         }
       } catch (err) {
@@ -306,10 +324,6 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
       
       console.log('Commitment marked as abandoned in database');
 
-      // Set 90-day lockout
-      const lockoutUntil = new Date();
-      lockoutUntil.setDate(lockoutUntil.getDate() + 90);
-      await AsyncStorage.setItem('foundertype_lockout_until', lockoutUntil.toISOString());
       await AsyncStorage.setItem('foundertype_abandoned_commitment_text', commitmentText);
       await AsyncStorage.setItem('foundertype_abandoned_date', new Date().toISOString());
 
@@ -322,9 +336,6 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
         'foundertype_commitment',
       ]);
 
-      // Award The Ghost badge if applicable
-      await awardBadge('ghost');
-      
       console.log('Abandon complete, navigating to feed');
 
       // Show success and redirect to feed
@@ -361,29 +372,12 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
       await AsyncStorage.removeItem('foundertype_has_active_commitment');
       await AsyncStorage.removeItem('foundertype_active_commitment_text');
       await AsyncStorage.removeItem('foundertype_active_deadline');
+      await AsyncStorage.removeItem('foundertype_active_commitment');
 
-      // Award completion badges
-      await awardBadge('confirmed');
-      const days = daysSinceStart;
-      if (days <= 15) {
-        await awardBadge('sprinter');
-      }
-
-      navigation.navigate('unlockScreen');
+      navigation.navigate('landing');
     } catch (err) {
       console.error('Error marking complete:', err);
     }
-  };
-
-  const awardBadge = async (badge: string) => {
-    try {
-      const existing = await AsyncStorage.getItem('foundertype_badges');
-      const badges = existing ? JSON.parse(existing) : [];
-      if (!badges.includes(badge)) {
-        badges.push(badge);
-        await AsyncStorage.setItem('foundertype_badges', JSON.stringify(badges));
-      }
-    } catch (e) { /* ignore */ }
   };
 
   const renderDayGrid = () => {

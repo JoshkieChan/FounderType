@@ -40,7 +40,7 @@ const RULES = [
   'Once posted, it\'s public and can\'t be edited',
 ];
 
-type GateStatus = 'fresh' | 'active' | 'completed' | 'locked';
+type GateStatus = 'fresh' | 'active' | 'completed';
 
 export default function CommitmentScreen({ navigation, route }: { navigation: any; route: any }) {
   const [commitment, setCommitment] = useState('');
@@ -52,7 +52,6 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
   const [gateStatus, setGateStatus] = useState<GateStatus>('fresh');
   const [activeCommitmentText, setActiveCommitmentText] = useState('');
   const [activeDaysLeft, setActiveDaysLeft] = useState(0);
-  const [lockoutDays, setLockoutDays] = useState(0);
 
   const profile = route?.params?.profile;
   const answers = route?.params?.answers;
@@ -78,7 +77,6 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
   const checkGate = async () => {
     const hasActive = await AsyncStorage.getItem('foundertype_has_active_commitment');
     const hasCompleted = await AsyncStorage.getItem('foundertype_has_completed_commitment');
-    const lockoutUntil = await AsyncStorage.getItem('foundertype_lockout_until');
 
     if (hasActive === 'true') {
       const text = await AsyncStorage.getItem('foundertype_active_commitment_text') || '';
@@ -87,16 +85,6 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
       setActiveCommitmentText(text);
       setActiveDaysLeft(days);
       setGateStatus('active');
-    } else if (lockoutUntil) {
-      const end = new Date(lockoutUntil);
-      const days = Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-      if (days > 0) {
-        setLockoutDays(days);
-        setGateStatus('locked');
-      } else {
-        await AsyncStorage.removeItem('foundertype_lockout_until');
-        setGateStatus(hasCompleted === 'true' ? 'completed' : 'fresh');
-      }
     } else {
       setGateStatus(hasCompleted === 'true' ? 'completed' : 'fresh');
     }
@@ -205,17 +193,7 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
         return;
       }
 
-      // New commitment flow
-      // Paid tier — completed first commitment, now requires $29 stake
-      if (gateStatus === 'completed') {
-        await AsyncStorage.setItem('foundertype_pending_commitment_text', processedCommitment.trim());
-        await AsyncStorage.setItem('foundertype_pending_commitment_deadline', get30DaysFromNow().toISOString());
-        await AsyncStorage.setItem('foundertype_pending_daily_action', dailyAction.trim());
-        navigation.navigate('upgrade', { commitmentText: processedCommitment.trim() });
-        return;
-      }
-
-      // Fresh — first commitment is FREE
+      // Fresh or returning after completion: post one public 30-day commitment.
       await AsyncStorage.setItem('foundertype_commitment', processedCommitment);
       await AsyncStorage.setItem('foundertype_first_commitment_posted', 'true');
       await AsyncStorage.setItem('foundertype_has_active_commitment', 'true');
@@ -242,7 +220,6 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
         deadline,
         created_at: new Date().toISOString(),
         check_ins: [],
-        daily_progress: [],
       };
 
       const { data: savedCommitment, error } = await supabase
@@ -357,14 +334,6 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
           </View>
         )}
 
-        {gateStatus === 'locked' && (
-          <View style={[styles.gateBanner, { backgroundColor: '#FEF2F2', borderColor: '#EF4444' }]}>
-            <Text style={[styles.gateLabel, { color: '#991B1B' }]}>LOCKED OUT</Text>
-            <Text style={styles.gateText}>You abandoned a commitment. You're locked out for {lockoutDays} more days.</Text>
-            <Text style={[styles.gateMeta, { color: '#B91C1C' }]}>Come back when you're ready to commit.</Text>
-          </View>
-        )}
-
         {!editMode && (gateStatus === 'fresh' || gateStatus === 'completed') && (
           <View style={styles.mainContent}>
             <View style={styles.inputSection}>
@@ -464,19 +433,10 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
                 disabled={isSubmitting}
               >
                 <Text style={styles.submitButtonText}>
-                  {isSubmitting
-                    ? 'Posting...'
-                    : gateStatus === 'completed'
-                      ? 'Continue to Payment ($29)'
-                      : 'Post My Commitment'
-                  }
+                  {isSubmitting ? 'Posting...' : 'Post My Commitment'}
                 </Text>
               </TouchableOpacity>
-              {gateStatus === 'completed' ? (
-                <Text style={styles.freeLabel}>Your first commitment was free. This one requires a $29 stake.</Text>
-              ) : (
-                <Text style={styles.freeLabel}>FREE — no payment required for your first commitment</Text>
-              )}
+              <Text style={styles.freeLabel}>One active public commitment at a time.</Text>
             </View>
           </View>
         )}

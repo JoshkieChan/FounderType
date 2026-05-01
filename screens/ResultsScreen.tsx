@@ -74,7 +74,7 @@ export default function ResultsScreen({ route, navigation, currentProfile, curre
   useEffect(() => {
     if (founderTypeData) {
       saveProfileToSupabase();
-      // Store profile for action plan using new storage system
+      // Store the latest profile for commitment posting context.
       const saveProfileData = async () => {
         if (answers && founderTypeData) {
           let parsedAnswers = {};

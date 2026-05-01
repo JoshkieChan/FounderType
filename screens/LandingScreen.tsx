@@ -79,29 +79,7 @@ function getUserLabel(item: Commitment) {
   return `Founder (${item.founder_type})`;
 }
 
-type UserStatus = 'none' | 'active' | 'completed' | 'locked';
-
-function getBadgeIcon(badge: string): string {
-  const icons: Record<string, string> = {
-    'confirmed': '✓',
-    'sprinter': '⚡',
-    'ghost': '👻',
-    'streak': '🔥',
-    'first': '🎯',
-  };
-  return icons[badge] || '🏆';
-}
-
-function getBadgeName(badge: string): string {
-  const names: Record<string, string> = {
-    'confirmed': 'The Confirmed',
-    'sprinter': 'Sprinter',
-    'ghost': 'The Ghost',
-    'streak': 'Streak Keeper',
-    'first': 'First Blood',
-  };
-  return names[badge] || badge;
-}
+type UserStatus = 'none' | 'active' | 'completed';
 
 function isEditable(item: Commitment, userId: string | null): boolean {
   if (!userId || item.user_id !== userId) return false;
@@ -128,8 +106,6 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
   const [userStatus, setUserStatus] = useState<UserStatus>('none');
   const [activeText, setActiveText] = useState('');
   const [activeDays, setActiveDays] = useState(0);
-  const [lockoutDays, setLockoutDays] = useState(0);
-  const [badges, setBadges] = useState<string[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { width } = useWindowDimensions();
   const isWide = width > 768;
@@ -230,7 +206,6 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
         // Check user commitment status
         const hasActive = await AsyncStorage.getItem('foundertype_has_active_commitment');
         const hasCompleted = await AsyncStorage.getItem('foundertype_has_completed_commitment');
-        const lockoutUntil = await AsyncStorage.getItem('foundertype_lockout_until');
 
         if (hasActive === 'true') {
           const text = await AsyncStorage.getItem('foundertype_active_commitment_text') || '';
@@ -239,24 +214,8 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
           setActiveText(text);
           setActiveDays(days);
           setUserStatus('active');
-        } else if (lockoutUntil) {
-          const end = new Date(lockoutUntil);
-          const days = Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-          if (days > 0) {
-            setLockoutDays(days);
-            setUserStatus('locked');
-          } else {
-            await AsyncStorage.removeItem('foundertype_lockout_until');
-            setUserStatus(hasCompleted === 'true' ? 'completed' : 'none');
-          }
         } else {
           setUserStatus(hasCompleted === 'true' ? 'completed' : 'none');
-        }
-
-        // Load earned badges
-        const badgesJson = await AsyncStorage.getItem('foundertype_badges');
-        if (badgesJson) {
-          setBadges(JSON.parse(badgesJson));
         }
 
         // Get current user for edit/delete permissions
@@ -463,20 +422,9 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
       {userStatus === 'completed' && (
         <View style={[styles.statusBanner, { backgroundColor: '#ECFDF5', borderColor: '#10B981' }]}>
           <Text style={[styles.statusLabel, { color: '#065F46' }]}>COMMITMENT COMPLETED</Text>
-          <Text style={styles.statusText}>You followed through. Ready for real stakes?</Text>
-          <TouchableOpacity style={[styles.statusCta, { backgroundColor: '#111111' }]} onPress={() => navigation.navigate('unlockScreen')}>
-            <Text style={styles.statusCtaText}>Post Next Commitment — $29 →</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {userStatus === 'locked' && (
-        <View style={[styles.statusBanner, { backgroundColor: '#FEF2F2', borderColor: '#EF4444' }]}>
-          <Text style={[styles.statusLabel, { color: '#991B1B' }]}>LOCKED OUT</Text>
-          <Text style={styles.statusText}>You abandoned your last commitment.</Text>
-          <Text style={[styles.statusMeta, { color: '#B91C1C' }]}>{lockoutDays} days until you can try again</Text>
-          <TouchableOpacity style={[styles.statusCta, { backgroundColor: '#EF4444' }]} onPress={() => navigation.navigate('lockoutScreen')}>
-            <Text style={styles.statusCtaText}>View Details →</Text>
+          <Text style={styles.statusText}>You followed through. Post the next public 30-day commitment when you're ready.</Text>
+          <TouchableOpacity style={[styles.statusCta, { backgroundColor: '#111111' }]} onPress={() => navigation.navigate('commitment')}>
+            <Text style={styles.statusCtaText}>Post Next Commitment →</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -487,7 +435,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
         <Text style={styles.heroSub}>Post a 30-day commitment. Complete it or everyone sees you quit.</Text>
         <TouchableOpacity style={styles.primaryCta} onPress={() => navigation.navigate('commitment')}>
           <Text style={styles.primaryCtaText}>
-            {userStatus === 'completed' ? 'Post Your Next Commitment — $29' : 'Post Your First Commitment — Free'}
+            {userStatus === 'completed' ? 'Post Your Next Commitment' : 'Post Your First Commitment'}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.secondaryCta} onPress={() => navigation.navigate('onboarding')}>
@@ -520,7 +468,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
         <View style={styles.steps}>
           <View style={[styles.step, isWide && styles.stepWide]}>
             <Text style={styles.stepNumber}>1</Text>
-            <Text style={styles.stepTitle}>Post Your First Commitment (Free)</Text>
+            <Text style={styles.stepTitle}>Post One Commitment</Text>
             <Text style={styles.stepDesc}>One specific thing you'll do in 30 days. It goes public immediately.</Text>
           </View>
           <View style={[styles.step, isWide && styles.stepWide]}>
@@ -530,30 +478,15 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
           </View>
           <View style={[styles.step, isWide && styles.stepWide]}>
             <Text style={styles.stepNumber}>3</Text>
-            <Text style={styles.stepTitle}>Earn Real Stakes</Text>
-            <Text style={styles.stepDesc}>Complete your first? Unlock paid accountability ($29 per commitment, refundable if completed). Abandon it? Locked out for 90 days.</Text>
+            <Text style={styles.stepTitle}>Own the Outcome</Text>
+            <Text style={styles.stepDesc}>Complete it and it stays green. Abandon it and it stays public. Either way, the record is real.</Text>
           </View>
         </View>
       </View>
 
-      {/* EARNED BADGES */}
-      {badges.length > 0 && (
-        <View style={styles.badgesSection}>
-          <Text style={styles.badgesTitle}>Earned Badges</Text>
-          <View style={styles.badgesRow}>
-            {badges.map((badge) => (
-              <View key={badge} style={styles.badgePill}>
-                <Text style={styles.badgeIcon}>{getBadgeIcon(badge)}</Text>
-                <Text style={styles.badgeName}>{getBadgeName(badge)}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
-
       {/* FOOTER */}
       <View style={styles.footer}>
-        <TouchableOpacity onPress={() => navigation.navigate('privacy')}>
+        <TouchableOpacity onPress={() => navigation.navigate('privacyPolicy')}>
           <Text style={styles.footerLink}>Privacy Policy</Text>
         </TouchableOpacity>
         {hasSavedProfile && (

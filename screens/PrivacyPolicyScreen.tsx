@@ -27,11 +27,11 @@ export default function PrivacyPolicyScreen({ navigation }: { navigation: any })
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>What We Collect</Text>
           <Text style={styles.sectionText}>
-            We collect only what's necessary to provide your personalized founder profile:
+            We collect only what's necessary to run the diagnostic and public accountability tracker:
           </Text>
           <Text style={styles.bulletPoint}>- Your answers to the 7 assessment questions</Text>
-          <Text style={styles.bulletPoint}>- Purchase records via RevenueCat (for premium features)</Text>
-          <Text style={styles.bulletPoint}>- Generated founder profile data (stored securely)</Text>
+          <Text style={styles.bulletPoint}>- Your founder type result</Text>
+          <Text style={styles.bulletPoint}>- Public commitment text, daily action, and check-in progress</Text>
         </View>
 
         <View style={styles.section}>
@@ -51,10 +51,9 @@ export default function PrivacyPolicyScreen({ navigation }: { navigation: any })
           <Text style={styles.sectionText}>
             Your data is used exclusively for:
           </Text>
-          <Text style={styles.bulletPoint}>- Generating your personalized founder profile via Google Gemini AI</Text>
-          <Text style={styles.bulletPoint}>- Providing business model recommendations</Text>
-          <Text style={styles.bulletPoint}>- Creating your 30-day action plan (premium feature)</Text>
-          <Text style={styles.bulletPoint}>- Improving our AI accuracy (anonymized data only)</Text>
+          <Text style={styles.bulletPoint}>- Calculating your founder type locally from your answers</Text>
+          <Text style={styles.bulletPoint}>- Showing your public 30-day commitment in the feed</Text>
+          <Text style={styles.bulletPoint}>- Tracking daily check-ins and abandoned/completed status</Text>
         </View>
 
         <View style={styles.section}>
@@ -62,8 +61,6 @@ export default function PrivacyPolicyScreen({ navigation }: { navigation: any })
           <Text style={styles.sectionText}>
             We use trusted third-party services:
           </Text>
-          <Text style={styles.bulletPoint}>- <Text style={styles.bold}>Google Gemini API</Text> - AI profile generation</Text>
-          <Text style={styles.bulletPoint}>- <Text style={styles.bold}>RevenueCat</Text> - Purchase management</Text>
           <Text style={styles.bulletPoint}>- <Text style={styles.bold}>Supabase</Text> - Secure data storage</Text>
         </View>
 

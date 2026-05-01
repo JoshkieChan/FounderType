@@ -8,11 +8,6 @@ export interface FounderProfile {
   founderType: string;
   summary: string;
   matches: Match[];
-  archetypeComparison?: {
-    initialType: string;
-    nextLevelType: string;
-    insight: string;
-  };
 }
 
 export interface Match {
@@ -84,25 +79,6 @@ export interface UserAnalytics {
   userId?: string;
   events: AnalyticsEvent[];
   startTime: number;
-}
-
-// Purchase Types
-export interface PurchaseInfo {
-  productId: string;
-  price: number;
-  currency: string;
-  localizedPrice: string;
-}
-
-export interface RevenueCatOffering {
-  identifier: string;
-  packages: RevenueCatPackage[];
-}
-
-export interface RevenueCatPackage {
-  identifier: string;
-  product: PurchaseInfo;
-  offeringIdentifier: string;
 }
 
 // UI State Types
