@@ -1,5 +1,5 @@
 -- Create profiles table for storing founder profiles
-CREATE TABLE profiles (
+CREATE TABLE IF NOT EXISTS profiles (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -14,19 +14,22 @@ CREATE TABLE profiles (
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- Create policy for users to read their own profiles
+DROP POLICY IF EXISTS "Users can view their own profiles" ON profiles;
 CREATE POLICY "Users can view their own profiles"
   ON profiles FOR SELECT
   USING (auth.uid() = user_id);
 
 -- Create policy for users to insert their own profiles
+DROP POLICY IF EXISTS "Users can insert their own profiles" ON profiles;
 CREATE POLICY "Users can insert their own profiles"
   ON profiles FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
 -- Create policy for users to update their own profiles
+DROP POLICY IF EXISTS "Users can update their own profiles" ON profiles;
 CREATE POLICY "Users can update their own profiles"
   ON profiles FOR UPDATE
   USING (auth.uid() = user_id);
 
 -- Create index for faster queries
-CREATE INDEX profiles_user_id_idx ON profiles(user_id);
+CREATE INDEX IF NOT EXISTS profiles_user_id_idx ON profiles(user_id);
