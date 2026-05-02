@@ -184,9 +184,13 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
         },
       ];
 
-      // Combine real and placeholder commitments, sort by date
+      // Combine real and placeholder commitments, sort by most recent activity date
       const allCommitments = [...cleanedCommitments, ...placeholders];
-      allCommitments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      allCommitments.sort((a: any, b: any) => {
+        const dateA = new Date(a.completed_at || a.abandoned_at || a.created_at).getTime();
+        const dateB = new Date(b.completed_at || b.abandoned_at || b.created_at).getTime();
+        return dateB - dateA;
+      });
       
       setCommitments(allCommitments);
     } catch (e) { /* ignore */ }
