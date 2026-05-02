@@ -380,7 +380,7 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
       
       if (isLocal) {
         // For local-only commitments, insert as a new completed record
-        await supabase
+        const { error } = await supabase
           .from('commitments')
           .insert({
             commitment_text: activeCommitment.commitment_text,
@@ -389,14 +389,17 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
             status: 'completed',
             completed: true,
             completed_at: completedAt,
+            days_completed: 30,
             deadline: activeCommitment.deadline,
             created_at: activeCommitment.created_at || new Date().toISOString(),
           });
+        if (error) throw error;
       } else {
-        await supabase
+        const { error } = await supabase
           .from('commitments')
           .update({ status: 'completed', completed: true, completed_at: completedAt })
           .eq('id', activeCommitment.id);
+        if (error) throw error;
       }
 
       // Set completion flag
@@ -410,6 +413,12 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
       navigation.navigate('landing');
     } catch (err) {
       console.error('Error marking complete:', err);
+      const msg = (err as Error).message || 'Unknown error';
+      if (Platform.OS === 'web') {
+        window.alert('Failed to sync with public feed: ' + msg);
+      } else {
+        Alert.alert('Sync Error', 'Failed to sync with public feed: ' + msg);
+      }
     }
   };
 
