@@ -495,26 +495,28 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
           )}
         </View>
 
-        {/* Day 30 Decision Section */}
-        {(isDeadlinePassed || daysSinceStart >= 30 || checkInData.completedDays.length >= 30) && (
-          <View style={styles.decisionCard}>
-            <Text style={styles.decisionTitle}>Time's Up</Text>
-            <Text style={styles.decisionText}>
-              Your 30-day deadline has passed. Mark it complete or abandon it.
-            </Text>
-            <View style={styles.decisionButtons}>
-              <TouchableOpacity style={styles.completeButton} onPress={handleMarkComplete}>
-                <Text style={styles.completeButtonText}>Mark Complete ✓</Text>
-              </TouchableOpacity>
+        {/* Early Completion or Deadline Decision Section */}
+        <View style={styles.decisionCard}>
+          <Text style={styles.decisionTitle}>{isDeadlinePassed || daysSinceStart >= 30 ? "Time's Up" : "Achieved Your Goal Early?"}</Text>
+          <Text style={styles.decisionText}>
+            {isDeadlinePassed || daysSinceStart >= 30 
+              ? "Your 30-day deadline has passed. Mark it complete or abandon it."
+              : "If you've already achieved your 30-day goal, you can mark it complete now."}
+          </Text>
+          <View style={styles.decisionButtons}>
+            <TouchableOpacity style={styles.completeButton} onPress={handleMarkComplete}>
+              <Text style={styles.completeButtonText}>Mark Complete ✓</Text>
+            </TouchableOpacity>
+            {(isDeadlinePassed || daysSinceStart >= 30) && (
               <TouchableOpacity style={styles.abandonBigButton} onPress={() => { console.log('Abandon big button pressed'); handleAbandon(); }}>
                 <Text style={styles.abandonBigText}>Abandon It ✕</Text>
               </TouchableOpacity>
-            </View>
-            <Text style={styles.decisionNote}>
-              24 hours to respond. No response = automatic abandon.
-            </Text>
-          </View>
-        )}
+            )}
+          </div>
+          <Text style={styles.decisionNote}>
+            {isDeadlinePassed || daysSinceStart >= 30 ? "24 hours to respond. No response = automatic abandon." : "Completion will move this to the 'Completed' section of the public feed."}
+          </Text>
+        </View>
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loadProfile, getCurrentUserId, getCachedActiveCommitment } from '../lib/storage';
+import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 
 interface Commitment {
@@ -197,43 +198,45 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    loadCommitments();
-    (async () => {
-      try {
-        const profileUserId = await getCurrentUserId();
-        if (profileUserId) {
-          const p = await loadProfile(profileUserId);
-          if (p) setHasSavedProfile(true);
-        }
-
-        // Check user commitment status
-        const hasActive = await AsyncStorage.getItem('foundertype_has_active_commitment');
-        const hasCompleted = await AsyncStorage.getItem('foundertype_has_completed_commitment');
-
-        if (hasActive === 'true') {
-          const text = await AsyncStorage.getItem('foundertype_active_commitment_text') || '';
-          const deadline = await AsyncStorage.getItem('foundertype_active_deadline');
-          const days = deadline ? Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
-          setActiveText(text);
-          setActiveDays(days);
-          setUserStatus('active');
-        } else {
-          if (hasCompleted === 'true') {
-            setUserStatus('completed');
-            // Clear flag so it disappears on next refresh
-            await AsyncStorage.removeItem('foundertype_has_completed_commitment');
-          } else {
-            setUserStatus('none');
+  useFocusEffect(
+    useCallback(() => {
+      loadCommitments();
+      (async () => {
+        try {
+          const profileUserId = await getCurrentUserId();
+          if (profileUserId) {
+            const p = await loadProfile(profileUserId);
+            if (p) setHasSavedProfile(true);
           }
-        }
 
-        // Get current user for edit/delete permissions
-        const currentId = await getCurrentUserId();
-        setCurrentUserId(currentId);
-      } catch (e) { /* ignore */ }
-    })();
-  }, [loadCommitments]);
+          // Check user commitment status
+          const hasActive = await AsyncStorage.getItem('foundertype_has_active_commitment');
+          const hasCompleted = await AsyncStorage.getItem('foundertype_has_completed_commitment');
+
+          if (hasActive === 'true') {
+            const text = await AsyncStorage.getItem('foundertype_active_commitment_text') || '';
+            const deadline = await AsyncStorage.getItem('foundertype_active_deadline');
+            const days = deadline ? Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
+            setActiveText(text);
+            setActiveDays(days);
+            setUserStatus('active');
+          } else {
+            if (hasCompleted === 'true') {
+              setUserStatus('completed');
+              // Clear flag so it disappears on next refresh
+              await AsyncStorage.removeItem('foundertype_has_completed_commitment');
+            } else {
+              setUserStatus('none');
+            }
+          }
+
+          // Get current user for edit/delete permissions
+          const currentId = await getCurrentUserId();
+          setCurrentUserId(currentId);
+        } catch (e) { /* ignore */ }
+      })();
+    }, [loadCommitments])
+  );
 
   const handleEditCommitment = (item: Commitment) => {
     // Navigate to commitment screen with edit mode
