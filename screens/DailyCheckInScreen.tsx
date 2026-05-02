@@ -300,19 +300,37 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
       const userId = await getCurrentUserId();
       console.log('User ID:', userId);
       
-      // Calculate which day they abandoned on
-      const abandonedOnDay = daysSinceStart + 1; // Current day they're abandoning
-      console.log('Abandoned on day:', abandonedOnDay);
+      const isLocal = String(commitmentId).startsWith('local-');
+      const abandonedAt = new Date().toISOString();
+      const abandonedOnDay = daysSinceStart + 1;
       
-      const { error } = await supabase
-        .from('commitments')
-        .update({ 
-          status: 'abandoned', 
-          abandoned: true,
-          abandoned_at: new Date().toISOString(),
-          abandoned_on_day: abandonedOnDay
-        })
-        .eq('id', commitmentId);
+      let error;
+      if (isLocal) {
+        const { error: insertError } = await supabase
+          .from('commitments')
+          .insert({
+            commitment_text: commitmentText,
+            founder_type: activeCommitment?.founder_type || 'Founder',
+            status: 'abandoned',
+            abandoned: true,
+            abandoned_at: abandonedAt,
+            abandoned_on_day: abandonedOnDay,
+            deadline: activeCommitment?.deadline || new Date().toISOString(),
+            created_at: activeCommitment?.created_at || new Date().toISOString(),
+          });
+        error = insertError;
+      } else {
+        const { error: updateError } = await supabase
+          .from('commitments')
+          .update({ 
+            status: 'abandoned', 
+            abandoned: true,
+            abandoned_at: abandonedAt,
+            abandoned_on_day: abandonedOnDay
+          })
+          .eq('id', commitmentId);
+        error = updateError;
+      }
       
       if (error) {
         console.error('Supabase abandon error:', error);
@@ -357,10 +375,29 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
   const handleMarkComplete = async () => {
     if (!activeCommitment) return;
     try {
-      await supabase
-        .from('commitments')
-        .update({ status: 'completed', completed: true, completed_at: new Date().toISOString() })
-        .eq('id', activeCommitment.id);
+      const isLocal = String(activeCommitment.id).startsWith('local-');
+      const completedAt = new Date().toISOString();
+      
+      if (isLocal) {
+        // For local-only commitments, insert as a new completed record
+        await supabase
+          .from('commitments')
+          .insert({
+            commitment_text: activeCommitment.commitment_text,
+            daily_action: activeCommitment.daily_action,
+            founder_type: activeCommitment.founder_type,
+            status: 'completed',
+            completed: true,
+            completed_at: completedAt,
+            deadline: activeCommitment.deadline,
+            created_at: activeCommitment.created_at || new Date().toISOString(),
+          });
+      } else {
+        await supabase
+          .from('commitments')
+          .update({ status: 'completed', completed: true, completed_at: completedAt })
+          .eq('id', activeCommitment.id);
+      }
 
       // Set completion flag
       await AsyncStorage.setItem('foundertype_has_completed_commitment', 'true');
