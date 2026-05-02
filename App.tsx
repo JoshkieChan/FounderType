@@ -25,21 +25,7 @@ export default Sentry.wrap(function App() {
       tracesSampleRate: 0.2,
     } as any);
 
-    // Initialize anonymous auth
-    const initAuth = async () => {
-      try {
-        const { data, error } = await supabase.auth.signInAnonymously();
-        if (error) {
-          console.error('Anonymous auth failed:', error);
-        } else {
-          console.log('Anonymous auth successful:', data.user?.id);
-        }
-      } catch (err) {
-        console.error('Auth init error:', err);
-      }
-    };
-    initAuth();
-
+    
     // Check for missed commitment check-in days
     checkMissedCommitmentDays();
   }, []);

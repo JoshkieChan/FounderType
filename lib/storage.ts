@@ -83,24 +83,13 @@ export async function getLastAssessmentDate(userId: string): Promise<string | nu
   }
 }
 
-// Get current authenticated user ID, or create anonymous session if none exists
+// Get current authenticated user ID
 export async function getCurrentUserId(): Promise<string | null> {
   // Check if already signed in
   const { data: { user } } = await supabase.auth.getUser();
   if (user?.id) return user.id;
   
-  // Fallback: create anonymous session
-  try {
-    const { data: authData, error } = await supabase.auth.signInAnonymously();
-    if (error) {
-      console.error('Failed to sign in anonymously:', error);
-      return null;
-    }
-    return authData.user?.id || null;
-  } catch (err) {
-    console.error('Auth fallback error:', err);
-    return null;
-  }
+  return null; // No anonymous auth fallback
 }
 
 // Update commitment check-in and return updated count
