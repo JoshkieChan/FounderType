@@ -153,6 +153,7 @@ export default function ResultsScreen({ route, navigation, currentProfile, curre
       <TouchableOpacity 
         style={styles.backButton} 
         onPress={() => navigation.navigate('landing')}
+        hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
       >
         <Text style={styles.backButtonText}>← Back to Home</Text>
       </TouchableOpacity>

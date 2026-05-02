@@ -163,13 +163,12 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
           check_ins: [],
         };
 
-        if (commitmentId) {
+        if (commitmentId && !String(commitmentId).startsWith('local-')) {
           const { error } = await supabase
             .from('commitments')
             .update({
               commitment_text: processedCommitment.trim(),
-              daily_action: dailyAction.trim(),
-              edited_at: new Date().toISOString(),
+              daily_action: dailyAction.trim()
             })
             .eq('id', commitmentId);
 
@@ -315,7 +314,11 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity 
+          onPress={() => navigation.goBack()} 
+          style={styles.backButton}
+          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+        >
           <Text style={styles.backText}>×</Text>
         </TouchableOpacity>
 
@@ -517,11 +520,16 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginBottom: 16,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   backText: {
     color: '#3B82F6',
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 32,
+    fontWeight: '300',
+    lineHeight: 32,
   },
   title: {
     fontSize: 32,

@@ -8,6 +8,7 @@ export default function OnboardingScreen({ navigation }: { navigation: any }) {
       <TouchableOpacity
         onPress={() => navigation.goBack()}
         style={{ position: 'absolute', top: 20, left: 20, zIndex: 10 }}
+        hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
       >
         <Text style={{ color: '#3B82F6', fontSize: 16 }}>← Back</Text>
       </TouchableOpacity>
