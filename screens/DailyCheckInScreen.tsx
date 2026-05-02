@@ -334,6 +334,7 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
         'foundertype_active_deadline',
         'foundertype_active_commitment',
         'foundertype_commitment',
+        CHECK_IN_KEY,
       ]);
 
       console.log('Abandon complete, navigating to feed');
@@ -373,6 +374,7 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
       await AsyncStorage.removeItem('foundertype_active_commitment_text');
       await AsyncStorage.removeItem('foundertype_active_deadline');
       await AsyncStorage.removeItem('foundertype_active_commitment');
+      await AsyncStorage.removeItem(CHECK_IN_KEY);
 
       navigation.navigate('landing');
     } catch (err) {
@@ -454,7 +456,7 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
         </View>
 
         {/* Day 30 Decision Section */}
-        {(isDeadlinePassed || daysSinceStart >= 30) && (
+        {(isDeadlinePassed || daysSinceStart >= 30 || checkInData.completedDays.length >= 30) && (
           <View style={styles.decisionCard}>
             <Text style={styles.decisionTitle}>Time's Up</Text>
             <Text style={styles.decisionText}>
@@ -465,11 +467,11 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
                 <Text style={styles.completeButtonText}>Mark Complete ✓</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.abandonBigButton} onPress={() => { console.log('Abandon big button pressed'); handleAbandon(); }}>
-                <Text style={styles.abandonBigText}>I Didn't Finish ✕</Text>
+                <Text style={styles.abandonBigText}>Abandon It ✕</Text>
               </TouchableOpacity>
             </View>
             <Text style={styles.decisionNote}>
-              48 hours to respond. No response = automatic abandon.
+              24 hours to respond. No response = automatic abandon.
             </Text>
           </View>
         )}
@@ -487,7 +489,7 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
         </View>
 
         {checkInData.streak > 1 && (
-          <Text style={styles.streakText}> {checkInData.streak} day streak</Text>
+          <Text style={styles.streakText}> {Math.min(checkInData.streak, 30)} day streak</Text>
         )}
 
         <View style={styles.gridContainer}>
