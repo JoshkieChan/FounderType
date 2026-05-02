@@ -222,14 +222,19 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
         check_ins: [],
       };
 
-      const { data: savedCommitment, error } = await supabase
-        .from('commitments')
-        .insert(fallbackCommitment)
-        .select()
-        .maybeSingle();
+      // Only save to Supabase if we have a valid user ID
+      let savedCommitment;
+      if (userId) {
+        const { data, error } = await supabase
+          .from('commitments')
+          .insert({ ...fallbackCommitment, id: undefined }) // Let Supabase generate UUID
+          .select()
+          .maybeSingle();
 
-      if (error) {
-        console.error('Error saving commitment:', error);
+        if (error) {
+          console.error('Error saving commitment:', error);
+        }
+        savedCommitment = data;
       }
 
       await AsyncStorage.setItem(
