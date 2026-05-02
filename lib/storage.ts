@@ -99,6 +99,26 @@ export async function updateCommitmentCheckIn(
 ): Promise<number> {
   const today = new Date().toISOString().split('T')[0];
 
+  // Skip database operations for local commitments
+  if (commitmentId.startsWith('local-')) {
+    // Update local commitment in AsyncStorage
+    const cachedCommitment = await getCachedActiveCommitment();
+    if (cachedCommitment && cachedCommitment.id === commitmentId) {
+      const checkIns: string[] = cachedCommitment.check_ins || [];
+      
+      if (!checkIns.includes(today)) {
+        const updated = [...checkIns, today];
+        cachedCommitment.check_ins = updated;
+        await AsyncStorage.setItem(
+          'foundertype_active_commitment',
+          JSON.stringify(cachedCommitment)
+        );
+        return updated.length;
+      }
+    }
+    return cachedCommitment?.check_ins?.length || 0;
+  }
+
   const { data } = await supabase
     .from('commitments')
     .select('check_ins')
