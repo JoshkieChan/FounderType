@@ -215,7 +215,13 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
           setActiveDays(days);
           setUserStatus('active');
         } else {
-          setUserStatus(hasCompleted === 'true' ? 'completed' : 'none');
+          if (hasCompleted === 'true') {
+            setUserStatus('completed');
+            // Clear flag so it disappears on next refresh
+            await AsyncStorage.removeItem('foundertype_has_completed_commitment');
+          } else {
+            setUserStatus('none');
+          }
         }
 
         // Get current user for edit/delete permissions

@@ -135,18 +135,16 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
     await saveCheckInData(newData);
 
     // Update Supabase commitment check-ins
-    if (activeCommitment) {
+    if (activeCommitment && !String(activeCommitment.id).startsWith('local-')) {
       try {
-        const userId = await getCurrentUserId();
-        if (userId && activeCommitment?.id) {
-          const completedAt = new Date().toISOString();
-          const todayIso = completedAt.split('T')[0];
-          const updatedCheckIns = [...(activeCommitment.check_ins || []), todayIso];
+        const completedAt = new Date().toISOString();
+        const todayIso = completedAt.split('T')[0];
+        const updatedCheckIns = [...(activeCommitment.check_ins || []), todayIso];
 
-          await supabase.from('commitments').update({
-            check_ins: updatedCheckIns,
-            days_completed: newCompletedDays.length,
-          }).eq('id', activeCommitment.id);
+        await supabase.from('commitments').update({
+          check_ins: updatedCheckIns,
+          days_completed: newCompletedDays.length,
+        }).eq('id', activeCommitment.id);
 
           await supabase.from('daily_progress').upsert({
             commitment_id: activeCommitment.id,
@@ -161,11 +159,10 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
             days_completed: newCompletedDays.length,
           });
           setTodayAlreadyCheckedIn(true);
+        } catch (err) {
+          console.error('Error updating commitment check-in:', err);
         }
-      } catch (err) {
-        console.error('Error updating commitment check-in:', err);
       }
-    }
 
     // Simple milestone detection
     if (newCompletedDays.length === 1) {
@@ -360,13 +357,10 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
   const handleMarkComplete = async () => {
     if (!activeCommitment) return;
     try {
-      const userId = await getCurrentUserId();
-      if (userId) {
-        await supabase
-          .from('commitments')
-          .update({ status: 'completed', completed: true, completed_at: new Date().toISOString() })
-          .eq('id', activeCommitment.id);
-      }
+      await supabase
+        .from('commitments')
+        .update({ status: 'completed', completed: true, completed_at: new Date().toISOString() })
+        .eq('id', activeCommitment.id);
 
       // Set completion flag
       await AsyncStorage.setItem('foundertype_has_completed_commitment', 'true');
