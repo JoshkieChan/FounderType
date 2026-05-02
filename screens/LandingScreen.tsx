@@ -398,10 +398,10 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       {/* RETURNING USER BANNERS */}
       {userStatus === 'active' && (
-        <View style={[styles.statusBanner, { backgroundColor: '#FFFBEB', borderColor: '#F59E0B' }]}>
-          <Text style={[styles.statusLabel, { color: '#92400E' }]}>ACTIVE COMMITMENT</Text>
+        <View style={[styles.statusBanner, { backgroundColor: '#0D1F3A', borderColor: '#1E3A5F' }]}>
+          <Text style={[styles.statusLabel, { color: '#3B82F6' }]}>ACTIVE COMMITMENT</Text>
           <Text style={styles.statusText}>"{activeText}"</Text>
-          <Text style={[styles.statusMeta, { color: '#B45309' }]}>{activeDays} days left</Text>
+          <Text style={[styles.statusMeta, { color: '#93C5FD' }]}>{activeDays} days left</Text>
           <View style={styles.statusActions}>
             <TouchableOpacity
               style={[styles.statusCta, { backgroundColor: '#F59E0B' }]}
@@ -420,10 +420,10 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
       )}
 
       {userStatus === 'completed' && (
-        <View style={[styles.statusBanner, { backgroundColor: '#ECFDF5', borderColor: '#10B981' }]}>
-          <Text style={[styles.statusLabel, { color: '#065F46' }]}>COMMITMENT COMPLETED</Text>
+        <View style={[styles.statusBanner, { backgroundColor: '#064E3B', borderColor: '#065F46' }]}>
+          <Text style={[styles.statusLabel, { color: '#10B981' }]}>COMMITMENT COMPLETED</Text>
           <Text style={styles.statusText}>You followed through. Post the next public 30-day commitment when you're ready.</Text>
-          <TouchableOpacity style={[styles.statusCta, { backgroundColor: '#111111' }]} onPress={() => navigation.navigate('commitment')}>
+          <TouchableOpacity style={[styles.statusCta, { backgroundColor: '#10B981' }]} onPress={() => navigation.navigate('commitment')}>
             <Text style={styles.statusCtaText}>Post Next Commitment →</Text>
           </TouchableOpacity>
         </View>
