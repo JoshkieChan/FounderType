@@ -129,7 +129,8 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
       }
 
       const remoteCommitments = error ? [] : (data || []).map(normalizeCommitment);
-      const deletedIds = JSON.parse(localStorage.getItem('deleted_commitments') || '[]');
+      const deletedIdsString = await AsyncStorage.getItem('deleted_commitments');
+      const deletedIds = JSON.parse(deletedIdsString || '[]');
       const mergedCommitments = localCommitment &&
         !remoteCommitments.some(c => c.id === localCommitment.id || c.commitment_text === localCommitment.commitment_text)
         ? [localCommitment, ...remoteCommitments]
@@ -174,9 +175,10 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
         setCommitments(prev => prev.filter(c => c.id !== item.id));
         
         // Store deleted IDs to prevent them from reappearing
-        const deletedIds = JSON.parse(localStorage.getItem('deleted_commitments') || '[]');
+        const deletedIdsString = await AsyncStorage.getItem('deleted_commitments');
+        const deletedIds = JSON.parse(deletedIdsString || '[]');
         deletedIds.push(item.id);
-        localStorage.setItem('deleted_commitments', JSON.stringify(deletedIds));
+        await AsyncStorage.setItem('deleted_commitments', JSON.stringify(deletedIds));
         
         window.alert('Commitment deleted successfully!');
       }
@@ -189,14 +191,15 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
           { 
             text: 'Delete Commitment', 
             style: 'destructive',
-            onPress: () => {
+            onPress: async () => {
               // Immediately remove from UI
               setCommitments(prev => prev.filter(c => c.id !== item.id));
               
               // Store deleted IDs to prevent them from reappearing
-              const deletedIds = JSON.parse(localStorage.getItem('deleted_commitments') || '[]');
+              const deletedIdsString = await AsyncStorage.getItem('deleted_commitments');
+              const deletedIds = JSON.parse(deletedIdsString || '[]');
               deletedIds.push(item.id);
-              localStorage.setItem('deleted_commitments', JSON.stringify(deletedIds));
+              await AsyncStorage.setItem('deleted_commitments', JSON.stringify(deletedIds));
               
               Alert.alert('Success', 'Commitment deleted successfully!');
             }
