@@ -22,6 +22,7 @@ ALTER TABLE daily_progress ENABLE ROW LEVEL SECURITY;
 GRANT SELECT ON daily_progress TO anon;
 GRANT ALL ON daily_progress TO authenticated;
 
+DROP POLICY IF EXISTS "Progress readable for public commitments" ON daily_progress;
 CREATE POLICY "Progress readable for public commitments"
   ON daily_progress FOR SELECT
   USING (
@@ -33,6 +34,7 @@ CREATE POLICY "Progress readable for public commitments"
     )
   );
 
+DROP POLICY IF EXISTS "Users manage progress for own commitments" ON daily_progress;
 CREATE POLICY "Users manage progress for own commitments"
   ON daily_progress FOR ALL
   USING (

@@ -12,6 +12,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { getCurrentUserId, getCachedActiveCommitment } from '../lib/storage';
+import HCaptchaWrapper from '../components/HCaptchaWrapper';
 
 const MAX_CHARS = 140;
 const MAX_DAILY_ACTION_CHARS = 60;
@@ -52,6 +53,7 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
   const [gateStatus, setGateStatus] = useState<GateStatus>('fresh');
   const [activeCommitmentText, setActiveCommitmentText] = useState('');
   const [activeDaysLeft, setActiveDaysLeft] = useState(0);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const profile = route?.params?.profile;
   const answers = route?.params?.answers;
@@ -142,6 +144,11 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
       } else {
         Alert.alert('Required', 'You must acknowledge that this commitment becomes permanent after 24 hours.');
       }
+      return;
+    }
+
+    if (Platform.OS === 'web' && !captchaToken) {
+      window.alert('Please complete the security check (captcha).');
       return;
     }
 
@@ -436,6 +443,8 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
                 I understand this commitment becomes permanent after 24 hours
               </Text>
             </TouchableOpacity>
+
+            <HCaptchaWrapper onVerify={(token) => setCaptchaToken(token)} />
 
             <View style={styles.ctaSection}>
               <TouchableOpacity

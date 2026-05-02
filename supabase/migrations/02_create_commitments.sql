@@ -21,11 +21,13 @@ GRANT SELECT ON commitments TO anon;
 GRANT ALL ON commitments TO authenticated;
 
 -- Public commitments are readable by everyone (including anon/unauthenticated users)
+DROP POLICY IF EXISTS "Public commitments readable by all" ON commitments;
 CREATE POLICY "Public commitments readable by all"
   ON commitments FOR SELECT
   USING (is_public = true);
 
 -- Authenticated users can fully manage their own commitments
+DROP POLICY IF EXISTS "Users manage own commitments" ON commitments;
 CREATE POLICY "Users manage own commitments"
   ON commitments FOR ALL
   USING (auth.uid() = user_id);
