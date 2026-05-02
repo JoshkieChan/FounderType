@@ -499,6 +499,9 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
         <TouchableOpacity onPress={() => navigation.navigate('privacyPolicy')}>
           <Text style={styles.footerLink}>Privacy Policy</Text>
         </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('terms')}>
+          <Text style={styles.footerLink}>Terms of Service</Text>
+        </TouchableOpacity>
         {hasSavedProfile && (
           <TouchableOpacity onPress={() => navigation.navigate('results')}>
             <Text style={styles.footerLink}>View Your Last Results</Text>

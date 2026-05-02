@@ -87,6 +87,29 @@ export default function PrivacyPolicyScreen({ navigation }: { navigation: any })
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Data Deletion</Text>
+          <Text style={styles.sectionText}>
+            You can request complete deletion of your account and all associated data at any time.
+          </Text>
+          
+          <Text style={styles.bold}>What gets deleted:</Text>
+          <Text style={styles.bulletPoint}>- All diagnostic answers and founder type results</Text>
+          <Text style={styles.bulletPoint}>- All commitments (active, completed, or abandoned)</Text>
+          <Text style={styles.bulletPoint}>- All check-in history and progress data</Text>
+          <Text style={styles.bulletPoint}>- Account information and preferences</Text>
+
+          <Text style={[styles.bold, { marginTop: 12 }]}>How to request deletion:</Text>
+          <Text style={styles.bulletPoint}>1. Email us at privacy@foundertype.app with subject "Delete My Data"</Text>
+          <Text style={styles.bulletPoint}>2. Include your account identifier or commitment text for verification</Text>
+          <Text style={styles.bulletPoint}>3. We will process your request within 30 days</Text>
+          <Text style={styles.bulletPoint}>4. Once deleted, your data cannot be recovered</Text>
+
+          <Text style={[styles.sectionText, { marginTop: 12 }]}>
+            <Text style={styles.bold}>Note:</Text> Deleted commitments will be removed from the public feed. This action is permanent.
+          </Text>
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Contact Us</Text>
           <Text style={styles.sectionText}>
             If you have questions about this privacy policy or how we handle your data, please contact us at:

@@ -10,6 +10,7 @@ import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import DailyCheckInScreen from '../screens/DailyCheckInScreen';
 import PublicFeedScreen from '../screens/PublicFeedScreen';
 import LockoutScreen from '../screens/LockoutScreen';
+import TermsScreen from '../screens/TermsScreen';
 
 type Screen =
   | 'landing'
@@ -21,7 +22,8 @@ type Screen =
   | 'privacyPolicy'
   | 'dailyCheckIn'
   | 'publicFeed'
-  | 'lockout';
+  | 'lockout'
+  | 'terms';
 
 interface NavigationParams {
   answers?: string;
@@ -67,6 +69,7 @@ export type RootStackParamList = {
   dailyCheckIn: { commitment?: any } | undefined;
   publicFeed: undefined;
   lockout: undefined;
+  terms: undefined;
 };
 
 export default function AppNavigator({
@@ -162,6 +165,8 @@ export default function AppNavigator({
         return <PublicFeedScreen navigation={navigation as any} />;
       case 'lockout':
         return <LockoutScreen navigation={navigation as any} />;
+      case 'terms':
+        return <TermsScreen navigation={navigation as any} />;
       default:
         return <LandingScreen navigation={navigation as any} />;
     }
