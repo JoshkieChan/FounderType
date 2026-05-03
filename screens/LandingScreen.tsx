@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,22 +12,10 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loadProfile, getCurrentUserId, getCachedActiveCommitment } from '../lib/storage';
+import { loadProfile } from '../lib/storage';
 import { supabase } from '../lib/supabase';
-
-interface Commitment {
-  id: string;
-  user_id: string | null;
-  founder_type: string | null;
-  commitment_text: string;
-  daily_action?: string | null;
-  deadline: string;
-  status: 'active' | 'completed' | 'abandoned';
-  created_at: string;
-  completed_at: string | null;
-  edited_at: string | null;
-}
+import { usePublicFeed } from '../hooks/usePublicFeed';
+import { Commitment } from '../types/commitment';
 
 function getStatusColor(s: string) {
   if (s === 'completed') return '#22C55E'; // GREEN for COMPLETED
@@ -76,7 +64,6 @@ function getUserLabel(item: Commitment) {
   return `Founder (${item.founder_type})`;
 }
 
-type UserStatus = 'none' | 'active' | 'completed';
 
 function isEditable(item: Commitment, userId: string | null): boolean {
   if (!userId || item.user_id !== userId) return false;
@@ -96,178 +83,46 @@ function getHoursRemaining(item: Commitment): number {
   return Math.max(0, 24 - hoursSincePosted);
 }
 
+import { useUserContext } from '../context/UserContext';
+
 export default function LandingScreen({ navigation }: { navigation: any }) {
-  const [commitments, setCommitments] = useState<Commitment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const { 
+    activeCommitment, 
+    currentSlotStatus, 
+    lastCycleResult, 
+    refreshActiveCommitment,
+    user
+  } = useUserContext();
+
+  const {
+    commitments: allCommitments,
+    loading,
+    refreshing,
+    loadCommitments,
+  } = usePublicFeed('active');
+
   const [hasSavedProfile, setHasSavedProfile] = useState(false);
-  const [userStatus, setUserStatus] = useState<UserStatus>('none');
-  const [activeText, setActiveText] = useState('');
-  const [activeDays, setActiveDays] = useState(0);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
   const { width } = useWindowDimensions();
   const isWide = width > 768;
 
-  const loadCommitments = useCallback(async () => {
-    try {
-      // Load real commitments from database
-      const { data } = await supabase.from('commitments').select('*').order('created_at', { ascending: false }).limit(20);
-      
-      // Clean up any [date] placeholders and filter out test data
-      const cleanedCommitments = (data || [])
-        .filter(c => {
-          const t = c.commitment_text.toLowerCase();
-          // Filter out the specific ones seen in the screenshot that aren't marked as "test"
-          if (t.includes('newsletter') || t.includes('onboarding flow')) return false;
-          // Filter out general test data
-          if (t.includes('test')) return false;
-          return true;
-        })
-        .map(commitment => ({
-          ...commitment,
-          commitment_text: commitment.commitment_text.replace(/\[date\]/g, 'May 30, 2026')
-        }));
+  // Cap the embedded feed to a small preview subset
+  const commitments = allCommitments.slice(0, isWide ? 9 : 6);
 
-      // Add placeholder completed/abandoned commitments
-      const now = new Date();
-      const placeholders: Commitment[] = [
-        {
-          id: 'mock-1',
-          user_id: 'mock-user-1',
-          commitment_text: 'Launch my first SaaS product MVP',
-          daily_action: 'Code 2 hours',
-          status: 'abandoned',
-          created_at: new Date(now.getTime() - 40 * 86400000).toISOString(),
-          abandoned_at: new Date(now.getTime() - 10 * 86400000).toISOString(),
-          founder_type: 'Visionary'
-        },
-        {
-          id: 'mock-2',
-          user_id: 'mock-user-2',
-          commitment_text: 'Acquire 10 beta users through cold outreach',
-          daily_action: 'Message 20 founders',
-          status: 'abandoned',
-          created_at: new Date(now.getTime() - 45 * 86400000).toISOString(),
-          abandoned_at: new Date(now.getTime() - 15 * 86400000).toISOString(),
-          founder_type: 'Hustler'
-        },
-        {
-          id: 'mock-3',
-          user_id: 'mock-user-3',
-          commitment_text: '30 days of consistent user feedback calls',
-          daily_action: '1 call per day',
-          status: 'completed',
-          completed: true,
-          created_at: new Date(now.getTime() - 60 * 86400000).toISOString(),
-          completed_at: new Date(now.getTime() - 30 * 86400000).toISOString(),
-          days_completed: 30,
-          founder_type: 'Technician'
-        }
-      ];
-
-      // Combine real and placeholder commitments, sort by most recent activity date
-      const allCommitments = [...cleanedCommitments, ...placeholders];
-      allCommitments.sort((a: any, b: any) => {
-        const dateA = new Date(a.completed_at || a.abandoned_at || a.created_at).getTime();
-        const dateB = new Date(b.completed_at || b.abandoned_at || b.created_at).getTime();
-        return dateB - dateA;
-      });
-      
-      const currentId = await getCurrentUserId();
-      if (currentId) {
-        const { data: userActive } = await supabase
-          .from('commitments')
-          .select('*')
-          .eq('user_id', currentId)
-          .eq('status', 'active')
-          .maybeSingle();
-        
-        if (userActive) {
-          const alreadyInList = allCommitments.some(c => c.id === userActive.id);
-          if (!alreadyInList) {
-            allCommitments.unshift({
-              ...userActive,
-              commitment_text: userActive.commitment_text.replace(/\[date\]/g, 'May 30, 2026')
-            });
-          }
-        }
-      }
-
-      setCommitments(allCommitments);
-    } catch (e) { /* ignore */ }
-    finally { setLoading(false); }
-  }, []);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadCommitments();
-    await checkUserStatus();
-    setRefreshing(false);
-  }, [loadCommitments]);
-
-  const checkUserStatus = async () => {
-    try {
-      const currentId = await getCurrentUserId();
-      if (currentId) {
-        // VALIDATE ACTIVE STATUS WITH DB
-        const { data: dbActive } = await supabase
-          .from('commitments')
-          .select('*')
-          .eq('user_id', currentId)
-          .eq('status', 'active')
-          .maybeSingle();
-
-        if (dbActive) {
-          // Sync DB to local
-          await AsyncStorage.setItem('foundertype_has_active_commitment', 'true');
-          await AsyncStorage.setItem('foundertype_active_commitment_text', dbActive.commitment_text);
-          await AsyncStorage.setItem('foundertype_active_deadline', dbActive.deadline);
-          await AsyncStorage.setItem('foundertype_active_commitment', JSON.stringify(dbActive));
-          
-          const deadline = dbActive.deadline;
-          const days = deadline ? Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
-          setActiveText(dbActive.commitment_text);
-          setActiveDays(days);
-          setUserStatus('active');
-        } else {
-          // No active commitment in DB -> CLEAR LOCAL
-          await AsyncStorage.multiRemove([
-            'foundertype_has_active_commitment',
-            'foundertype_active_commitment_text',
-            'foundertype_active_deadline',
-            'foundertype_active_commitment',
-            'foundertype_commitment',
-          ]);
-          setUserStatus('none');
-
-          // Check if they just completed one
-          const hasCompleted = await AsyncStorage.getItem('foundertype_has_completed_commitment');
-          if (hasCompleted === 'true') {
-            setUserStatus('completed');
-            await AsyncStorage.removeItem('foundertype_has_completed_commitment');
-          }
-        }
-        setCurrentUserId(currentId);
-      }
-    } catch (e) { /* ignore */ }
+  const onRefresh = async () => {
+    await Promise.all([
+      loadCommitments(),
+      refreshActiveCommitment()
+    ]);
   };
 
   useEffect(() => {
-    loadCommitments();
-    checkUserStatus();
-  }, [loadCommitments]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const profileUserId = await getCurrentUserId();
-        if (profileUserId) {
-          const p = await loadProfile(profileUserId);
-          if (p) setHasSavedProfile(true);
-        }
-      } catch (e) { /* ignore */ }
-    })();
-  }, [loadCommitments]);
+    if (user?.id) {
+      loadProfile(user.id).then(p => {
+        if (p) setHasSavedProfile(true);
+      }).catch(() => {});
+    }
+  }, [user]);
 
   const handleEditCommitment = (item: Commitment) => {
     // Navigate to commitment screen with edit mode
@@ -282,15 +137,24 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
 
   const handleDeleteCommitment = async (item: Commitment) => {
     const message = 'This will permanently remove your commitment from the feed. You can post a new one anytime.';
+    const doDelete = async () => {
+      try {
+        await supabase.from('commitments').delete().eq('id', item.id);
+        await loadCommitments(); // Refresh feed
+        await refreshActiveCommitment(); // Sync context
+      } catch (error) {
+        console.error('Error deleting commitment:', error);
+        if (Platform.OS === 'web') {
+          window.alert('Failed to delete commitment. Please try again.');
+        } else {
+          Alert.alert('Error', 'Failed to delete commitment. Please try again.');
+        }
+      }
+    };
+
     if (Platform.OS === 'web') {
       if (window.confirm(message + ' Are you sure?')) {
-        try {
-          await supabase.from('commitments').delete().eq('id', item.id);
-          loadCommitments(); // Refresh feed
-        } catch (error) {
-          console.error('Error deleting commitment:', error);
-          window.alert('Failed to delete commitment. Please try again.');
-        }
+        doDelete();
       }
     } else {
       Alert.alert(
@@ -298,68 +162,17 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
         message,
         [
           { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Delete Commitment', 
-            style: 'destructive',
-            onPress: async () => {
-              try {
-                await supabase.from('commitments').delete().eq('id', item.id);
-                loadCommitments(); // Refresh feed
-              } catch (error) {
-                console.error('Error deleting commitment:', error);
-                Alert.alert('Error', 'Failed to delete commitment. Please try again.');
-              }
-            }
-          },
+          { text: 'Delete Commitment', style: 'destructive', onPress: doDelete },
         ]
       );
     }
   };
 
-  const handleViewProgress = async () => {
-    try {
-      const cachedCommitment = await getCachedActiveCommitment();
-      if (cachedCommitment) {
-        navigation.navigate('dailyCheckIn', { commitment: cachedCommitment });
-        return;
-      }
-
-      const userId = await getCurrentUserId();
-      if (userId) {
-        const { data: commitment, error } = await supabase
-          .from('commitments')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('status', 'active')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (!error && commitment) {
-          await AsyncStorage.setItem('foundertype_active_commitment', JSON.stringify(commitment));
-          navigation.navigate('dailyCheckIn', { commitment });
-          return;
-        }
-      }
-
-      if (activeText) {
-        const deadline = await AsyncStorage.getItem('foundertype_active_deadline');
-        navigation.navigate('dailyCheckIn', {
-          commitment: {
-            id: 'local-active-commitment',
-            commitment_text: activeText,
-            deadline,
-            status: 'active',
-            check_ins: [],
-          },
-        });
-        return;
-      }
-
+  const handleViewProgress = () => {
+    if (activeCommitment) {
+      navigation.navigate('dailyCheckIn', { commitment: activeCommitment });
+    } else {
       Alert.alert('Error', 'No active commitment found');
-    } catch (err) {
-      console.error('Failed to load commitment:', err);
-      Alert.alert('Error', 'Failed to load commitment');
     }
   };
 
@@ -385,11 +198,13 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
         }
       >
       {/* RETURNING USER BANNERS */}
-      {userStatus === 'active' && (
+      {currentSlotStatus === 'active' && activeCommitment && (
         <View style={[styles.statusBanner, { backgroundColor: '#0D1F3A', borderColor: '#1E3A5F' }]}>
           <Text style={[styles.statusLabel, { color: '#3B82F6' }]}>ACTIVE COMMITMENT</Text>
-          <Text style={styles.statusText}>"{activeText}"</Text>
-          <Text style={[styles.statusMeta, { color: '#93C5FD' }]}>Day {31 - activeDays} of 30</Text>
+          <Text style={styles.statusText}>"{activeCommitment.commitment_text}"</Text>
+          <Text style={[styles.statusMeta, { color: '#93C5FD' }]}>
+            Day {activeCommitment.check_ins.length + 1} of 30
+          </Text>
           <View style={styles.statusActions}>
             <TouchableOpacity
               style={[styles.statusCta, { backgroundColor: '#F59E0B' }]}
@@ -401,11 +216,21 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
         </View>
       )}
 
-      {userStatus === 'completed' && (
+      {currentSlotStatus === 'none' && lastCycleResult === 'completed' && (
         <View style={[styles.statusBanner, { backgroundColor: '#064E3B', borderColor: '#065F46' }]}>
           <Text style={[styles.statusLabel, { color: '#10B981' }]}>COMMITMENT COMPLETED</Text>
           <Text style={styles.statusText}>You followed through. Post the next public 30-day commitment when you're ready.</Text>
           <TouchableOpacity style={[styles.statusCta, { backgroundColor: '#10B981' }]} onPress={() => navigation.navigate('commitment')}>
+            <Text style={styles.statusCtaText}>Post Next Commitment →</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {currentSlotStatus === 'none' && lastCycleResult === 'abandoned' && (
+        <View style={[styles.statusBanner, { backgroundColor: '#450A0A', borderColor: '#7F1D1D' }]}>
+          <Text style={[styles.statusLabel, { color: '#EF4444' }]}>COMMITMENT ABANDONED</Text>
+          <Text style={styles.statusText}>That one didn't stick. Post your next public 30-day commitment when you're ready.</Text>
+          <TouchableOpacity style={[styles.statusCta, { backgroundColor: '#EF4444' }]} onPress={() => navigation.navigate('commitment')}>
             <Text style={styles.statusCtaText}>Post Next Commitment →</Text>
           </TouchableOpacity>
         </View>
@@ -417,7 +242,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
         <Text style={styles.heroSub}>Post a 30-day commitment. Complete it or everyone sees you quit.</Text>
         <TouchableOpacity style={styles.primaryCta} onPress={() => navigation.navigate('commitment')}>
           <Text style={styles.primaryCtaText}>
-            {userStatus === 'completed' ? 'Post Your Next Commitment' : 'Post Your First Commitment'}
+            {lastCycleResult === 'completed' ? 'Post Your Next Commitment' : 'Post Your First Commitment'}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.secondaryCta} onPress={() => navigation.navigate('onboarding')}>

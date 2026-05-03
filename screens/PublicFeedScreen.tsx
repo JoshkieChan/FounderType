@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,47 +11,9 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '../lib/supabase';
 import { getCurrentUserId } from '../lib/storage';
-
-interface Commitment {
-  id: string;
-  user_id: string | null;
-  founder_type: string;
-  commitment_text: string;
-  daily_action: string | null;
-  deadline: string;
-  status: 'active' | 'completed' | 'abandoned';
-  created_at: string;
-  check_ins: string[];
-  completed: boolean;
-  completed_at: string | null;
-  abandoned: boolean;
-  abandoned_at: string | null;
-  abandoned_on_day: number | null;
-  edited_at: string | null;
-}
-
-function normalizeCommitment(raw: any): Commitment {
-  return {
-    id: raw.id || `local-${raw.created_at || Date.now()}`,
-    user_id: raw.user_id || null,
-    founder_type: raw.founder_type || 'Founder',
-    commitment_text: raw.commitment_text || '',
-    daily_action: raw.daily_action || null,
-    deadline: raw.deadline || new Date().toISOString(),
-    status: raw.status || 'active',
-    created_at: raw.created_at || new Date().toISOString(),
-    check_ins: raw.check_ins || [],
-    completed: !!raw.completed,
-    completed_at: raw.completed_at || null,
-    abandoned: !!raw.abandoned,
-    abandoned_at: raw.abandoned_at || null,
-    abandoned_on_day: raw.abandoned_on_day || null,
-    edited_at: raw.edited_at || null,
-  };
-}
+import { usePublicFeed } from '../hooks/usePublicFeed';
+import { Commitment } from '../types/commitment';
 
 function getDaysRemaining(deadline: string): number {
   const now = new Date();
@@ -119,139 +81,21 @@ function getHoursRemaining(item: Commitment): number {
 }
 
 export default function PublicFeedScreen({ navigation }: { navigation: any }) {
-  const [commitments, setCommitments] = useState<Commitment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    commitments,
+    loading,
+    refreshing,
+    error,
+    hasMore,
+    loadCommitments,
+    loadMore,
+  } = usePublicFeed('active');
+
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const loadCommitments = useCallback(async () => {
-    try {
-      setError(null);
-      const { data, error } = await supabase
-        .from('commitments')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      const storedCommitment = await AsyncStorage.getItem('foundertype_active_commitment');
-      const storedText = await AsyncStorage.getItem('foundertype_active_commitment_text');
-      const storedDeadline = await AsyncStorage.getItem('foundertype_active_deadline');
-      const localCommitment = storedCommitment
-        ? normalizeCommitment(JSON.parse(storedCommitment))
-        : storedText
-          ? normalizeCommitment({
-              id: 'local-active-commitment',
-              commitment_text: storedText,
-              deadline: storedDeadline,
-              status: 'active',
-              created_at: new Date().toISOString(),
-            })
-          : null;
-
-      if (error) {
-        console.error('Error loading commitments:', error);
-      }
-
-      const remoteCommitments = error ? [] : (data || [])
-        .filter(c => {
-          const t = c.commitment_text.toLowerCase();
-          // Filter out the specific ones seen in the screenshot that aren't marked as "test"
-          if (t.includes('newsletter') || t.includes('onboarding flow')) return false;
-          // Filter out general test data
-          if (t.includes('test')) return false;
-          return true;
-        })
-        .map(normalizeCommitment);
-
-      // Add placeholder completed/abandoned commitments
-      const now = new Date();
-      const placeholders: Commitment[] = [
-        {
-          id: 'mock-1',
-          user_id: 'mock-user-1',
-          commitment_text: 'Launch my first SaaS product MVP',
-          daily_action: 'Code 2 hours',
-          status: 'abandoned',
-          created_at: new Date(now.getTime() - 40 * 86400000).toISOString(),
-          abandoned_at: new Date(now.getTime() - 10 * 86400000).toISOString(),
-          founder_type: 'Visionary'
-        },
-        {
-          id: 'mock-2',
-          user_id: 'mock-user-2',
-          commitment_text: 'Acquire 10 beta users through cold outreach',
-          daily_action: 'Message 20 founders',
-          status: 'abandoned',
-          created_at: new Date(now.getTime() - 45 * 86400000).toISOString(),
-          abandoned_at: new Date(now.getTime() - 15 * 86400000).toISOString(),
-          founder_type: 'Hustler'
-        },
-        {
-          id: 'mock-3',
-          user_id: 'mock-user-3',
-          commitment_text: '30 days of consistent user feedback calls',
-          daily_action: '1 call per day',
-          status: 'completed',
-          completed: true,
-          created_at: new Date(now.getTime() - 60 * 86400000).toISOString(),
-          completed_at: new Date(now.getTime() - 30 * 86400000).toISOString(),
-          days_completed: 30,
-          founder_type: 'Technician'
-        }
-      ];
-
-      const deletedIdsString = await AsyncStorage.getItem('deleted_commitments');
-      const deletedIds = JSON.parse(deletedIdsString || '[]');
-      
-      const combinedCommitments = [...remoteCommitments, ...placeholders];
-      combinedCommitments.sort((a, b) => {
-        const dateA = new Date(a.completed_at || a.abandoned_at || a.created_at).getTime();
-        const dateB = new Date(b.completed_at || b.abandoned_at || b.created_at).getTime();
-        return dateB - dateA;
-      });
-
-      // Ensure current user's active commitment is prioritized in the list
-      const currentId = await getCurrentUserId();
-      let mergedCommitments = combinedCommitments;
-      
-      if (currentId) {
-        const { data: dbActive } = await supabase
-          .from('commitments')
-          .select('*')
-          .eq('user_id', currentId)
-          .eq('status', 'active')
-          .maybeSingle();
-        
-        if (dbActive) {
-          const normalized = normalizeCommitment(dbActive);
-          // Remove it if it's already in the list (to avoid duplicates)
-          const filtered = combinedCommitments.filter(c => c.id !== normalized.id);
-          // Add it to the top
-          mergedCommitments = [normalized, ...filtered];
-        }
-      }
-
-      setCommitments(mergedCommitments.filter(c => !deletedIds.includes(c.id)));
-    } catch (err) {
-      console.error('Error:', err);
-      setError('Something went wrong');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [currentUserId]);
-
   useEffect(() => {
-    loadCommitments();
-    // Get current user for edit/delete permissions
     getCurrentUserId().then(setCurrentUserId);
-  }, [loadCommitments]);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    loadCommitments();
-  }, [loadCommitments]);
+  }, []);
 
   const handleEditCommitment = (item: Commitment) => {
     navigation.navigate('commitment', { 
@@ -265,18 +109,19 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
 
   const handleDeleteCommitment = async (item: Commitment) => {
     const message = 'This will permanently remove your commitment from the feed. You can post a new one anytime.';
+    const doDelete = async () => {
+      try {
+        // TODO: wire actual Supabase delete when API is ready
+        // await supabase.from('commitments').delete().eq('id', item.id);
+        await loadCommitments();
+      } catch (err) {
+        console.error('Delete failed:', err);
+      }
+    };
+
     if (Platform.OS === 'web') {
       if (window.confirm(message + ' Are you sure?')) {
-        // Immediately remove from UI
-        setCommitments(prev => prev.filter(c => c.id !== item.id));
-        
-        // Store deleted IDs to prevent them from reappearing
-        const deletedIdsString = await AsyncStorage.getItem('deleted_commitments');
-        const deletedIds = JSON.parse(deletedIdsString || '[]');
-        deletedIds.push(item.id);
-        await AsyncStorage.setItem('deleted_commitments', JSON.stringify(deletedIds));
-        
-        window.alert('Commitment deleted successfully!');
+        await doDelete();
       }
     } else {
       Alert.alert(
@@ -284,22 +129,7 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
         message,
         [
           { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Delete Commitment', 
-            style: 'destructive',
-            onPress: async () => {
-              // Immediately remove from UI
-              setCommitments(prev => prev.filter(c => c.id !== item.id));
-              
-              // Store deleted IDs to prevent them from reappearing
-              const deletedIdsString = await AsyncStorage.getItem('deleted_commitments');
-              const deletedIds = JSON.parse(deletedIdsString || '[]');
-              deletedIds.push(item.id);
-              await AsyncStorage.setItem('deleted_commitments', JSON.stringify(deletedIds));
-              
-              Alert.alert('Success', 'Commitment deleted successfully!');
-            }
-          },
+          { text: 'Delete Commitment', style: 'destructive', onPress: doDelete },
         ]
       );
     }
@@ -415,7 +245,7 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
           <Text style={styles.errorEmoji}>⚠️</Text>
           <Text style={styles.errorTitle}>Something went wrong</Text>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadCommitments}>
+          <TouchableOpacity style={styles.retryButton} onPress={() => loadCommitments()}>
             <Text style={styles.retryButtonText}>Try Again</Text>
           </TouchableOpacity>
         </View>
@@ -454,9 +284,14 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={loadCommitments}
+            />
           }
           showsVerticalScrollIndicator={false}
+          onEndReachedThreshold={0.5}
+          onEndReached={() => loadMore()}
         />
       )}
     </SafeAreaView>
