@@ -93,14 +93,17 @@ export default function AppNavigator({
   };
 
   const goBack = () => {
+    console.log('AppNavigator goBack called');
     setHistory(prev => {
       const newHistory = [...prev];
       const last = newHistory.pop();
       if (last) {
+        console.log('AppNavigator goBack - returning to:', last.screen, 'with params:', last.params);
         setCurrentScreen(last.screen);
         setParams(last.params);
         setDirectParams(last.params);
       } else {
+        console.log('AppNavigator goBack - history empty, returning to landing');
         setCurrentScreen('landing');
       }
       return newHistory;

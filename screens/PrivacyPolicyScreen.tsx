@@ -12,7 +12,7 @@ export default function PrivacyPolicyScreen({ navigation }: { navigation: any })
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('landing')}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backButton}>Back</Text>
         </TouchableOpacity>
       </View>
