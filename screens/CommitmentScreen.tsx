@@ -10,9 +10,8 @@ import {
   TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
-import { getCurrentUserId, getCachedActiveCommitment } from '../lib/storage';
+import { useUserContext } from '../context/UserContext';
 import HCaptchaWrapper from '../components/HCaptchaWrapper';
 
 const MAX_CHARS = 140;
@@ -42,18 +41,15 @@ const RULES = [
   'Once posted, it\'s public and can\'t be edited',
 ];
 
-type GateStatus = 'fresh' | 'active' | 'completed';
-
 export default function CommitmentScreen({ navigation, route }: { navigation: any; route: any }) {
+  const { activeCommitment, currentSlotStatus, user, refreshActiveCommitment } = useUserContext();
+
   const [commitment, setCommitment] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dailyAction, setDailyAction] = useState('');
   const [agreedPublic, setAgreedPublic] = useState(false);
   const [agreedPermanent, setAgreedPermanent] = useState(false);
-  const [gateStatus, setGateStatus] = useState<GateStatus>('fresh');
-  const [activeCommitmentText, setActiveCommitmentText] = useState('');
-  const [activeDaysLeft, setActiveDaysLeft] = useState(0);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const profile = route?.params?.profile;
@@ -72,62 +68,8 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
       setDailyAction(initialDailyAction || '');
       setAgreedPublic(true);
       setAgreedPermanent(true);
-    } else {
-      checkGate();
     }
   }, [editMode, initialText, initialDailyAction]);
-
-  const checkGate = async () => {
-    setLoading(true);
-    try {
-      const currentId = await getCurrentUserId();
-      
-      if (!currentId) {
-        setGateStatus('fresh');
-        return;
-      }
-
-      // ALWAYS validate with DB to prevent "zombie" states
-      const { data: dbActive } = await supabase
-        .from('commitments')
-        .select('*')
-        .eq('user_id', currentId)
-        .eq('status', 'active')
-        .maybeSingle();
-
-      if (dbActive) {
-        // Sync DB to local
-        await AsyncStorage.setItem('foundertype_has_active_commitment', 'true');
-        await AsyncStorage.setItem('foundertype_active_commitment_text', dbActive.commitment_text);
-        await AsyncStorage.setItem('foundertype_active_deadline', dbActive.deadline);
-        await AsyncStorage.setItem('foundertype_active_commitment', JSON.stringify(dbActive));
-        
-        const deadline = dbActive.deadline;
-        const days = deadline ? Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
-        setActiveCommitmentText(dbActive.commitment_text);
-        setActiveDaysLeft(days);
-        setGateStatus('active');
-      } else {
-        // No active commitment in DB -> FORCE CLEAR LOCAL
-        await AsyncStorage.multiRemove([
-          'foundertype_has_active_commitment',
-          'foundertype_active_commitment_text',
-          'foundertype_active_deadline',
-          'foundertype_active_commitment',
-          'foundertype_commitment',
-        ]);
-
-        // Check if they just completed one
-        const hasCompleted = await AsyncStorage.getItem('foundertype_has_completed_commitment');
-        setGateStatus(hasCompleted === 'true' ? 'completed' : 'fresh');
-      }
-    } catch (e) {
-      console.error('CheckGate error:', e);
-      setGateStatus('fresh');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async () => {
     if (!commitment.trim()) {
@@ -227,22 +169,12 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
           }
         }
 
-        await AsyncStorage.setItem('foundertype_active_commitment', JSON.stringify(updatedCommitment));
-        await AsyncStorage.setItem('foundertype_active_commitment_text', processedCommitment.trim());
-        if (initialDeadline) {
-          await AsyncStorage.setItem('foundertype_active_deadline', initialDeadline);
-        }
+        await refreshActiveCommitment();
         navigation.navigate('dailyCheckIn', { commitment: updatedCommitment });
         return;
       }
 
       // Fresh or returning after completion: post one public 30-day commitment.
-      await AsyncStorage.setItem('foundertype_commitment', processedCommitment);
-      await AsyncStorage.setItem('foundertype_first_commitment_posted', 'true');
-      await AsyncStorage.setItem('foundertype_has_active_commitment', 'true');
-      await AsyncStorage.setItem('foundertype_active_commitment_text', processedCommitment.trim());
-      await AsyncStorage.setItem('foundertype_active_deadline', get30DaysFromNow().toISOString());
-
       let founderType = null;
       if (profile) {
         try {
@@ -252,10 +184,9 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
       }
 
       const deadline = get30DaysFromNow().toISOString();
-      const userId = await getCurrentUserId();
       const fallbackCommitment = {
         id: `local-${Date.now()}`,
-        user_id: userId || null,
+        user_id: user?.id || null,
         commitment_text: processedCommitment.trim(),
         daily_action: dailyAction.trim(),
         founder_type: founderType || 'Founder',
@@ -283,10 +214,7 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
         console.error('Failed to sync with Supabase:', e);
       }
 
-      await AsyncStorage.setItem(
-        'foundertype_active_commitment',
-        JSON.stringify(savedCommitment || fallbackCommitment)
-      );
+      await refreshActiveCommitment();
       navigation.navigate('dailyCheckIn', { commitment: savedCommitment || fallbackCommitment });
     } catch (err) {
       console.error('Error posting commitment:', err);
@@ -305,49 +233,11 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
     setCommitment(example);
   };
 
-  const handleViewProgress = async () => {
-    try {
-      const cachedCommitment = await getCachedActiveCommitment();
-      if (cachedCommitment) {
-        navigation.navigate('dailyCheckIn', { commitment: cachedCommitment });
-        return;
-      }
-
-      const userId = await getCurrentUserId();
-      if (userId) {
-        const { data: commitment, error } = await supabase
-          .from('commitments')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('status', 'active')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (!error && commitment) {
-          await AsyncStorage.setItem('foundertype_active_commitment', JSON.stringify(commitment));
-          navigation.navigate('dailyCheckIn', { commitment });
-          return;
-        }
-      }
-
-      if (activeCommitmentText) {
-        const deadline = await AsyncStorage.getItem('foundertype_active_deadline');
-        navigation.navigate('dailyCheckIn', {
-          commitment: {
-            commitment_text: activeCommitmentText,
-            deadline,
-            status: 'active',
-            check_ins: [],
-          },
-        });
-        return;
-      }
-
+  const handleViewProgress = () => {
+    if (activeCommitment) {
+      navigation.navigate('dailyCheckIn', { commitment: activeCommitment });
+    } else {
       Alert.alert('Error', 'No active commitment found');
-    } catch (err) {
-      console.error('Failed to load commitment:', err);
-      Alert.alert('Error', 'Failed to load commitment');
     }
   };
 
@@ -375,11 +265,13 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
         </View>
 
         {/* GATE BANNERS */}
-        {gateStatus === 'active' && (
+        {currentSlotStatus === 'active' && activeCommitment && (
           <View style={[styles.gateBanner, { backgroundColor: '#FFFBEB', borderColor: '#F59E0B' }]}>
             <Text style={[styles.gateLabel, { color: '#92400E' }]}>ACTIVE COMMITMENT</Text>
-            <Text style={styles.gateText}>"{activeCommitmentText}"</Text>
-            <Text style={[styles.gateMeta, { color: '#B45309' }]}>{activeDaysLeft} days remaining</Text>
+            <Text style={styles.gateText}>"{activeCommitment.commitment_text}"</Text>
+            <Text style={[styles.gateMeta, { color: '#B45309' }]}>
+              {Math.ceil((new Date(activeCommitment.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days remaining
+            </Text>
             <TouchableOpacity
               style={[styles.gateCta, { backgroundColor: '#F59E0B' }]}
               onPress={handleViewProgress}
@@ -389,7 +281,7 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
           </View>
         )}
 
-        {!editMode && (gateStatus === 'fresh' || gateStatus === 'completed') && (
+        {!editMode && currentSlotStatus !== 'active' && (
           <View style={styles.mainContent}>
             <View style={styles.inputSection}>
               <Text style={styles.label}>Your 30-Day Commitment</Text>
