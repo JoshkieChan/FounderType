@@ -10,7 +10,10 @@ let circuitBreakerTime = 0;
 const CIRCUIT_BREAKER_DURATION = 5 * 60 * 1000; // 5 minutes
 
 function shouldUseCircuitBreaker(): boolean {
-  if (circuitBreakerOpen && Date.now() - circuitBreakerTime > CIRCUIT_BREAKER_DURATION) {
+  if (
+    circuitBreakerOpen &&
+    Date.now() - circuitBreakerTime > CIRCUIT_BREAKER_DURATION
+  ) {
     circuitBreakerOpen = false;
     console.log('Circuit breaker reset');
   }
@@ -60,39 +63,39 @@ function extractJsonFromResponse(text: string): Record<string, unknown> | null {
 
 function fixTruncatedJson(text: string): string {
   let fixedText = text.trim();
-  
+
   // Remove markdown code block markers if present
   fixedText = fixedText.replace(/```(?:json)?\s*/, '').replace(/```\s*$/, '');
-  
+
   // Count braces to see if JSON is incomplete
   let openBraces = 0;
   let inString = false;
   let escapeNext = false;
-  
+
   for (let i = 0; i < fixedText.length; i++) {
     const char = fixedText[i];
-    
+
     if (escapeNext) {
       escapeNext = false;
       continue;
     }
-    
+
     if (char === '\\') {
       escapeNext = true;
       continue;
     }
-    
+
     if (char === '"' && !escapeNext) {
       inString = !inString;
       continue;
     }
-    
+
     if (!inString) {
       if (char === '{') openBraces++;
       else if (char === '}') openBraces--;
     }
   }
-  
+
   // If there are more open braces than closed, complete the JSON
   while (openBraces > 0) {
     // Try to close the most recent incomplete structure
@@ -102,17 +105,17 @@ function fixTruncatedJson(text: string): string {
     fixedText += '}';
     openBraces--;
   }
-  
+
   // Try to fix incomplete arrays
   if (fixedText.includes('[') && !fixedText.includes(']')) {
     fixedText += ']';
   }
-  
+
   // Try to fix incomplete strings
   if (inString && !fixedText.endsWith('"')) {
     fixedText += '"';
   }
-  
+
   return fixedText;
 }
 
@@ -125,8 +128,9 @@ async function callGeminiWithRetry(
   // Check circuit breaker first
   if (shouldUseCircuitBreaker()) {
     return {
-      error: "AI_SERVICE_UNAVAILABLE",
-      message: "Our AI service is temporarily unavailable. Please try again in a few minutes."
+      error: 'AI_SERVICE_UNAVAILABLE',
+      message:
+        'Our AI service is temporarily unavailable. Please try again in a few minutes.',
     };
   }
 
@@ -136,12 +140,18 @@ async function callGeminiWithRetry(
     try {
       const result = await model.generateContent({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        ...(generationConfig && { generationConfig })
+        ...(generationConfig && { generationConfig }),
       });
       const response = await result.response;
       const text = response.text();
-      console.log('Raw Gemini response:', JSON.stringify(result).substring(0, 500));
-      console.log(`Gemini raw response (attempt ${attempt}):`, text.substring(0, 500));
+      console.log(
+        'Raw Gemini response:',
+        JSON.stringify(result).substring(0, 500)
+      );
+      console.log(
+        `Gemini raw response (attempt ${attempt}):`,
+        text.substring(0, 500)
+      );
 
       const parsed = extractJsonFromResponse(text);
       if (parsed) {
@@ -160,7 +170,7 @@ async function callGeminiWithRetry(
 
       if (status === '503' || error?.message?.includes('high demand')) {
         consecutive503s++;
-        
+
         if (attempt === maxRetries) {
           // Trip circuit breaker if all retries are 503s
           if (consecutive503s === maxRetries) {
@@ -168,17 +178,18 @@ async function callGeminiWithRetry(
           }
           console.error('All retry attempts exhausted');
           return {
-            error: "AI_SERVICE_UNAVAILABLE", 
-            message: "Our AI service is temporarily unavailable. Please try again in a few minutes."
+            error: 'AI_SERVICE_UNAVAILABLE',
+            message:
+              'Our AI service is temporarily unavailable. Please try again in a few minutes.',
           };
         }
-        
+
         // Exponential backoff: 2s, 4s, 8s, 16s with random jitter
         const baseDelay = Math.pow(2, attempt) * 1000;
         const jitter = Math.random() * 1000;
         const delay = baseDelay + jitter;
         console.log(`Retrying in ${Math.round(delay)}ms...`);
-        await new Promise(r => setTimeout(r, delay));
+        await new Promise((r) => setTimeout(r, delay));
         continue;
       }
 
@@ -194,7 +205,10 @@ async function callGeminiWithRetry(
 export async function generateFounderProfile(answers: Record<number, string>) {
   console.log('=== GEMINI DEBUG ===');
   console.log('API Key exists:', !!process.env.EXPO_PUBLIC_GEMINI_API_KEY);
-  console.log('API Key prefix:', process.env.EXPO_PUBLIC_GEMINI_API_KEY?.substring(0, 12));
+  console.log(
+    'API Key prefix:',
+    process.env.EXPO_PUBLIC_GEMINI_API_KEY?.substring(0, 12)
+  );
   console.log('Answers received:', JSON.stringify(answers));
   console.log('Answers count:', Object.keys(answers).length);
 

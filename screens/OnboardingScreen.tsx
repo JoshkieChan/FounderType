@@ -18,47 +18,57 @@ export default function OnboardingScreen({ navigation }: { navigation: any }) {
 
       <View style={styles.content}>
         <View style={styles.iconContainer}>
-          <Image 
+          <Image
             source={require('../assets/foundertype-icon.png')}
             style={{
               width: 80,
               height: 80,
               borderRadius: 18,
               marginBottom: 24,
-              backgroundColor: 'transparent'
+              backgroundColor: 'transparent',
             }}
           />
         </View>
-        
-        <Text style={styles.headline}>
-          The honest truth about building
-        </Text>
-        
+
+        <Text style={styles.headline}>The honest truth about building</Text>
+
         <View style={styles.bodyContainer}>
           <Text style={styles.bodyText}>
-            Most people spend years trying the wrong things. Not because they lack drive 
+            Most people spend years trying the wrong things. Not because they
+            lack drive
             {/* eslint-disable-next-line react-native/no-inline-styles */}
-            <Text style={{ fontWeight: '600' }}> because nobody told them what actually fits them.</Text>
+            <Text style={{ fontWeight: '600' }}>
+              {' '}
+              because nobody told them what actually fits them.
+            </Text>
           </Text>
-          
+
           <Text style={styles.bodyText}>
-            FounderType asks you 7 honest questions. Then it tells you exactly what business 
-            model fits your skills, psychology, and lifestyle {/* eslint-disable-next-line react-native/no-inline-styles */}
-            <Text style={{ fontWeight: '600' }}> and what will make you quit.</Text>
+            FounderType asks you 7 honest questions. Then it tells you exactly
+            what business model fits your skills, psychology, and lifestyle{' '}
+            {/* eslint-disable-next-line react-native/no-inline-styles */}
+            <Text style={{ fontWeight: '600' }}>
+              {' '}
+              and what will make you quit.
+            </Text>
           </Text>
-          
+
           <Text style={styles.bodyText}>
-            No motivation. No generic advice. {/* eslint-disable-next-line react-native/no-inline-styles */}
-            <Text style={{ fontWeight: '600' }}> Just the truth about where you should focus.</Text>
+            No motivation. No generic advice.{' '}
+            {/* eslint-disable-next-line react-native/no-inline-styles */}
+            <Text style={{ fontWeight: '600' }}>
+              {' '}
+              Just the truth about where you should focus.
+            </Text>
           </Text>
         </View>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.ctaButton}
           onPress={() => {
             Sentry.addBreadcrumb({
               message: 'assessment_started',
-              level: 'info'
+              level: 'info',
             });
             navigation.navigate('questions');
           }}

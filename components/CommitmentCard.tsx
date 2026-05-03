@@ -54,8 +54,15 @@ export default React.memo(function CommitmentCard({
         <Text style={styles.commitmentText} numberOfLines={3}>
           {commitment.commitment_text}
         </Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(commitment.status) }]}>
-          <Text style={styles.statusText}>{getStatusText(commitment.status)}</Text>
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: getStatusColor(commitment.status) },
+          ]}
+        >
+          <Text style={styles.statusText}>
+            {getStatusText(commitment.status)}
+          </Text>
         </View>
       </View>
 
@@ -87,8 +94,13 @@ export default React.memo(function CommitmentCard({
             </TouchableOpacity>
           )}
           {onDelete && (
-            <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={onDelete}>
-              <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Delete</Text>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.deleteButton]}
+              onPress={onDelete}
+            >
+              <Text style={[styles.actionButtonText, styles.deleteButtonText]}>
+                Delete
+              </Text>
             </TouchableOpacity>
           )}
         </View>

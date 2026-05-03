@@ -1,5 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  TouchableOpacity,
+} from 'react-native';
 
 export interface ToastProps {
   message: string;
@@ -12,12 +18,12 @@ export interface ToastProps {
   };
 }
 
-export default function Toast({ 
-  message, 
-  type = 'info', 
-  duration = 3000, 
+export default function Toast({
+  message,
+  type = 'info',
+  duration = 3000,
   onHide,
-  action 
+  action,
 }: ToastProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-100)).current;
@@ -103,16 +109,13 @@ export default function Toast({
         <Text style={styles.icon}>{getIcon()}</Text>
         <Text style={styles.message}>{message}</Text>
       </View>
-      
+
       {action && (
-        <TouchableOpacity 
-          style={styles.actionButton} 
-          onPress={action.onPress}
-        >
+        <TouchableOpacity style={styles.actionButton} onPress={action.onPress}>
           <Text style={styles.actionText}>{action.label}</Text>
         </TouchableOpacity>
       )}
-      
+
       <TouchableOpacity style={styles.closeButton} onPress={hide}>
         <Text style={styles.closeText}>×</Text>
       </TouchableOpacity>

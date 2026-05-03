@@ -12,7 +12,11 @@ interface HCaptchaWrapperProps {
   onError?: (err: any) => void;
 }
 
-export default function HCaptchaWrapper({ onVerify, onExpire, onError }: HCaptchaWrapperProps) {
+export default function HCaptchaWrapper({
+  onVerify,
+  onExpire,
+  onError,
+}: HCaptchaWrapperProps) {
   if (Platform.OS === 'web') {
     return null; // HCaptcha web component incompatible with Metro bundler
   }

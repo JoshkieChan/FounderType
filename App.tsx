@@ -3,7 +3,11 @@ import * as Sentry from '@sentry/react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { testSupabaseConnection } from './lib/supabase';
-import { getCurrentUserId, getCachedActiveCommitment, getActiveCommitment } from './lib/storage';
+import {
+  getCurrentUserId,
+  getCachedActiveCommitment,
+  getActiveCommitment,
+} from './lib/storage';
 import { sendMissedDaysAlert } from './lib/notifications';
 import AppNavigator from './navigation/AppNavigator';
 import { supabase } from './lib/supabase';
@@ -20,7 +24,7 @@ export default Sentry.wrap(function App() {
 
   useEffect(() => {
     testSupabaseConnection();
-    
+
     // Initialize Sentry
     Sentry.init({
       dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
@@ -29,7 +33,6 @@ export default Sentry.wrap(function App() {
       tracesSampleRate: 0.2,
     } as any);
 
-    
     // Check for missed commitment check-in days
     checkMissedCommitmentDays();
   }, []);
@@ -71,7 +74,7 @@ export default Sentry.wrap(function App() {
       <SafeAreaProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <UserProvider>
-            <AppNavigator 
+            <AppNavigator
               currentProfile={currentProfile}
               setCurrentProfile={setCurrentProfile}
               currentAnswers={currentAnswers}

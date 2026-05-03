@@ -11,24 +11,26 @@ interface Profile {
 }
 
 // Save profile for anonymous user
-export async function saveProfile(userId: string, answers: Record<number, string>, profile: Profile) {
+export async function saveProfile(
+  userId: string,
+  answers: Record<number, string>,
+  profile: Profile
+) {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .insert({
-        user_id: userId,
-        answers,
-        founder_type: profile.founderType || profile.founder_type,
-        summary: profile.summary,
-        matches: profile.matches,
-        created_at: new Date().toISOString()
-      });
+    const { data, error } = await supabase.from('profiles').insert({
+      user_id: userId,
+      answers,
+      founder_type: profile.founderType || profile.founder_type,
+      summary: profile.summary,
+      matches: profile.matches,
+      created_at: new Date().toISOString(),
+    });
 
     if (error) {
       console.error('Failed to save profile:', error);
       throw error;
     }
-    
+
     console.log('Profile saved successfully');
     return data;
   } catch (error) {
@@ -59,7 +61,7 @@ export async function loadProfile(userId: string) {
     return {
       founderType: data.founder_type,
       summary: data.summary,
-      matches: data.matches
+      matches: data.matches,
     };
   } catch (error) {
     console.error('Error loading profile:', error);
@@ -68,7 +70,9 @@ export async function loadProfile(userId: string) {
 }
 
 // Get last assessment date for user
-export async function getLastAssessmentDate(userId: string): Promise<string | null> {
+export async function getLastAssessmentDate(
+  userId: string
+): Promise<string | null> {
   try {
     const { data, error } = await supabase
       .from('profiles')
@@ -93,9 +97,11 @@ export async function getLastAssessmentDate(userId: string): Promise<string | nu
 // Get current authenticated user ID
 export async function getCurrentUserId(): Promise<string | null> {
   // Check if already signed in
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (user?.id) return user.id;
-  
+
   return null; // No anonymous auth fallback
 }
 
@@ -112,7 +118,7 @@ export async function updateCommitmentCheckIn(
     const cachedCommitment = await getCachedActiveCommitment();
     if (cachedCommitment && cachedCommitment.id === commitmentId) {
       const checkIns: string[] = cachedCommitment.check_ins || [];
-      
+
       if (!checkIns.includes(today)) {
         const updated = [...checkIns, today];
         cachedCommitment.check_ins = updated;
@@ -163,7 +169,9 @@ export async function getCachedActiveCommitment(): Promise<Commitment | null> {
 }
 
 // Fetch the most recent active commitment from Supabase
-export async function getActiveCommitment(userId: string): Promise<Commitment | null> {
+export async function getActiveCommitment(
+  userId: string
+): Promise<Commitment | null> {
   try {
     const { data, error } = await supabase
       .from('commitments')

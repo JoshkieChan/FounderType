@@ -85,16 +85,19 @@ export async function scheduleWeeklyMirror(
   });
 }
 
-export async function sendMissedDaysAlert(daysMissed: number, commitmentText: string) {
+export async function sendMissedDaysAlert(
+  daysMissed: number,
+  commitmentText: string
+) {
   await Notifications.scheduleNotificationAsync({
     content: {
       title: 'FounderType — Be Honest',
       body: `${daysMissed} days without checking in. "${commitmentText.substring(0, 60)}..." Your commitment is still waiting.`,
       sound: true,
     },
-    trigger: { 
+    trigger: {
       type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-      seconds: 1 
+      seconds: 1,
     } as any,
   });
 }

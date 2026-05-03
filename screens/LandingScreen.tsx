@@ -19,7 +19,7 @@ import { Commitment } from '../types/commitment';
 
 function getStatusColor(s: string) {
   if (s === 'completed') return '#22C55E'; // GREEN for COMPLETED
-  if (s === 'active') return '#3B82F6';    // BLUE for ACTIVE  
+  if (s === 'active') return '#3B82F6'; // BLUE for ACTIVE
   if (s === 'abandoned') return '#EF4444'; // RED for ABANDONED
   return '#888888';
 }
@@ -32,27 +32,35 @@ function getStatusLabel(s: string) {
 }
 
 function getDaysRemaining(deadline: string): number {
-  return Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  return Math.ceil(
+    (new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+  );
 }
 
 function getTimelineText(item: Commitment): string {
   const now = new Date();
-  
+
   if (item.status === 'completed') {
-    const targetDate = item.completed_at ? new Date(item.completed_at) : new Date(item.created_at);
+    const targetDate = item.completed_at
+      ? new Date(item.completed_at)
+      : new Date(item.created_at);
     const diffTime = Math.abs(now.getTime() - targetDate.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     return `Completed ${diffDays === 0 ? 'today' : `${diffDays} days ago`}`;
   }
-  
+
   if (item.status === 'abandoned') {
-    const targetDate = item.abandoned_at ? new Date(item.abandoned_at) : new Date(item.deadline);
+    const targetDate = item.abandoned_at
+      ? new Date(item.abandoned_at)
+      : new Date(item.deadline);
     const diffTime = Math.abs(now.getTime() - targetDate.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     return `Abandoned ${diffDays === 0 ? 'today' : `${diffDays} days ago`}`;
   }
-  
-  const diffTime = Math.abs(now.getTime() - new Date(item.created_at).getTime());
+
+  const diffTime = Math.abs(
+    now.getTime() - new Date(item.created_at).getTime()
+  );
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   return `Started ${diffDays === 0 ? 'today' : `${diffDays} days ago`}`;
 }
@@ -60,38 +68,41 @@ function getTimelineText(item: Commitment): string {
 function getUserLabel(item: Commitment) {
   if (!item.founder_type) return 'Founder';
   // Prevent duplicate "Founder (Founder)"
-  if (item.founder_type.toLowerCase().includes('founder')) return item.founder_type;
+  if (item.founder_type.toLowerCase().includes('founder'))
+    return item.founder_type;
   return `Founder (${item.founder_type})`;
 }
 
-
 function isEditable(item: Commitment, userId: string | null): boolean {
   if (!userId || item.user_id !== userId) return false;
-  const hoursSincePosted = (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60);
+  const hoursSincePosted =
+    (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60);
   return hoursSincePosted < 24;
 }
 
 function isLocked(item: Commitment, userId: string | null): boolean {
   if (!userId || item.user_id !== userId) return false;
   if (item.status !== 'active') return false;
-  const hoursSincePosted = (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60);
+  const hoursSincePosted =
+    (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60);
   return hoursSincePosted >= 24;
 }
 
 function getHoursRemaining(item: Commitment): number {
-  const hoursSincePosted = (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60);
+  const hoursSincePosted =
+    (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60);
   return Math.max(0, 24 - hoursSincePosted);
 }
 
 import { useUserContext } from '../context/UserContext';
 
 export default function LandingScreen({ navigation }: { navigation: any }) {
-  const { 
-    activeCommitment, 
-    currentSlotStatus, 
-    lastCycleResult, 
+  const {
+    activeCommitment,
+    currentSlotStatus,
+    lastCycleResult,
     refreshActiveCommitment,
-    user
+    user,
   } = useUserContext();
 
   const {
@@ -102,7 +113,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
   } = usePublicFeed('active');
 
   const [hasSavedProfile, setHasSavedProfile] = useState(false);
-  
+
   const { width } = useWindowDimensions();
   const isWide = width > 768;
 
@@ -114,33 +125,33 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
   const commitments = allCommitments.slice(0, isWide ? 9 : 6);
 
   const onRefresh = async () => {
-    await Promise.all([
-      loadCommitments(),
-      refreshActiveCommitment()
-    ]);
+    await Promise.all([loadCommitments(), refreshActiveCommitment()]);
   };
 
   useEffect(() => {
     if (user?.id) {
-      loadProfile(user.id).then(p => {
-        if (p) setHasSavedProfile(true);
-      }).catch(() => {});
+      loadProfile(user.id)
+        .then((p) => {
+          if (p) setHasSavedProfile(true);
+        })
+        .catch(() => {});
     }
   }, [user]);
 
   const handleEditCommitment = (item: Commitment) => {
     // Navigate to commitment screen with edit mode
-    (navigation as any).navigate('commitment', { 
-      editMode: true, 
+    (navigation as any).navigate('commitment', {
+      editMode: true,
       commitmentId: item.id,
       initialText: item.commitment_text,
       initialDailyAction: item.daily_action || '',
-      initialDeadline: item.deadline
+      initialDeadline: item.deadline,
     });
   };
 
   const handleDeleteCommitment = async (item: Commitment) => {
-    const message = 'This will permanently remove your commitment from the feed. You can post a new one anytime.';
+    const message =
+      'This will permanently remove your commitment from the feed. You can post a new one anytime.';
     const doDelete = async () => {
       try {
         await supabase.from('commitments').delete().eq('id', item.id);
@@ -151,7 +162,10 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
         if (Platform.OS === 'web') {
           window.alert('Failed to delete commitment. Please try again.');
         } else {
-          Alert.alert('Error', 'Failed to delete commitment. Please try again.');
+          Alert.alert(
+            'Error',
+            'Failed to delete commitment. Please try again.'
+          );
         }
       }
     };
@@ -161,14 +175,10 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
         doDelete();
       }
     } else {
-      Alert.alert(
-        'Delete This Commitment?',
-        message,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete Commitment', style: 'destructive', onPress: doDelete },
-        ]
-      );
+      Alert.alert('Delete This Commitment?', message, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete Commitment', style: 'destructive', onPress: doDelete },
+      ]);
     }
   };
 
@@ -180,11 +190,17 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
     }
   };
 
-
   const FeedCard = ({ item, index }: { item: Commitment; index: number }) => (
     <View style={[styles.feedCard, isWide && styles.feedCardWide]}>
-      <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-        <Text style={styles.statusBadgeText}>{getStatusLabel(item.status)}</Text>
+      <View
+        style={[
+          styles.statusBadge,
+          { backgroundColor: getStatusColor(item.status) },
+        ]}
+      >
+        <Text style={styles.statusBadgeText}>
+          {getStatusLabel(item.status)}
+        </Text>
       </View>
       <Text style={styles.feedUser}>{getUserLabel(item)}</Text>
       <Text style={styles.feedCommitment}>"{item.commitment_text}"</Text>
@@ -194,122 +210,191 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
-        style={styles.container} 
+      <ScrollView
+        style={styles.container}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-      {/* RETURNING USER BANNERS */}
-      {currentSlotStatus === 'active' && activeCommitment && (
-        <View style={[styles.statusBanner, { backgroundColor: '#0D1F3A', borderColor: '#1E3A5F' }]}>
-          <Text style={[styles.statusLabel, { color: '#3B82F6' }]}>ACTIVE COMMITMENT</Text>
-          <Text style={styles.statusText}>"{activeCommitment.commitment_text}"</Text>
-          <Text style={[styles.statusMeta, { color: '#93C5FD' }]}>
-            Day {activeCommitment.check_ins.length + 1} of 30
-          </Text>
-          <View style={styles.statusActions}>
+        {/* RETURNING USER BANNERS */}
+        {currentSlotStatus === 'active' && activeCommitment && (
+          <View
+            style={[
+              styles.statusBanner,
+              { backgroundColor: '#0D1F3A', borderColor: '#1E3A5F' },
+            ]}
+          >
+            <Text style={[styles.statusLabel, { color: '#3B82F6' }]}>
+              ACTIVE COMMITMENT
+            </Text>
+            <Text style={styles.statusText}>
+              "{activeCommitment.commitment_text}"
+            </Text>
+            <Text style={[styles.statusMeta, { color: '#93C5FD' }]}>
+              Day {activeCommitment.check_ins.length + 1} of 30
+            </Text>
+            <View style={styles.statusActions}>
+              <TouchableOpacity
+                style={[styles.statusCta, { backgroundColor: '#F59E0B' }]}
+                onPress={handleViewProgress}
+              >
+                <Text style={styles.statusCtaText}>View Progress →</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {currentSlotStatus === 'none' && lastCycleResult === 'completed' && (
+          <View
+            style={[
+              styles.statusBanner,
+              { backgroundColor: '#064E3B', borderColor: '#065F46' },
+            ]}
+          >
+            <Text style={[styles.statusLabel, { color: '#10B981' }]}>
+              COMMITMENT COMPLETED
+            </Text>
+            <Text style={styles.statusText}>
+              You followed through. Post the next public 30-day commitment when
+              you're ready.
+            </Text>
             <TouchableOpacity
-              style={[styles.statusCta, { backgroundColor: '#F59E0B' }]}
-              onPress={handleViewProgress}
+              style={[styles.statusCta, { backgroundColor: '#10B981' }]}
+              onPress={() => navigation.navigate('commitment')}
             >
-              <Text style={styles.statusCtaText}>View Progress →</Text>
+              <Text style={styles.statusCtaText}>Post Next Commitment →</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      )}
+        )}
 
-      {currentSlotStatus === 'none' && lastCycleResult === 'completed' && (
-        <View style={[styles.statusBanner, { backgroundColor: '#064E3B', borderColor: '#065F46' }]}>
-          <Text style={[styles.statusLabel, { color: '#10B981' }]}>COMMITMENT COMPLETED</Text>
-          <Text style={styles.statusText}>You followed through. Post the next public 30-day commitment when you're ready.</Text>
-          <TouchableOpacity style={[styles.statusCta, { backgroundColor: '#10B981' }]} onPress={() => navigation.navigate('commitment')}>
-            <Text style={styles.statusCtaText}>Post Next Commitment →</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        {currentSlotStatus === 'none' && lastCycleResult === 'abandoned' && (
+          <View
+            style={[
+              styles.statusBanner,
+              { backgroundColor: '#450A0A', borderColor: '#7F1D1D' },
+            ]}
+          >
+            <Text style={[styles.statusLabel, { color: '#EF4444' }]}>
+              COMMITMENT ABANDONED
+            </Text>
+            <Text style={styles.statusText}>
+              That one didn't stick. Post your next public 30-day commitment
+              when you're ready.
+            </Text>
+            <TouchableOpacity
+              style={[styles.statusCta, { backgroundColor: '#EF4444' }]}
+              onPress={() => navigation.navigate('commitment')}
+            >
+              <Text style={styles.statusCtaText}>Post Next Commitment →</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-      {currentSlotStatus === 'none' && lastCycleResult === 'abandoned' && (
-        <View style={[styles.statusBanner, { backgroundColor: '#450A0A', borderColor: '#7F1D1D' }]}>
-          <Text style={[styles.statusLabel, { color: '#EF4444' }]}>COMMITMENT ABANDONED</Text>
-          <Text style={styles.statusText}>That one didn't stick. Post your next public 30-day commitment when you're ready.</Text>
-          <TouchableOpacity style={[styles.statusCta, { backgroundColor: '#EF4444' }]} onPress={() => navigation.navigate('commitment')}>
-            <Text style={styles.statusCtaText}>Post Next Commitment →</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* HERO */}
-      <View style={styles.hero}>
-        <Text style={styles.heroHeadline}>You've Started Before. You've Stopped Before. This Time It's Public.</Text>
-        <Text style={styles.heroSub}>Post a 30-day commitment. Complete it or everyone sees you quit.</Text>
-        <TouchableOpacity style={styles.primaryCta} onPress={() => navigation.navigate('commitment')}>
-          <Text style={styles.primaryCtaText}>
-            {lastCycleResult === 'completed' ? 'Post Your Next Commitment' : 'Post Your First Commitment'}
+        {/* HERO */}
+        <View style={styles.hero}>
+          <Text style={styles.heroHeadline}>
+            You've Started Before. You've Stopped Before. This Time It's Public.
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.secondaryCta} onPress={() => navigation.navigate('onboarding')}>
-          <Text style={styles.secondaryCtaText}>Take the diagnostic first</Text>
-        </TouchableOpacity>
-      </View>
+          <Text style={styles.heroSub}>
+            Post a 30-day commitment. Complete it or everyone sees you quit.
+          </Text>
+          <TouchableOpacity
+            style={styles.primaryCta}
+            onPress={() => navigation.navigate('commitment')}
+          >
+            <Text style={styles.primaryCtaText}>
+              {lastCycleResult === 'completed'
+                ? 'Post Your Next Commitment'
+                : 'Post Your First Commitment'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.secondaryCta}
+            onPress={() => navigation.navigate('onboarding')}
+          >
+            <Text style={styles.secondaryCtaText}>
+              Take the diagnostic first
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* EMBEDDED FEED */}
-      <View style={styles.feedSection}>
-        <Text style={styles.feedTitle}>Who's Building Right Now</Text>
-        {loading ? (
-          <ActivityIndicator size="large" color="#111111" style={{ marginVertical: 40 }} />
-        ) : commitments.length === 0 ? (
-          <Text style={styles.feedEmpty}>No commitments yet. Be the first.</Text>
-        ) : (
-          <View style={styles.feedGrid}>
-            {commitments.slice(0, isWide ? 9 : 6).map((item, i) => (
-              <FeedCard key={item.id || i} item={item} index={i} />
-            ))}
-          </View>
-        )}
-        <TouchableOpacity style={styles.viewAllLink} onPress={() => navigation.navigate('publicFeed')}>
-          <Text style={styles.viewAllText}>See All Commitments →</Text>
-        </TouchableOpacity>
-      </View>
+        {/* EMBEDDED FEED */}
+        <View style={styles.feedSection}>
+          <Text style={styles.feedTitle}>Who's Building Right Now</Text>
+          {loading ? (
+            <ActivityIndicator
+              size="large"
+              color="#111111"
+              style={{ marginVertical: 40 }}
+            />
+          ) : commitments.length === 0 ? (
+            <Text style={styles.feedEmpty}>
+              No commitments yet. Be the first.
+            </Text>
+          ) : (
+            <View style={styles.feedGrid}>
+              {commitments.slice(0, isWide ? 9 : 6).map((item, i) => (
+                <FeedCard key={item.id || i} item={item} index={i} />
+              ))}
+            </View>
+          )}
+          <TouchableOpacity
+            style={styles.viewAllLink}
+            onPress={() => navigation.navigate('publicFeed')}
+          >
+            <Text style={styles.viewAllText}>See All Commitments →</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* HOW IT WORKS */}
-      <View style={styles.howItWorks}>
-        <Text style={styles.howTitle}>How It Works</Text>
-        <View style={styles.steps}>
-          <View style={[styles.step, isWide && styles.stepWide]}>
-            <Text style={styles.stepNumber}>1</Text>
-            <Text style={styles.stepTitle}>Post One Commitment</Text>
-            <Text style={styles.stepDesc}>One specific thing you'll do in 30 days. It goes public immediately.</Text>
-          </View>
-          <View style={[styles.step, isWide && styles.stepWide]}>
-            <Text style={styles.stepNumber}>2</Text>
-            <Text style={styles.stepTitle}>Complete It or Everyone Sees</Text>
-            <Text style={styles.stepDesc}>At day 30, mark it complete or it gets flagged as abandoned. No hiding. No edits.</Text>
-          </View>
-          <View style={[styles.step, isWide && styles.stepWide]}>
-            <Text style={styles.stepNumber}>3</Text>
-            <Text style={styles.stepTitle}>Own the Outcome</Text>
-            <Text style={styles.stepDesc}>Complete it and it stays green. Abandon it and it stays public. Either way, the record is real.</Text>
+        {/* HOW IT WORKS */}
+        <View style={styles.howItWorks}>
+          <Text style={styles.howTitle}>How It Works</Text>
+          <View style={styles.steps}>
+            <View style={[styles.step, isWide && styles.stepWide]}>
+              <Text style={styles.stepNumber}>1</Text>
+              <Text style={styles.stepTitle}>Post One Commitment</Text>
+              <Text style={styles.stepDesc}>
+                One specific thing you'll do in 30 days. It goes public
+                immediately.
+              </Text>
+            </View>
+            <View style={[styles.step, isWide && styles.stepWide]}>
+              <Text style={styles.stepNumber}>2</Text>
+              <Text style={styles.stepTitle}>Complete It or Everyone Sees</Text>
+              <Text style={styles.stepDesc}>
+                At day 30, mark it complete or it gets flagged as abandoned. No
+                hiding. No edits.
+              </Text>
+            </View>
+            <View style={[styles.step, isWide && styles.stepWide]}>
+              <Text style={styles.stepNumber}>3</Text>
+              <Text style={styles.stepTitle}>Own the Outcome</Text>
+              <Text style={styles.stepDesc}>
+                Complete it and it stays green. Abandon it and it stays public.
+                Either way, the record is real.
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* FOOTER */}
-      <View style={styles.footer}>
-        <TouchableOpacity onPress={() => navigation.navigate('privacyPolicy')}>
-          <Text style={styles.footerLink}>Privacy Policy</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('terms')}>
-          <Text style={styles.footerLink}>Terms of Service</Text>
-        </TouchableOpacity>
-        {hasSavedProfile && (
-          <TouchableOpacity onPress={() => navigation.navigate('results')}>
-            <Text style={styles.footerLink}>View Your Last Results</Text>
+        {/* FOOTER */}
+        <View style={styles.footer}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('privacyPolicy')}
+          >
+            <Text style={styles.footerLink}>Privacy Policy</Text>
           </TouchableOpacity>
-        )}
-      </View>
-    </ScrollView>
+          <TouchableOpacity onPress={() => navigation.navigate('terms')}>
+            <Text style={styles.footerLink}>Terms of Service</Text>
+          </TouchableOpacity>
+          {hasSavedProfile && (
+            <TouchableOpacity onPress={() => navigation.navigate('results')}>
+              <Text style={styles.footerLink}>View Your Last Results</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

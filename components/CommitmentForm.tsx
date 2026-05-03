@@ -71,9 +71,7 @@ export default function CommitmentForm({
   return (
     <View style={styles.container}>
       <View style={styles.section}>
-        <Text style={styles.label}>
-          My commitment (max {MAX_CHARS} chars)
-        </Text>
+        <Text style={styles.label}>My commitment (max {MAX_CHARS} chars)</Text>
         <TextInput
           style={styles.textInput}
           value={commitment}

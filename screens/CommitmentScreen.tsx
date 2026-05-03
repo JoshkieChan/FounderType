@@ -31,18 +31,29 @@ function get30DaysFromNow(): Date {
 
 function replaceDatePlaceholders(text: string): string {
   const deadline = get30DaysFromNow();
-  const formattedDate = deadline.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const formattedDate = deadline.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
   return text.replace(/\[date\]/g, formattedDate);
 }
 
 const RULES = [
   'Must be specific and verifiable by a stranger',
   'Must have completion date within 30 days',
-  'Once posted, it\'s public and can\'t be edited',
+  "Once posted, it's public and can't be edited",
 ];
 
-export default function CommitmentScreen({ navigation, route }: { navigation: any; route: any }) {
-  const { activeCommitment, currentSlotStatus, user, refreshActiveCommitment } = useUserContext();
+export default function CommitmentScreen({
+  navigation,
+  route,
+}: {
+  navigation: any;
+  route: any;
+}) {
+  const { activeCommitment, currentSlotStatus, user, refreshActiveCommitment } =
+    useUserContext();
 
   const [commitment, setCommitment] = useState('');
   const [loading, setLoading] = useState(false);
@@ -85,7 +96,10 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
       if (Platform.OS === 'web') {
         window.alert(`Commitment must be ${MAX_CHARS} characters or less.`);
       } else {
-        Alert.alert('Too Long', `Commitment must be ${MAX_CHARS} characters or less.`);
+        Alert.alert(
+          'Too Long',
+          `Commitment must be ${MAX_CHARS} characters or less.`
+        );
       }
       return;
     }
@@ -94,16 +108,24 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
       if (Platform.OS === 'web') {
         window.alert('Please enter your daily action.');
       } else {
-        Alert.alert('Required', 'Please enter what you will do every day to achieve this commitment.');
+        Alert.alert(
+          'Required',
+          'Please enter what you will do every day to achieve this commitment.'
+        );
       }
       return;
     }
 
     if (dailyAction.trim().length > MAX_DAILY_ACTION_CHARS) {
       if (Platform.OS === 'web') {
-        window.alert(`Daily action must be ${MAX_DAILY_ACTION_CHARS} characters or less.`);
+        window.alert(
+          `Daily action must be ${MAX_DAILY_ACTION_CHARS} characters or less.`
+        );
       } else {
-        Alert.alert('Too Long', `Daily action must be ${MAX_DAILY_ACTION_CHARS} characters or less.`);
+        Alert.alert(
+          'Too Long',
+          `Daily action must be ${MAX_DAILY_ACTION_CHARS} characters or less.`
+        );
       }
       return;
     }
@@ -112,16 +134,24 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
       if (Platform.OS === 'web') {
         window.alert('You must agree that this commitment will be public.');
       } else {
-        Alert.alert('Required', 'You must agree that this commitment will be public and visible to all users.');
+        Alert.alert(
+          'Required',
+          'You must agree that this commitment will be public and visible to all users.'
+        );
       }
       return;
     }
 
     if (!agreedPermanent) {
       if (Platform.OS === 'web') {
-        window.alert('You must acknowledge that this commitment becomes permanent after 24 hours.');
+        window.alert(
+          'You must acknowledge that this commitment becomes permanent after 24 hours.'
+        );
       } else {
-        Alert.alert('Required', 'You must acknowledge that this commitment becomes permanent after 24 hours.');
+        Alert.alert(
+          'Required',
+          'You must acknowledge that this commitment becomes permanent after 24 hours.'
+        );
       }
       return;
     }
@@ -154,7 +184,7 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
             .from('commitments')
             .update({
               commitment_text: processedCommitment.trim(),
-              daily_action: dailyAction.trim()
+              daily_action: dailyAction.trim(),
             })
             .eq('id', commitmentId);
 
@@ -163,7 +193,10 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
             if (Platform.OS === 'web') {
               window.alert('Failed to update commitment. Please try again.');
             } else {
-              Alert.alert('Error', 'Failed to update commitment. Please try again.');
+              Alert.alert(
+                'Error',
+                'Failed to update commitment. Please try again.'
+              );
             }
             return;
           }
@@ -178,9 +211,12 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
       let founderType = null;
       if (profile) {
         try {
-          const parsed = typeof profile === 'string' ? JSON.parse(profile) : profile;
+          const parsed =
+            typeof profile === 'string' ? JSON.parse(profile) : profile;
           founderType = parsed?.founderType || null;
-        } catch (e) { /* ignore */ }
+        } catch (e) {
+          /* ignore */
+        }
       }
 
       const deadline = get30DaysFromNow().toISOString();
@@ -215,7 +251,9 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
       }
 
       await refreshActiveCommitment();
-      navigation.navigate('dailyCheckIn', { commitment: savedCommitment || fallbackCommitment });
+      navigation.navigate('dailyCheckIn', {
+        commitment: savedCommitment || fallbackCommitment,
+      });
     } catch (err) {
       console.error('Error posting commitment:', err);
       if (Platform.OS === 'web') {
@@ -251,8 +289,8 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <TouchableOpacity 
-          onPress={() => navigation.goBack()} 
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
           style={styles.backButton}
           hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
         >
@@ -260,17 +298,36 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
         </TouchableOpacity>
 
         <View style={styles.header}>
-          <Text style={styles.title}>{editMode ? 'Edit Your Commitment' : 'Post Your Commitment'}</Text>
-          <Text style={styles.subtitle}>{editMode ? 'Update your commitment text.' : 'Make it public. Make it happen.'}</Text>
+          <Text style={styles.title}>
+            {editMode ? 'Edit Your Commitment' : 'Post Your Commitment'}
+          </Text>
+          <Text style={styles.subtitle}>
+            {editMode
+              ? 'Update your commitment text.'
+              : 'Make it public. Make it happen.'}
+          </Text>
         </View>
 
         {/* GATE BANNERS */}
         {currentSlotStatus === 'active' && activeCommitment && (
-          <View style={[styles.gateBanner, { backgroundColor: '#FFFBEB', borderColor: '#F59E0B' }]}>
-            <Text style={[styles.gateLabel, { color: '#92400E' }]}>ACTIVE COMMITMENT</Text>
-            <Text style={styles.gateText}>"{activeCommitment.commitment_text}"</Text>
+          <View
+            style={[
+              styles.gateBanner,
+              { backgroundColor: '#FFFBEB', borderColor: '#F59E0B' },
+            ]}
+          >
+            <Text style={[styles.gateLabel, { color: '#92400E' }]}>
+              ACTIVE COMMITMENT
+            </Text>
+            <Text style={styles.gateText}>
+              "{activeCommitment.commitment_text}"
+            </Text>
             <Text style={[styles.gateMeta, { color: '#B45309' }]}>
-              {Math.ceil((new Date(activeCommitment.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days remaining
+              {Math.ceil(
+                (new Date(activeCommitment.deadline).getTime() - Date.now()) /
+                  (1000 * 60 * 60 * 24)
+              )}{' '}
+              days remaining
             </Text>
             <TouchableOpacity
               style={[styles.gateCta, { backgroundColor: '#F59E0B' }]}
@@ -285,7 +342,9 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
           <View style={styles.mainContent}>
             <View style={styles.inputSection}>
               <Text style={styles.label}>Your 30-Day Commitment</Text>
-              <Text style={styles.charCount}>{commitment.length}/{MAX_CHARS}</Text>
+              <Text style={styles.charCount}>
+                {commitment.length}/{MAX_CHARS}
+              </Text>
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.textInput}
@@ -301,8 +360,12 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
             </View>
 
             <View style={styles.inputSection}>
-              <Text style={styles.label}>What will you do EVERY DAY to achieve this?</Text>
-              <Text style={styles.charCount}>{dailyAction.length}/{MAX_DAILY_ACTION_CHARS}</Text>
+              <Text style={styles.label}>
+                What will you do EVERY DAY to achieve this?
+              </Text>
+              <Text style={styles.charCount}>
+                {dailyAction.length}/{MAX_DAILY_ACTION_CHARS}
+              </Text>
               <View style={[styles.inputContainer, { borderColor: '#3B82F6' }]}>
                 <TextInput
                   style={styles.textInput}
@@ -314,13 +377,20 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
                   editable={!isSubmitting}
                 />
               </View>
-              <Text style={styles.helpText}>Be specific and realistic. You'll check this off EVERY DAY for 30 days.</Text>
+              <Text style={styles.helpText}>
+                Be specific and realistic. You'll check this off EVERY DAY for
+                30 days.
+              </Text>
             </View>
 
             <View style={styles.examplesSection}>
               <Text style={styles.examplesTitle}>Examples</Text>
               {EXAMPLES.map((example, i) => (
-                <TouchableOpacity key={i} style={styles.example} onPress={() => handleExampleTap(example)}>
+                <TouchableOpacity
+                  key={i}
+                  style={styles.example}
+                  onPress={() => handleExampleTap(example)}
+                >
                   <Text style={styles.exampleText}>{example}</Text>
                 </TouchableOpacity>
               ))}
@@ -329,12 +399,16 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
             <View style={styles.rulesSection}>
               <Text style={styles.rulesTitle}>Rules</Text>
               {RULES.map((rule, i) => (
-                <Text key={i} style={styles.ruleText}>• {rule}</Text>
+                <Text key={i} style={styles.ruleText}>
+                  • {rule}
+                </Text>
               ))}
             </View>
 
             <View style={styles.warningSection}>
-              <Text style={styles.warningTitle}>⚠️ Important: 24-Hour Edit Window</Text>
+              <Text style={styles.warningTitle}>
+                ⚠️ Important: 24-Hour Edit Window
+              </Text>
               <Text style={styles.warningText}>
                 Once 24 hours pass, this commitment becomes permanent.
               </Text>
@@ -345,7 +419,8 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
                 After that, it's locked until your deadline on {formattedDate}.
               </Text>
               <Text style={styles.warningText}>
-                If you don't complete it by then, it will be marked as ABANDONED and stay in the public feed forever.
+                If you don't complete it by then, it will be marked as ABANDONED
+                and stay in the public feed forever.
               </Text>
             </View>
 
@@ -353,11 +428,17 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
               style={styles.checkboxRow}
               onPress={() => setAgreedPublic(!agreedPublic)}
             >
-              <View style={[styles.checkbox, agreedPublic && styles.checkboxChecked]}>
+              <View
+                style={[
+                  styles.checkbox,
+                  agreedPublic && styles.checkboxChecked,
+                ]}
+              >
                 {agreedPublic && <Text style={styles.checkmark}>✓</Text>}
               </View>
               <Text style={styles.checkboxLabel}>
-                I understand this commitment will be public and visible to all users
+                I understand this commitment will be public and visible to all
+                users
               </Text>
             </TouchableOpacity>
 
@@ -365,7 +446,12 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
               style={styles.checkboxRow}
               onPress={() => setAgreedPermanent(!agreedPermanent)}
             >
-              <View style={[styles.checkbox, agreedPermanent && styles.checkboxChecked]}>
+              <View
+                style={[
+                  styles.checkbox,
+                  agreedPermanent && styles.checkboxChecked,
+                ]}
+              >
                 {agreedPermanent && <Text style={styles.checkmark}>✓</Text>}
               </View>
               <Text style={styles.checkboxLabel}>
@@ -377,7 +463,10 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
 
             <View style={styles.ctaSection}>
               <TouchableOpacity
-                style={[styles.submitButton, isSubmitting && styles.disabledButton]}
+                style={[
+                  styles.submitButton,
+                  isSubmitting && styles.disabledButton,
+                ]}
                 onPress={handleSubmit}
                 disabled={isSubmitting}
               >
@@ -385,7 +474,9 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
                   {isSubmitting ? 'Posting...' : 'Post My Commitment'}
                 </Text>
               </TouchableOpacity>
-              <Text style={styles.freeLabel}>One active public commitment at a time.</Text>
+              <Text style={styles.freeLabel}>
+                One active public commitment at a time.
+              </Text>
             </View>
           </View>
         )}
@@ -395,7 +486,9 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
           <View style={styles.mainContent}>
             <View style={styles.inputSection}>
               <Text style={styles.label}>Your 30-Day Commitment</Text>
-              <Text style={styles.charCount}>{commitment.length}/{MAX_CHARS}</Text>
+              <Text style={styles.charCount}>
+                {commitment.length}/{MAX_CHARS}
+              </Text>
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.textInput}
@@ -411,8 +504,12 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
             </View>
 
             <View style={styles.inputSection}>
-              <Text style={styles.label}>What will you do EVERY DAY to achieve this?</Text>
-              <Text style={styles.charCount}>{dailyAction.length}/{MAX_DAILY_ACTION_CHARS}</Text>
+              <Text style={styles.label}>
+                What will you do EVERY DAY to achieve this?
+              </Text>
+              <Text style={styles.charCount}>
+                {dailyAction.length}/{MAX_DAILY_ACTION_CHARS}
+              </Text>
               <View style={[styles.inputContainer, { borderColor: '#3B82F6' }]}>
                 <TextInput
                   style={styles.textInput}
@@ -424,12 +521,17 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
                   editable={!isSubmitting}
                 />
               </View>
-              <Text style={styles.helpText}>This is what appears on your daily progress screen.</Text>
+              <Text style={styles.helpText}>
+                This is what appears on your daily progress screen.
+              </Text>
             </View>
 
             <View style={styles.ctaSection}>
               <TouchableOpacity
-                style={[styles.submitButton, isSubmitting && styles.disabledButton]}
+                style={[
+                  styles.submitButton,
+                  isSubmitting && styles.disabledButton,
+                ]}
                 onPress={handleSubmit}
                 disabled={isSubmitting}
               >
@@ -437,7 +539,9 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
                   {isSubmitting ? 'Saving...' : 'Save Changes'}
                 </Text>
               </TouchableOpacity>
-              <Text style={styles.freeLabel}>Changes will be reflected in the feed immediately.</Text>
+              <Text style={styles.freeLabel}>
+                Changes will be reflected in the feed immediately.
+              </Text>
             </View>
           </View>
         )}

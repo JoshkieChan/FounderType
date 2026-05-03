@@ -15,35 +15,47 @@ export function useToast() {
       id,
     };
 
-    setToasts(prev => [...prev, newToast]);
+    setToasts((prev) => [...prev, newToast]);
 
     // Auto remove after duration
     setTimeout(() => {
-      setToasts(prev => prev.filter(toast => toast.id !== id));
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, props.duration || 3000);
 
     return id;
   }, []);
 
   const hideToast = useCallback((id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const showSuccess = useCallback((message: string, options?: Partial<ToastProps>) => {
-    return showToast({ message, type: 'success', ...options });
-  }, [showToast]);
+  const showSuccess = useCallback(
+    (message: string, options?: Partial<ToastProps>) => {
+      return showToast({ message, type: 'success', ...options });
+    },
+    [showToast]
+  );
 
-  const showError = useCallback((message: string, options?: Partial<ToastProps>) => {
-    return showToast({ message, type: 'error', ...options });
-  }, [showToast]);
+  const showError = useCallback(
+    (message: string, options?: Partial<ToastProps>) => {
+      return showToast({ message, type: 'error', ...options });
+    },
+    [showToast]
+  );
 
-  const showWarning = useCallback((message: string, options?: Partial<ToastProps>) => {
-    return showToast({ message, type: 'warning', ...options });
-  }, [showToast]);
+  const showWarning = useCallback(
+    (message: string, options?: Partial<ToastProps>) => {
+      return showToast({ message, type: 'warning', ...options });
+    },
+    [showToast]
+  );
 
-  const showInfo = useCallback((message: string, options?: Partial<ToastProps>) => {
-    return showToast({ message, type: 'info', ...options });
-  }, [showToast]);
+  const showInfo = useCallback(
+    (message: string, options?: Partial<ToastProps>) => {
+      return showToast({ message, type: 'info', ...options });
+    },
+    [showToast]
+  );
 
   return {
     toasts,

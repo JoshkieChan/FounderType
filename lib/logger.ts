@@ -7,9 +7,17 @@ enum LogLevel {
 }
 
 class Logger {
-  private static currentLevel: LogLevel = __DEV__ ? LogLevel.DEBUG : LogLevel.WARN;
+  private static currentLevel: LogLevel = __DEV__
+    ? LogLevel.DEBUG
+    : LogLevel.WARN;
 
-  private static formatMessage(level: string, message: string, ...args: any[]): string {
+  static readonly LogLevel = LogLevel;
+
+  private static formatMessage(
+    level: string,
+    message: string,
+    ...args: any[]
+  ): string {
     const timestamp = new Date().toISOString();
     return `[${timestamp}] [${level}] ${message}`;
   }

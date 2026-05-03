@@ -1,12 +1,22 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function PrivacyPolicyScreen({ navigation }: { navigation: any }) {
-  const today = new Date().toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+export default function PrivacyPolicyScreen({
+  navigation,
+}: {
+  navigation: any;
+}) {
+  const today = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   });
 
   return (
@@ -17,18 +27,27 @@ export default function PrivacyPolicyScreen({ navigation }: { navigation: any })
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentContainer}>
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentContainer}
+      >
         <Text style={styles.title}>Privacy Policy</Text>
         <Text style={styles.date}>Effective: {today}</Text>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>What We Collect</Text>
           <Text style={styles.sectionText}>
-            We collect only what's necessary to run the diagnostic and public accountability tracker:
+            We collect only what's necessary to run the diagnostic and public
+            accountability tracker:
           </Text>
-          <Text style={styles.bulletPoint}>- Your answers to the 7 assessment questions</Text>
+          <Text style={styles.bulletPoint}>
+            - Your answers to the 7 assessment questions
+          </Text>
           <Text style={styles.bulletPoint}>- Your founder type result</Text>
-          <Text style={styles.bulletPoint}>- Public commitment text, daily action, and check-in progress</Text>
+          <Text style={styles.bulletPoint}>
+            - Public commitment text, daily action, and check-in progress
+          </Text>
         </View>
 
         <View style={styles.section}>
@@ -36,11 +55,19 @@ export default function PrivacyPolicyScreen({ navigation }: { navigation: any })
           <Text style={styles.sectionText}>
             We intentionally do not collect:
           </Text>
-          <Text style={styles.bulletPoint}>- Your name or personal identity</Text>
-          <Text style={styles.bulletPoint}>- Email address or contact information</Text>
+          <Text style={styles.bulletPoint}>
+            - Your name or personal identity
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - Email address or contact information
+          </Text>
           <Text style={styles.bulletPoint}>- Location data</Text>
-          <Text style={styles.bulletPoint}>- Device identifiers beyond what's necessary</Text>
-          <Text style={styles.bulletPoint}>- Social media profiles or accounts</Text>
+          <Text style={styles.bulletPoint}>
+            - Device identifiers beyond what's necessary
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - Social media profiles or accounts
+          </Text>
         </View>
 
         <View style={styles.section}>
@@ -48,9 +75,15 @@ export default function PrivacyPolicyScreen({ navigation }: { navigation: any })
           <Text style={styles.sectionText}>
             Your data is used exclusively for:
           </Text>
-          <Text style={styles.bulletPoint}>- Calculating your founder type locally from your answers</Text>
-          <Text style={styles.bulletPoint}>- Showing your public 30-day commitment in the feed</Text>
-          <Text style={styles.bulletPoint}>- Tracking daily check-ins and abandoned/completed status</Text>
+          <Text style={styles.bulletPoint}>
+            - Calculating your founder type locally from your answers
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - Showing your public 30-day commitment in the feed
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - Tracking daily check-ins and abandoned/completed status
+          </Text>
         </View>
 
         <View style={styles.section}>
@@ -58,58 +91,90 @@ export default function PrivacyPolicyScreen({ navigation }: { navigation: any })
           <Text style={styles.sectionText}>
             We use trusted third-party services:
           </Text>
-          <Text style={styles.bulletPoint}>- <Text style={styles.bold}>Supabase</Text> - Secure data storage</Text>
+          <Text style={styles.bulletPoint}>
+            - <Text style={styles.bold}>Supabase</Text> - Secure data storage
+          </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Data Security</Text>
-          <Text style={styles.sectionText}>
-            We protect your data with:
+          <Text style={styles.sectionText}>We protect your data with:</Text>
+          <Text style={styles.bulletPoint}>
+            - End-to-end encryption for sensitive data
           </Text>
-          <Text style={styles.bulletPoint}>- End-to-end encryption for sensitive data</Text>
-          <Text style={styles.bulletPoint}>- Secure cloud storage via Supabase</Text>
-          <Text style={styles.bulletPoint}>- Limited data access to essential personnel only</Text>
-          <Text style={styles.bulletPoint}>- Regular security audits and updates</Text>
+          <Text style={styles.bulletPoint}>
+            - Secure cloud storage via Supabase
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - Limited data access to essential personnel only
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - Regular security audits and updates
+          </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Your Rights</Text>
-          <Text style={styles.sectionText}>
-            You have the right to:
-          </Text>
+          <Text style={styles.sectionText}>You have the right to:</Text>
           <Text style={styles.bulletPoint}>- Access your data at any time</Text>
-          <Text style={styles.bulletPoint}>- Request deletion of your data</Text>
+          <Text style={styles.bulletPoint}>
+            - Request deletion of your data
+          </Text>
           <Text style={styles.bulletPoint}>- Opt out of data collection</Text>
-          <Text style={styles.bulletPoint}>- Export your data in portable format</Text>
+          <Text style={styles.bulletPoint}>
+            - Export your data in portable format
+          </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Data Deletion</Text>
           <Text style={styles.sectionText}>
-            You can request complete deletion of your account and all associated data at any time.
+            You can request complete deletion of your account and all associated
+            data at any time.
           </Text>
-          
-          <Text style={styles.bold}>What gets deleted:</Text>
-          <Text style={styles.bulletPoint}>- All diagnostic answers and founder type results</Text>
-          <Text style={styles.bulletPoint}>- All commitments (active, completed, or abandoned)</Text>
-          <Text style={styles.bulletPoint}>- All check-in history and progress data</Text>
-          <Text style={styles.bulletPoint}>- Account information and preferences</Text>
 
-          <Text style={[styles.bold, { marginTop: 12 }]}>How to request deletion:</Text>
-          <Text style={styles.bulletPoint}>1. Email us at privacy@foundertype.app with subject "Delete My Data"</Text>
-          <Text style={styles.bulletPoint}>2. Include your account identifier or commitment text for verification</Text>
-          <Text style={styles.bulletPoint}>3. We will process your request within 30 days</Text>
-          <Text style={styles.bulletPoint}>4. Once deleted, your data cannot be recovered</Text>
+          <Text style={styles.bold}>What gets deleted:</Text>
+          <Text style={styles.bulletPoint}>
+            - All diagnostic answers and founder type results
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - All commitments (active, completed, or abandoned)
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - All check-in history and progress data
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - Account information and preferences
+          </Text>
+
+          <Text style={[styles.bold, { marginTop: 12 }]}>
+            How to request deletion:
+          </Text>
+          <Text style={styles.bulletPoint}>
+            1. Email us at privacy@foundertype.app with subject "Delete My Data"
+          </Text>
+          <Text style={styles.bulletPoint}>
+            2. Include your account identifier or commitment text for
+            verification
+          </Text>
+          <Text style={styles.bulletPoint}>
+            3. We will process your request within 30 days
+          </Text>
+          <Text style={styles.bulletPoint}>
+            4. Once deleted, your data cannot be recovered
+          </Text>
 
           <Text style={[styles.sectionText, { marginTop: 12 }]}>
-            <Text style={styles.bold}>Note:</Text> Deleted commitments will be removed from the public feed. This action is permanent.
+            <Text style={styles.bold}>Note:</Text> Deleted commitments will be
+            removed from the public feed. This action is permanent.
           </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Contact Us</Text>
           <Text style={styles.sectionText}>
-            If you have questions about this privacy policy or how we handle your data, please contact us at:
+            If you have questions about this privacy policy or how we handle
+            your data, please contact us at:
           </Text>
           <Text style={styles.contactEmail}>privacy@foundertype.app</Text>
         </View>
@@ -117,13 +182,17 @@ export default function PrivacyPolicyScreen({ navigation }: { navigation: any })
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Changes to This Policy</Text>
           <Text style={styles.sectionText}>
-            We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Effective" date above.
+            We may update this privacy policy from time to time. We will notify
+            you of any changes by posting the new policy on this page and
+            updating the "Effective" date above.
           </Text>
         </View>
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            This privacy policy is designed to be transparent and user-focused. We believe in building trust through honesty about what data we collect and why.
+            This privacy policy is designed to be transparent and user-focused.
+            We believe in building trust through honesty about what data we
+            collect and why.
           </Text>
         </View>
       </ScrollView>

@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
@@ -14,7 +22,13 @@ interface CheckInData {
   lastCheckInDate: string | null;
 }
 
-export default function DailyCheckInScreen({ navigation, route }: { navigation: any; route: any }) {
+export default function DailyCheckInScreen({
+  navigation,
+  route,
+}: {
+  navigation: any;
+  route: any;
+}) {
   const [checkInData, setCheckInData] = useState<CheckInData>({
     currentDay: 1,
     completedDays: [],
@@ -42,7 +56,9 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
       setActiveCommitment(passedCommitment);
       setTodayAction(passedCommitment.daily_action || '');
       const today = new Date().toISOString().split('T')[0];
-      setTodayAlreadyCheckedIn((passedCommitment.check_ins || []).includes(today));
+      setTodayAlreadyCheckedIn(
+        (passedCommitment.check_ins || []).includes(today)
+      );
 
       if (passedCommitment.deadline) {
         const deadline = new Date(passedCommitment.deadline);
@@ -51,12 +67,14 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
       }
       if (passedCommitment.created_at) {
         const created = new Date(passedCommitment.created_at);
-        const days = Math.floor((Date.now() - created.getTime()) / (1000 * 60 * 60 * 24));
+        const days = Math.floor(
+          (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24)
+        );
         setDaysSinceStart(days);
       }
       return;
     }
-    
+
     console.error('No commitment passed to DailyCheckIn screen');
   };
 
@@ -70,7 +88,10 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
 
         if (lastDate && lastDate !== today) {
           const lastCheckIn = new Date(lastDate);
-          const daysDiff = Math.floor((new Date().getTime() - lastCheckIn.getTime()) / (1000 * 60 * 60 * 24));
+          const daysDiff = Math.floor(
+            (new Date().getTime() - lastCheckIn.getTime()) /
+              (1000 * 60 * 60 * 24)
+          );
           if (daysDiff > 1) {
             data.streak = 0;
           }
@@ -88,7 +109,9 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
   const loadTodayAction = async () => {
     try {
       // Load daily_action from active commitment
-      const storedCommitment = await AsyncStorage.getItem('foundertype_active_commitment');
+      const storedCommitment = await AsyncStorage.getItem(
+        'foundertype_active_commitment'
+      );
       if (storedCommitment) {
         const commitment = JSON.parse(storedCommitment);
         if (commitment.daily_action) {
@@ -122,7 +145,10 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
 
   const handleDoneToday = async () => {
     const today = new Date().toDateString();
-    const newCompletedDays = [...checkInData.completedDays, checkInData.currentDay];
+    const newCompletedDays = [
+      ...checkInData.completedDays,
+      checkInData.currentDay,
+    ];
     const newStreak = checkInData.streak + 1;
     const nextDay = checkInData.currentDay + 1;
 
@@ -140,30 +166,39 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
       try {
         const completedAt = new Date().toISOString();
         const todayIso = completedAt.split('T')[0];
-        const updatedCheckIns = [...(activeCommitment.check_ins || []), todayIso];
+        const updatedCheckIns = [
+          ...(activeCommitment.check_ins || []),
+          todayIso,
+        ];
 
-        await supabase.from('commitments').update({
-          check_ins: updatedCheckIns,
-          days_completed: newCompletedDays.length,
-        }).eq('id', activeCommitment.id);
+        await supabase
+          .from('commitments')
+          .update({
+            check_ins: updatedCheckIns,
+            days_completed: newCompletedDays.length,
+          })
+          .eq('id', activeCommitment.id);
 
-          await supabase.from('daily_progress').upsert({
+        await supabase.from('daily_progress').upsert(
+          {
             commitment_id: activeCommitment.id,
             day_number: checkInData.currentDay,
             completed: true,
             completed_at: completedAt,
-          }, { onConflict: 'commitment_id,day_number' });
+          },
+          { onConflict: 'commitment_id,day_number' }
+        );
 
-          setActiveCommitment({
-            ...activeCommitment,
-            check_ins: updatedCheckIns,
-            days_completed: newCompletedDays.length,
-          });
-          setTodayAlreadyCheckedIn(true);
-        } catch (err) {
-          console.error('Error updating commitment check-in:', err);
-        }
+        setActiveCommitment({
+          ...activeCommitment,
+          check_ins: updatedCheckIns,
+          days_completed: newCompletedDays.length,
+        });
+        setTodayAlreadyCheckedIn(true);
+      } catch (err) {
+        console.error('Error updating commitment check-in:', err);
       }
+    }
 
     // Simple milestone detection
     if (newCompletedDays.length === 1) {
@@ -175,30 +210,36 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
     if (nextDay > 30) {
       // Day 30 reached — show completion prompt instead of auto-completing
       if (Platform.OS === 'web') {
-        window.alert('Day 30 reached. Time to mark your commitment complete or abandon it.');
+        window.alert(
+          'Day 30 reached. Time to mark your commitment complete or abandon it.'
+        );
       } else {
-        Alert.alert('Day 30', 'Time to mark your commitment complete or abandon it.');
+        Alert.alert(
+          'Day 30',
+          'Time to mark your commitment complete or abandon it.'
+        );
       }
       return;
     } else {
       if (Platform.OS === 'web') {
-        window.alert('Day ' + checkInData.currentDay + ' done. Come back tomorrow.');
+        window.alert(
+          'Day ' + checkInData.currentDay + ' done. Come back tomorrow.'
+        );
       } else {
         Alert.alert('Great job!', 'Come back tomorrow for your next action!');
       }
     }
   };
 
-  
   const handleDeleteBroken = async () => {
     console.log('Delete button pressed');
-    
+
     // Get commitment from state or route params
     const commitment = activeCommitment || route?.params?.commitment;
     console.log('Using commitment:', commitment);
-    
+
     const commitmentId = commitment?.id;
-    
+
     if (!commitmentId) {
       console.error('No commitment ID found');
       if (Platform.OS === 'web') {
@@ -208,24 +249,24 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
       }
       return;
     }
-    
+
     console.log('Deleting commitment with ID:', commitmentId);
-    
+
     try {
       const userId = await getCurrentUserId();
       console.log('User ID:', userId);
-      
+
       // Hard delete commitment
       const { error } = await supabase
         .from('commitments')
         .delete()
         .eq('id', commitmentId);
-      
+
       if (error) {
         console.error('Supabase delete error:', error);
         throw error;
       }
-      
+
       console.log('Commitment deleted from database');
 
       // Clear ALL commitment-related storage
@@ -236,7 +277,7 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
         'foundertype_active_commitment',
         'foundertype_commitment',
       ]);
-      
+
       console.log('Storage cleared, navigating to landing');
 
       // Show success and redirect to home
@@ -245,46 +286,50 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
       } else {
         Alert.alert('Success', 'Commitment deleted successfully');
       }
-      
+
       navigation.navigate('landing');
     } catch (err) {
       console.error('Error deleting commitment:', err);
       if (Platform.OS === 'web') {
         window.alert('Failed to delete commitment: ' + (err as Error).message);
       } else {
-        Alert.alert('Error', 'Failed to delete commitment: ' + (err as Error).message);
+        Alert.alert(
+          'Error',
+          'Failed to delete commitment: ' + (err as Error).message
+        );
       }
     }
   };
 
   const handleAbandon = () => {
-    const message = "This will be marked as ABANDONED and stay visible in the public feed forever. Everyone will see you gave up.";
+    const message =
+      'This will be marked as ABANDONED and stay visible in the public feed forever. Everyone will see you gave up.';
     if (Platform.OS === 'web') {
       if (window.confirm(message + ' Are you sure?')) {
         doAbandon();
       }
     } else {
-      Alert.alert(
-        'Abandon This Commitment?',
-        message,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: "Yes, I'm Abandoning It", style: 'destructive', onPress: doAbandon },
-        ]
-      );
+      Alert.alert('Abandon This Commitment?', message, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: "Yes, I'm Abandoning It",
+          style: 'destructive',
+          onPress: doAbandon,
+        },
+      ]);
     }
   };
 
   const doAbandon = async () => {
     console.log('Abandon confirmed, starting process...');
-    
+
     // Get commitment from state or route params
     const commitment = activeCommitment || route?.params?.commitment;
     console.log('Using commitment for abandon:', commitment);
-    
+
     const commitmentId = commitment?.id;
     const commitmentText = commitment?.commitment_text || '';
-    
+
     if (!commitmentId) {
       console.error('No commitment ID found for abandon');
       if (Platform.OS === 'web') {
@@ -294,17 +339,17 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
       }
       return;
     }
-    
+
     console.log('Abandoning commitment with ID:', commitmentId);
-    
+
     try {
       const userId = await getCurrentUserId();
       console.log('User ID:', userId);
-      
+
       const isLocal = String(commitmentId).startsWith('local-');
       const abandonedAt = new Date().toISOString();
       const abandonedOnDay = daysSinceStart + 1;
-      
+
       let error;
       if (isLocal) {
         const { error: insertError } = await supabase
@@ -317,31 +362,38 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
             abandoned_at: abandonedAt,
             abandoned_on_day: abandonedOnDay,
             deadline: activeCommitment?.deadline || new Date().toISOString(),
-            created_at: activeCommitment?.created_at || new Date().toISOString(),
+            created_at:
+              activeCommitment?.created_at || new Date().toISOString(),
           });
         error = insertError;
       } else {
         const { error: updateError } = await supabase
           .from('commitments')
-          .update({ 
-            status: 'abandoned', 
+          .update({
+            status: 'abandoned',
             abandoned: true,
             abandoned_at: abandonedAt,
-            abandoned_on_day: abandonedOnDay
+            abandoned_on_day: abandonedOnDay,
           })
           .eq('id', commitmentId);
         error = updateError;
       }
-      
+
       if (error) {
         console.error('Supabase abandon error:', error);
         throw error;
       }
-      
+
       console.log('Commitment marked as abandoned in database');
 
-      await AsyncStorage.setItem('foundertype_abandoned_commitment_text', commitmentText);
-      await AsyncStorage.setItem('foundertype_abandoned_date', new Date().toISOString());
+      await AsyncStorage.setItem(
+        'foundertype_abandoned_commitment_text',
+        commitmentText
+      );
+      await AsyncStorage.setItem(
+        'foundertype_abandoned_date',
+        new Date().toISOString()
+      );
 
       // Clear ALL commitment-related storage
       await AsyncStorage.multiRemove([
@@ -361,14 +413,17 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
       } else {
         Alert.alert('Abandoned', 'Commitment marked as ABANDONED permanently');
       }
-      
+
       navigation.navigate('publicFeed');
     } catch (err) {
       console.error('Error abandoning commitment:', err);
       if (Platform.OS === 'web') {
         window.alert('Failed to abandon commitment: ' + (err as Error).message);
       } else {
-        Alert.alert('Error', 'Failed to abandon commitment: ' + (err as Error).message);
+        Alert.alert(
+          'Error',
+          'Failed to abandon commitment: ' + (err as Error).message
+        );
       }
     }
   };
@@ -378,33 +433,38 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
     try {
       const isLocal = String(activeCommitment.id).startsWith('local-');
       const completedAt = new Date().toISOString();
-      
+
       if (isLocal) {
         // For local-only commitments, insert as a new completed record
-        const { error } = await supabase
-          .from('commitments')
-          .insert({
-            commitment_text: activeCommitment.commitment_text,
-            daily_action: activeCommitment.daily_action,
-            founder_type: activeCommitment.founder_type,
-            status: 'completed',
-            completed: true,
-            completed_at: completedAt,
-            days_completed: 30,
-            deadline: activeCommitment.deadline,
-            created_at: activeCommitment.created_at || new Date().toISOString(),
-          });
+        const { error } = await supabase.from('commitments').insert({
+          commitment_text: activeCommitment.commitment_text,
+          daily_action: activeCommitment.daily_action,
+          founder_type: activeCommitment.founder_type,
+          status: 'completed',
+          completed: true,
+          completed_at: completedAt,
+          days_completed: 30,
+          deadline: activeCommitment.deadline,
+          created_at: activeCommitment.created_at || new Date().toISOString(),
+        });
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('commitments')
-          .update({ status: 'completed', completed: true, completed_at: completedAt })
+          .update({
+            status: 'completed',
+            completed: true,
+            completed_at: completedAt,
+          })
           .eq('id', activeCommitment.id);
         if (error) throw error;
       }
 
       // Set completion flag
-      await AsyncStorage.setItem('foundertype_has_completed_commitment', 'true');
+      await AsyncStorage.setItem(
+        'foundertype_has_completed_commitment',
+        'true'
+      );
       await AsyncStorage.removeItem('foundertype_has_active_commitment');
       await AsyncStorage.removeItem('foundertype_active_commitment_text');
       await AsyncStorage.removeItem('foundertype_active_deadline');
@@ -438,7 +498,9 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
             isCurrent && styles.currentDay,
           ]}
         >
-          <Text style={[styles.dayNumber, isCompleted && styles.completedDayText]}>
+          <Text
+            style={[styles.dayNumber, isCompleted && styles.completedDayText]}
+          >
             {i}
           </Text>
         </View>
@@ -458,7 +520,10 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <TouchableOpacity onPress={() => navigation.navigate('landing')} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('landing')}
+          style={styles.backButton}
+        >
           <Text style={styles.backText}>×</Text>
         </TouchableOpacity>
 
@@ -467,7 +532,9 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
         {activeCommitment && (
           <View style={styles.commitmentBanner}>
             <Text style={styles.commitmentBannerLabel}>YOUR COMMITMENT</Text>
-            <Text style={styles.commitmentBannerText}>{activeCommitment.commitment_text}</Text>
+            <Text style={styles.commitmentBannerText}>
+              {activeCommitment.commitment_text}
+            </Text>
             {todayAlreadyCheckedIn && (
               <Text style={styles.alreadyCheckedIn}>✓ Checked in today</Text>
             )}
@@ -479,32 +546,53 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
           {todayAction ? (
             <View>
               <Text style={styles.actionText}>{todayAction}</Text>
-              <TouchableOpacity style={styles.editActionButton} onPress={handleEditCommitment}>
+              <TouchableOpacity
+                style={styles.editActionButton}
+                onPress={handleEditCommitment}
+              >
                 <Text style={styles.editActionButtonText}>Edit Commitment</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <View>
-              <Text style={styles.actionText}>Add a daily action to start checking in.</Text>
-              <TouchableOpacity style={styles.editActionButton} onPress={handleEditCommitment}>
-                <Text style={styles.editActionButtonText}>Add Daily Action</Text>
+              <Text style={styles.actionText}>
+                Add a daily action to start checking in.
+              </Text>
+              <TouchableOpacity
+                style={styles.editActionButton}
+                onPress={handleEditCommitment}
+              >
+                <Text style={styles.editActionButtonText}>
+                  Add Daily Action
+                </Text>
               </TouchableOpacity>
             </View>
           )}
         </View>
 
         {/* Day 30 Decision Section */}
-        {(isDeadlinePassed || daysSinceStart >= 30 || checkInData.completedDays.length >= 30) && (
+        {(isDeadlinePassed ||
+          daysSinceStart >= 30 ||
+          checkInData.completedDays.length >= 30) && (
           <View style={styles.decisionCard}>
             <Text style={styles.decisionTitle}>Time's Up</Text>
             <Text style={styles.decisionText}>
               Your 30-day deadline has passed. Mark it complete or abandon it.
             </Text>
             <View style={styles.decisionButtons}>
-              <TouchableOpacity style={styles.completeButton} onPress={handleMarkComplete}>
+              <TouchableOpacity
+                style={styles.completeButton}
+                onPress={handleMarkComplete}
+              >
                 <Text style={styles.completeButtonText}>Mark Complete ✓</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.abandonBigButton} onPress={() => { console.log('Abandon big button pressed'); handleAbandon(); }}>
+              <TouchableOpacity
+                style={styles.abandonBigButton}
+                onPress={() => {
+                  console.log('Abandon big button pressed');
+                  handleAbandon();
+                }}
+              >
                 <Text style={styles.abandonBigText}>Abandon It ✕</Text>
               </TouchableOpacity>
             </View>
@@ -516,18 +604,29 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[styles.doneButton, (todayAlreadyCheckedIn || !todayAction) && styles.doneButtonDisabled]}
+            style={[
+              styles.doneButton,
+              (todayAlreadyCheckedIn || !todayAction) &&
+                styles.doneButtonDisabled,
+            ]}
             onPress={handleDoneToday}
             disabled={todayAlreadyCheckedIn || !todayAction}
           >
             <Text style={styles.doneButtonText}>
-              {todayAlreadyCheckedIn ? '✓ Completed Today' : !todayAction ? 'No Action Defined' : 'Done Today'}
+              {todayAlreadyCheckedIn
+                ? '✓ Completed Today'
+                : !todayAction
+                  ? 'No Action Defined'
+                  : 'Done Today'}
             </Text>
           </TouchableOpacity>
         </View>
 
         {checkInData.streak > 1 && (
-          <Text style={styles.streakText}> {Math.min(checkInData.streak, 30)} day streak</Text>
+          <Text style={styles.streakText}>
+            {' '}
+            {Math.min(checkInData.streak, 30)} day streak
+          </Text>
         )}
 
         <View style={styles.gridContainer}>
@@ -536,7 +635,13 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
         </View>
 
         {/* Abandon link */}
-        <TouchableOpacity style={styles.abandonLink} onPress={() => { console.log('Abandon link pressed'); handleAbandon(); }}>
+        <TouchableOpacity
+          style={styles.abandonLink}
+          onPress={() => {
+            console.log('Abandon link pressed');
+            handleAbandon();
+          }}
+        >
           <Text style={styles.abandonText}>I'm abandoning this commitment</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -550,7 +655,13 @@ const styles = StyleSheet.create({
   backButton: { alignSelf: 'flex-start', marginBottom: 20 },
   backText: { fontSize: 24, color: '#FFFFFF', fontWeight: 'bold' },
   loadingText: { color: '#FFFFFF', textAlign: 'center', marginTop: 100 },
-  header: { fontSize: 32, fontWeight: 'bold', color: '#3B82F6', textAlign: 'center', marginBottom: 20 },
+  header: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#3B82F6',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
   commitmentBanner: {
     backgroundColor: '#0D1F3A',
     borderRadius: 12,
@@ -567,8 +678,18 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   commitmentBannerText: { color: '#CCCCCC', fontSize: 14, lineHeight: 20 },
-  alreadyCheckedIn: { color: '#22C55E', fontSize: 12, fontWeight: '600', marginTop: 8 },
-  actionContainer: { backgroundColor: '#1A1A1A', padding: 20, borderRadius: 12, marginBottom: 30 },
+  alreadyCheckedIn: {
+    color: '#22C55E',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  actionContainer: {
+    backgroundColor: '#1A1A1A',
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 30,
+  },
   actionLabel: { fontSize: 16, color: '#888888', marginBottom: 10 },
   actionText: { fontSize: 20, color: '#FFFFFF', lineHeight: 28 },
   buttonContainer: { marginBottom: 30 },
@@ -581,12 +702,28 @@ const styles = StyleSheet.create({
   },
   doneButtonDisabled: { backgroundColor: '#1E3A5F' },
   doneButtonText: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
-    streakText: { fontSize: 18, color: '#FF6B35', textAlign: 'center', marginBottom: 20 },
+  streakText: {
+    fontSize: 18,
+    color: '#FF6B35',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
   gridContainer: { marginTop: 20 },
-  gridLabel: { fontSize: 16, color: '#888888', textAlign: 'center', marginBottom: 15 },
-  dayGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
+  gridLabel: {
+    fontSize: 16,
+    color: '#888888',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  dayGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+  },
   daySquare: {
-    width: 40, height: 40,
+    width: 40,
+    height: 40,
     backgroundColor: '#2A2A2A',
     borderRadius: 6,
     justifyContent: 'center',
@@ -598,7 +735,11 @@ const styles = StyleSheet.create({
   dayNumber: { fontSize: 12, color: '#888888', fontWeight: 'bold' },
   completedDayText: { color: '#FFFFFF' },
   abandonLink: { alignItems: 'center', paddingTop: 32, paddingBottom: 8 },
-  abandonText: { color: '#444444', fontSize: 13, textDecorationLine: 'underline' },
+  abandonText: {
+    color: '#444444',
+    fontSize: 13,
+    textDecorationLine: 'underline',
+  },
   decisionCard: {
     backgroundColor: '#1A1A1A',
     borderRadius: 12,

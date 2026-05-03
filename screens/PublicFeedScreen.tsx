@@ -11,9 +11,11 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { supabase } from '../lib/supabase';
 import { getCurrentUserId } from '../lib/storage';
 import { usePublicFeed } from '../hooks/usePublicFeed';
 import { Commitment } from '../types/commitment';
+import Logger from '../lib/logger';
 
 function getDaysRemaining(deadline: string): number {
   const now = new Date();
@@ -23,40 +25,54 @@ function getDaysRemaining(deadline: string): number {
 
 function getStatusColor(status: string): string {
   switch (status) {
-    case 'active': return '#3B82F6';
-    case 'completed': return '#22C55E';
-    case 'abandoned': return '#EF4444';
-    default: return '#888888';
+    case 'active':
+      return '#3B82F6';
+    case 'completed':
+      return '#22C55E';
+    case 'abandoned':
+      return '#EF4444';
+    default:
+      return '#888888';
   }
 }
 
 function getStatusText(status: string): string {
   switch (status) {
-    case 'active': return 'ACTIVE';
-    case 'completed': return 'COMPLETED';
-    case 'abandoned': return 'ABANDONED';
-    default: return 'UNKNOWN';
+    case 'active':
+      return 'ACTIVE';
+    case 'completed':
+      return 'COMPLETED';
+    case 'abandoned':
+      return 'ABANDONED';
+    default:
+      return 'UNKNOWN';
   }
 }
 
 function getTimelineText(item: Commitment): string {
   const now = new Date();
-  
+
   if (item.status === 'completed') {
-    const targetDate = item.completed_at ? new Date(item.completed_at) : new Date(item.created_at);
+    const targetDate = item.completed_at
+      ? new Date(item.completed_at)
+      : new Date(item.created_at);
     const diffTime = Math.abs(now.getTime() - targetDate.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     return `Completed ${diffDays === 0 ? 'today' : `${diffDays} days ago`}`;
   }
-  
+
   if (item.status === 'abandoned') {
-    const targetDate = item.abandoned_at ? new Date(item.abandoned_at) : new Date(item.deadline);
+    const targetDate = item.abandoned_at
+      ? new Date(item.abandoned_at)
+      : new Date(item.deadline);
     const diffTime = Math.abs(now.getTime() - targetDate.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     return `Abandoned ${diffDays === 0 ? 'today' : `${diffDays} days ago`}`;
   }
-  
-  const diffTime = Math.abs(now.getTime() - new Date(item.created_at).getTime());
+
+  const diffTime = Math.abs(
+    now.getTime() - new Date(item.created_at).getTime()
+  );
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   return `Started ${diffDays === 0 ? 'today' : `${diffDays} days ago`}`;
 }
@@ -64,19 +80,22 @@ function getTimelineText(item: Commitment): string {
 function isEditable(item: Commitment, userId: string | null): boolean {
   // Show buttons for all active commitments within 24 hours
   if (item.status !== 'active') return false;
-  const hoursSincePosted = (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60);
+  const hoursSincePosted =
+    (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60);
   return hoursSincePosted < 24;
 }
 
 function isLocked(item: Commitment, userId: string | null): boolean {
   if (!userId || item.user_id !== userId) return false;
   if (item.status !== 'active') return false;
-  const hoursSincePosted = (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60);
+  const hoursSincePosted =
+    (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60);
   return hoursSincePosted >= 24;
 }
 
 function getHoursRemaining(item: Commitment): number {
-  const hoursSincePosted = (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60);
+  const hoursSincePosted =
+    (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60);
   return Math.max(0, 24 - hoursSincePosted);
 }
 
@@ -102,24 +121,32 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
   }, []);
 
   const handleEditCommitment = (item: Commitment) => {
-    navigation.navigate('commitment', { 
-      editMode: true, 
+    navigation.navigate('commitment', {
+      editMode: true,
       commitmentId: item.id,
       initialText: item.commitment_text,
       initialDailyAction: item.daily_action || '',
-      initialDeadline: item.deadline
+      initialDeadline: item.deadline,
     });
   };
 
   const handleDeleteCommitment = async (item: Commitment) => {
-    const message = 'This will permanently remove your commitment from the feed. You can post a new one anytime.';
+    const message =
+      'This will permanently remove your commitment from the feed. You can post a new one anytime.';
     const doDelete = async () => {
       try {
-        // TODO: wire actual Supabase delete when API is ready
-        // await supabase.from('commitments').delete().eq('id', item.id);
+        const { error } = await supabase
+          .from('commitments')
+          .delete()
+          .eq('id', item.id);
+
+        if (error) {
+          throw error;
+        }
+
         await loadCommitments();
       } catch (err) {
-        console.error('Delete failed:', err);
+        Logger.error('Delete failed:', err);
       }
     };
 
@@ -128,14 +155,10 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
         await doDelete();
       }
     } else {
-      Alert.alert(
-        'Delete This Commitment?',
-        message,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete Commitment', style: 'destructive', onPress: doDelete },
-        ]
-      );
+      Alert.alert('Delete This Commitment?', message, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete Commitment', style: 'destructive', onPress: doDelete },
+      ]);
     }
   };
 
@@ -151,8 +174,15 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
         <View style={styles.commitmentHeader}>
           <View style={styles.founderTypeContainer}>
             <Text style={styles.founderType}>{item.founder_type}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-              <Text style={styles.statusText}>{getStatusText(item.status)}</Text>
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: getStatusColor(item.status) },
+              ]}
+            >
+              <Text style={styles.statusText}>
+                {getStatusText(item.status)}
+              </Text>
             </View>
           </View>
           <Text style={styles.date}>
@@ -178,23 +208,23 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
         <View style={styles.commitmentFooter}>
           <View style={styles.deadlineContainer}>
             <Text style={styles.deadlineLabel}>Deadline:</Text>
-            <Text style={[
-              styles.deadlineText,
-              isOverdue && styles.overdueText
-            ]}>
+            <Text
+              style={[styles.deadlineText, isOverdue && styles.overdueText]}
+            >
               {new Date(item.deadline).toLocaleDateString()}
             </Text>
-            <Text style={[
-              styles.daysRemaining,
-              isOverdue && styles.overdueText
-            ]}>
+            <Text
+              style={[styles.daysRemaining, isOverdue && styles.overdueText]}
+            >
               {getTimelineText(item)}
             </Text>
           </View>
 
           {item.check_ins && item.check_ins.length > 0 && (
             <View style={styles.checkInsContainer}>
-              <Text style={styles.checkInsLabel}>Check-ins: {item.check_ins.length}</Text>
+              <Text style={styles.checkInsLabel}>
+                Check-ins: {item.check_ins.length}
+              </Text>
             </View>
           )}
         </View>
@@ -202,16 +232,18 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
         {/* Edit/Delete buttons for owner within 24 hours */}
         {editable && (
           <View style={styles.editActions}>
-            <Text style={styles.editableText}>Editable for {hoursRemaining} hours</Text>
+            <Text style={styles.editableText}>
+              Editable for {hoursRemaining} hours
+            </Text>
             <View style={styles.editButtons}>
-              <TouchableOpacity 
-                style={styles.editButton} 
+              <TouchableOpacity
+                style={styles.editButton}
                 onPress={() => handleEditCommitment(item)}
               >
                 <Text style={styles.editButtonText}>✏️ Edit</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.deleteButton} 
+              <TouchableOpacity
+                style={styles.deleteButton}
                 onPress={() => handleDeleteCommitment(item)}
               >
                 <Text style={styles.deleteButtonText}>🗑️ Delete</Text>
@@ -249,7 +281,10 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
           <Text style={styles.errorEmoji}>⚠️</Text>
           <Text style={styles.errorTitle}>Something went wrong</Text>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={() => loadCommitments()}>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => loadCommitments()}
+          >
             <Text style={styles.retryButtonText}>Try Again</Text>
           </TouchableOpacity>
         </View>
@@ -274,7 +309,7 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
           <Text style={styles.emptyText}>
             Be the first to make a commitment and inspire others!
           </Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.startButton}
             onPress={() => navigation.navigate('questions')}
           >

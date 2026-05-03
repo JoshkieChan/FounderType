@@ -15,12 +15,16 @@ export default function LockoutScreen({ navigation }: { navigation: any }) {
 
   useEffect(() => {
     (async () => {
-      const until = await AsyncStorage.getItem('foundertype_diagnostic_lockout_until');
+      const until = await AsyncStorage.getItem(
+        'foundertype_diagnostic_lockout_until'
+      );
 
       if (until) {
         const lockoutEnd = new Date(until);
         const now = new Date();
-        const diff = Math.ceil((lockoutEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const diff = Math.ceil(
+          (lockoutEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        );
         setDaysRemaining(Math.max(0, diff));
       } else {
         setDaysRemaining(7);
@@ -40,7 +44,8 @@ export default function LockoutScreen({ navigation }: { navigation: any }) {
         <View style={styles.divider} />
 
         <Text style={styles.body}>
-          You can retake the FounderType diagnostic after the cooldown. Your current commitment flow stays available.
+          You can retake the FounderType diagnostic after the cooldown. Your
+          current commitment flow stays available.
         </Text>
 
         <View style={styles.lockoutCard}>
@@ -53,7 +58,8 @@ export default function LockoutScreen({ navigation }: { navigation: any }) {
         </View>
 
         <Text style={styles.body}>
-          FounderType is stricter when the answers have time to mean something. Commitments remain public either way.
+          FounderType is stricter when the answers have time to mean something.
+          Commitments remain public either way.
         </Text>
 
         <TouchableOpacity

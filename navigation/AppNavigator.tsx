@@ -25,13 +25,36 @@ type Screen =
   | 'lockout'
   | 'terms';
 
+interface TopMatch {
+  founderType: string;
+  score: number;
+  description: string;
+}
+
+interface Commitment {
+  id: string;
+  commitment_text: string;
+  daily_action?: string;
+  deadline: string;
+  status: string;
+  created_at: string;
+  check_ins: string[];
+}
+
+interface Profile {
+  founderType: string;
+  summary?: string;
+  matches?: TopMatch[];
+  [key: string]: unknown;
+}
+
 interface NavigationParams {
   answers?: string;
   profile?: string;
   answersString?: string;
   founderType?: string;
-  topMatch?: any;
-  commitment?: any;
+  topMatch?: TopMatch;
+  commitment?: Commitment;
   commitmentText?: string;
   isPublicCommitment?: boolean;
   editMode?: boolean;
@@ -42,10 +65,10 @@ interface NavigationParams {
 }
 
 interface AppNavigatorProps {
-  currentProfile: any;
-  setCurrentProfile: (profile: any) => void;
-  currentAnswers: any;
-  setCurrentAnswers: (answers: any) => void;
+  currentProfile: Profile | null;
+  setCurrentProfile: (profile: Profile | null) => void;
+  currentAnswers: Record<number, string> | null;
+  setCurrentAnswers: (answers: Record<number, string> | null) => void;
   globalAnswersRef: { current: string | null };
 }
 
@@ -66,7 +89,7 @@ export type RootStackParamList = {
     initialDeadline?: string;
   };
   privacyPolicy: undefined;
-  dailyCheckIn: { commitment?: any } | undefined;
+  dailyCheckIn: { commitment?: Commitment } | undefined;
   publicFeed: undefined;
   lockout: undefined;
   terms: undefined;
@@ -81,12 +104,21 @@ export default function AppNavigator({
 }: AppNavigatorProps) {
   const [currentScreen, setCurrentScreen] = useState<Screen>('landing');
   const [params, setParams] = useState<NavigationParams>({});
-  const [directParams, setDirectParams] = useState<NavigationParams | null>(null);
-  const [history, setHistory] = useState<{screen: Screen, params: NavigationParams}[]>([]);
+  const [directParams, setDirectParams] = useState<NavigationParams | null>(
+    null
+  );
+  const [history, setHistory] = useState<
+    { screen: Screen; params: NavigationParams }[]
+  >([]);
 
   const navigate = (screen: Screen, newParams?: NavigationParams) => {
-    console.log('AppNavigator navigate - screen:', screen, 'newParams:', newParams);
-    setHistory(prev => [...prev, {screen: currentScreen, params}]);
+    console.log(
+      'AppNavigator navigate - screen:',
+      screen,
+      'newParams:',
+      newParams
+    );
+    setHistory((prev) => [...prev, { screen: currentScreen, params }]);
     setDirectParams(newParams || null);
     setParams(newParams || {});
     setCurrentScreen(screen);
@@ -94,16 +126,23 @@ export default function AppNavigator({
 
   const goBack = () => {
     console.log('AppNavigator goBack called');
-    setHistory(prev => {
+    setHistory((prev) => {
       const newHistory = [...prev];
       const last = newHistory.pop();
       if (last) {
-        console.log('AppNavigator goBack - returning to:', last.screen, 'with params:', last.params);
+        console.log(
+          'AppNavigator goBack - returning to:',
+          last.screen,
+          'with params:',
+          last.params
+        );
         setCurrentScreen(last.screen);
         setParams(last.params);
         setDirectParams(last.params);
       } else {
-        console.log('AppNavigator goBack - history empty, returning to landing');
+        console.log(
+          'AppNavigator goBack - history empty, returning to landing'
+        );
         setCurrentScreen('landing');
       }
       return newHistory;
@@ -119,12 +158,21 @@ export default function AppNavigator({
       case 'onboarding':
         return <OnboardingScreen navigation={navigation as any} />;
       case 'questions':
-        return <QuestionsScreen navigation={navigation as any} setCurrentAnswers={setCurrentAnswers} />;
+        return (
+          <QuestionsScreen
+            navigation={navigation as any}
+            setCurrentAnswers={setCurrentAnswers}
+          />
+        );
       case 'processing':
         return (
           <ProcessingScreen
             navigation={navigation as any}
-            route={{ params: { answers: directParams?.answers || params.answers } } as any}
+            route={
+              {
+                params: { answers: directParams?.answers || params.answers },
+              } as any
+            }
             setCurrentProfile={setCurrentProfile}
             setCurrentAnswers={setCurrentAnswers}
           />
@@ -133,7 +181,14 @@ export default function AppNavigator({
         return (
           <ResultsScreen
             navigation={navigation as any}
-            route={{ params: { profile: params.profile, answers: params.answersString } } as any}
+            route={
+              {
+                params: {
+                  profile: params.profile,
+                  answers: params.answersString,
+                },
+              } as any
+            }
             currentProfile={currentProfile}
             currentAnswers={currentAnswers}
           />
@@ -142,17 +197,19 @@ export default function AppNavigator({
         return (
           <CommitmentScreen
             navigation={navigation as any}
-            route={{
-              params: {
-                profile: params.profile,
-                answers: params.answersString,
-                editMode: params.editMode,
-                commitmentId: params.commitmentId,
-                initialText: params.initialText,
-                initialDailyAction: params.initialDailyAction,
-                initialDeadline: params.initialDeadline,
-              },
-            } as any}
+            route={
+              {
+                params: {
+                  profile: params.profile,
+                  answers: params.answersString,
+                  editMode: params.editMode,
+                  commitmentId: params.commitmentId,
+                  initialText: params.initialText,
+                  initialDailyAction: params.initialDailyAction,
+                  initialDeadline: params.initialDeadline,
+                },
+              } as any
+            }
           />
         );
       case 'privacyPolicy':

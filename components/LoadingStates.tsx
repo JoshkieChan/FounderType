@@ -14,16 +14,46 @@ export function QuestionSkeleton() {
         </View>
         <Skeleton width={60} height={20} borderRadius={10} />
       </View>
-      
+
       <View style={styles.content}>
-        <Skeleton width={120} height={16} borderRadius={8} style={styles.questionNumber} />
-        <Skeleton width="100%" height={32} borderRadius={8} style={styles.questionText} />
-        
+        <Skeleton
+          width={120}
+          height={16}
+          borderRadius={8}
+          style={styles.questionNumber}
+        />
+        <Skeleton
+          width="100%"
+          height={32}
+          borderRadius={8}
+          style={styles.questionText}
+        />
+
         <View style={styles.optionsContainer}>
-          <Skeleton width="100%" height={60} borderRadius={12} style={styles.option} />
-          <Skeleton width="100%" height={60} borderRadius={12} style={styles.option} />
-          <Skeleton width="100%" height={60} borderRadius={12} style={styles.option} />
-          <Skeleton width="100%" height={60} borderRadius={12} style={styles.option} />
+          <Skeleton
+            width="100%"
+            height={60}
+            borderRadius={12}
+            style={styles.option}
+          />
+          <Skeleton
+            width="100%"
+            height={60}
+            borderRadius={12}
+            style={styles.option}
+          />
+          <Skeleton
+            width="100%"
+            height={60}
+            borderRadius={12}
+            style={styles.option}
+          />
+          <Skeleton
+            width="100%"
+            height={60}
+            borderRadius={12}
+            style={styles.option}
+          />
         </View>
       </View>
     </View>
@@ -35,9 +65,14 @@ export function ResultsSkeleton() {
     <View style={styles.container}>
       <View style={styles.resultsHeader}>
         <Skeleton width={150} height={24} borderRadius={12} />
-        <Skeleton width="80%" height={16} borderRadius={8} style={styles.subtitle} />
+        <Skeleton
+          width="80%"
+          height={16}
+          borderRadius={8}
+          style={styles.subtitle}
+        />
       </View>
-      
+
       <View style={styles.scoresContainer}>
         {Array.from({ length: 4 }).map((_, index) => (
           <View key={index} style={styles.scoreItem}>
@@ -46,18 +81,28 @@ export function ResultsSkeleton() {
           </View>
         ))}
       </View>
-      
+
       <View style={styles.matchesContainer}>
         {Array.from({ length: 3 }).map((_, index) => (
           <View key={index} style={styles.matchItem}>
             <Skeleton width={120} height={18} borderRadius={9} />
-            <Skeleton width="100%" height={12} borderRadius={6} style={styles.matchDesc} />
+            <Skeleton
+              width="100%"
+              height={12}
+              borderRadius={6}
+              style={styles.matchDesc}
+            />
             <Skeleton width={80} height={24} borderRadius={12} />
           </View>
         ))}
       </View>
-      
-      <Skeleton width="100%" height={50} borderRadius={12} style={styles.ctaButton} />
+
+      <Skeleton
+        width="100%"
+        height={50}
+        borderRadius={12}
+        style={styles.ctaButton}
+      />
     </View>
   );
 }
@@ -67,10 +112,20 @@ export function UpgradeSkeleton() {
     <View style={styles.container}>
       <View style={styles.upgradeHeader}>
         <Skeleton width={80} height={24} borderRadius={12} />
-        <Skeleton width="90%" height={28} borderRadius={8} style={styles.title} />
-        <Skeleton width="85%" height={16} borderRadius={8} style={styles.subtitle} />
+        <Skeleton
+          width="90%"
+          height={28}
+          borderRadius={8}
+          style={styles.title}
+        />
+        <Skeleton
+          width="85%"
+          height={16}
+          borderRadius={8}
+          style={styles.subtitle}
+        />
       </View>
-      
+
       <View style={styles.featuresContainer}>
         {Array.from({ length: 6 }).map((_, index) => (
           <View key={index} style={styles.featureItem}>
@@ -79,14 +134,24 @@ export function UpgradeSkeleton() {
           </View>
         ))}
       </View>
-      
+
       <View style={styles.pricingCard}>
         <Skeleton width={120} height={16} borderRadius={8} />
-        <Skeleton width={80} height={48} borderRadius={8} style={styles.price} />
+        <Skeleton
+          width={80}
+          height={48}
+          borderRadius={8}
+          style={styles.price}
+        />
         <Skeleton width={100} height={14} borderRadius={7} />
       </View>
-      
-      <Skeleton width="100%" height={56} borderRadius={12} style={styles.purchaseButton} />
+
+      <Skeleton
+        width="100%"
+        height={56}
+        borderRadius={12}
+        style={styles.purchaseButton}
+      />
     </View>
   );
 }

@@ -15,7 +15,10 @@ interface ProgressData {
 const checkAsyncStorageAvailable = () => true;
 
 export function useProgressPersistence() {
-  const saveProgress = async (currentQuestion: number, answers: UserAnswers) => {
+  const saveProgress = async (
+    currentQuestion: number,
+    answers: UserAnswers
+  ) => {
     if (!checkAsyncStorageAvailable()) {
       console.warn('AsyncStorage not available, progress not saved');
       return;
@@ -47,7 +50,7 @@ export function useProgressPersistence() {
       if (!progressJson) return null;
 
       const progress: ProgressData = JSON.parse(progressJson);
-      
+
       // Clear progress if it's older than 24 hours
       const isExpired = Date.now() - progress.timestamp > 24 * 60 * 60 * 1000;
       if (isExpired) {

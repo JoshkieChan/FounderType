@@ -12,21 +12,30 @@ export class AppError extends Error {
 }
 
 export class NetworkError extends AppError {
-  constructor(message: string, public originalError?: Error) {
+  constructor(
+    message: string,
+    public originalError?: Error
+  ) {
     super(message, 'NETWORK_ERROR');
     this.name = 'NetworkError';
   }
 }
 
 export class ValidationError extends AppError {
-  constructor(message: string, public field?: string) {
+  constructor(
+    message: string,
+    public field?: string
+  ) {
     super(message, 'VALIDATION_ERROR');
     this.name = 'ValidationError';
   }
 }
 
 export class StorageError extends AppError {
-  constructor(message: string, public operation?: string) {
+  constructor(
+    message: string,
+    public operation?: string
+  ) {
     super(message, 'STORAGE_ERROR');
     this.name = 'StorageError';
   }

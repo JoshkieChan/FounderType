@@ -32,7 +32,10 @@ export function useAnalytics() {
     trackEvent('screen_view', { screen_name: screenName });
   };
 
-  const trackUserAction = (action: string, properties?: Record<string, any>) => {
+  const trackUserAction = (
+    action: string,
+    properties?: Record<string, any>
+  ) => {
     trackEvent('user_action', { action, ...properties });
   };
 
@@ -40,7 +43,11 @@ export function useAnalytics() {
     trackEvent('error', { error, context });
   };
 
-  const trackPurchase = (productId: string, price: number, currency: string) => {
+  const trackPurchase = (
+    productId: string,
+    price: number,
+    currency: string
+  ) => {
     trackEvent('purchase', {
       product_id: productId,
       price,
@@ -56,7 +63,11 @@ export function useAnalytics() {
     });
   };
 
-  const trackQuestionAnswered = (questionId: number, answer: string, questionNumber: number) => {
+  const trackQuestionAnswered = (
+    questionId: number,
+    answer: string,
+    questionNumber: number
+  ) => {
     trackEvent('question_answered', {
       question_id: questionId,
       answer,
@@ -64,7 +75,10 @@ export function useAnalytics() {
     });
   };
 
-  const trackSessionComplete = (duration: number, questionsAnswered: number) => {
+  const trackSessionComplete = (
+    duration: number,
+    questionsAnswered: number
+  ) => {
     trackEvent('session_complete', {
       duration_ms: duration,
       questions_answered: questionsAnswered,

@@ -13,10 +13,10 @@ interface ShareableProfileCardProps {
   summary: string;
 }
 
-export default function ShareableProfileCard({ 
-  founderType, 
-  topMatch, 
-  summary 
+export default function ShareableProfileCard({
+  founderType,
+  topMatch,
+  summary,
 }: ShareableProfileCardProps) {
   const cardRef = useRef<View>(null);
 
@@ -26,7 +26,7 @@ export default function ShareableProfileCard({
       const uri = await captureRef(cardRef, {
         format: 'png',
         quality: 1.0,
-        result: 'tmpfile'
+        result: 'tmpfile',
       });
 
       // Share the image
@@ -44,21 +44,21 @@ export default function ShareableProfileCard({
       <View style={styles.header}>
         <Text style={styles.label}>YOUR FOUNDERTYPE</Text>
       </View>
-      
+
       <View style={styles.content}>
         <Text style={styles.founderType}>{founderType}</Text>
-        
+
         <View style={styles.matchContainer}>
           <Text style={styles.matchLabel}>Top Match</Text>
           <Text style={styles.matchModel}>{topMatch.model}</Text>
           <Text style={styles.matchScore}>{topMatch.score}% Match</Text>
         </View>
-        
+
         <Text style={styles.summary} numberOfLines={2}>
           {summary}
         </Text>
       </View>
-      
+
       <View style={styles.footer}>
         <Text style={styles.branding}>FounderType App</Text>
       </View>

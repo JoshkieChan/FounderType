@@ -9,12 +9,12 @@ export interface SkeletonProps {
   animationDuration?: number;
 }
 
-export default function Skeleton({ 
-  width = '100%', 
-  height = 20, 
+export default function Skeleton({
+  width = '100%',
+  height = 20,
   borderRadius = 4,
   style,
-  animationDuration = 1000
+  animationDuration = 1000,
 }: SkeletonProps) {
   const animatedValue = React.useRef(new Animated.Value(0.3)).current;
 

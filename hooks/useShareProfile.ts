@@ -8,7 +8,11 @@ interface ShareProfileOptions {
 }
 
 export function useShareProfile() {
-  const shareProfile = async ({ profile, answers, includeDetails = false }: ShareProfileOptions) => {
+  const shareProfile = async ({
+    profile,
+    answers,
+    includeDetails = false,
+  }: ShareProfileOptions) => {
     try {
       let shareText = `My FounderType: ${profile.founderType}\n\n`;
 

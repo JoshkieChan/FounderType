@@ -1,23 +1,38 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import { calculateFounderType, FOUNDER_TYPE_RESULTS } from '../constants/founderTypeQuestions';
+import {
+  calculateFounderType,
+  FOUNDER_TYPE_RESULTS,
+} from '../constants/founderTypeQuestions';
 import { useProgressPersistence } from '../hooks/useProgressPersistence';
 import { globalAnswersRef } from '../lib/globalAnswers';
 
 type ProcessingScreenNavigationProp = any;
 type ProcessingScreenRouteProp = any;
 
-export default function ProcessingScreen({ route, navigation, setCurrentProfile, setCurrentAnswers }: { 
-  route: ProcessingScreenRouteProp; 
+export default function ProcessingScreen({
+  route,
+  navigation,
+  setCurrentProfile,
+  setCurrentAnswers,
+}: {
+  route: ProcessingScreenRouteProp;
   navigation: ProcessingScreenNavigationProp;
   setCurrentProfile: (profile: any) => void;
   setCurrentAnswers: (answers: any) => void;
 }) {
   const { answers } = route.params;
-  
+
   const [error, setError] = useState(false);
   const fadeAnim = useState(new Animated.Value(0))[0];
   const [retryCount, setRetryCount] = useState(0);
@@ -33,7 +48,7 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
     'Analyzing your answers...',
     'Mapping your founder psychology...',
     'Calculating business model fit...',
-    'Generating your honest profile...'
+    'Generating your honest profile...',
   ];
 
   useEffect(() => {
@@ -66,25 +81,28 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
     createPulse(pulse3, 1200).start();
 
     const subtitleInterval = setInterval(() => {
-      setSubtitleIndex(prev => (prev + 1) % subtitles.length);
+      setSubtitleIndex((prev) => (prev + 1) % subtitles.length);
     }, 3000);
 
     const generateProfile = async () => {
       try {
         console.log('ProcessingScreen - route.params.answers:', answers);
-        
+
         const parsedAnswers = JSON.parse(answers || '{}');
         console.log('ProcessingScreen - parsedAnswers:', parsedAnswers);
-        
+
         if (Object.keys(parsedAnswers).length === 0) {
           console.error('No answers provided - cannot generate profile');
           setError(true);
           return;
         }
-        
+
         // Calculate Founder Type locally
         const founderType = calculateFounderType(parsedAnswers);
-        const profile = FOUNDER_TYPE_RESULTS[founderType as keyof typeof FOUNDER_TYPE_RESULTS];
+        const profile =
+          FOUNDER_TYPE_RESULTS[
+            founderType as keyof typeof FOUNDER_TYPE_RESULTS
+          ];
 
         if (!profile) {
           setError(true);
@@ -94,7 +112,10 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
         setTimeout(() => {
           setCurrentProfile({ founderType, ...profile });
           setCurrentAnswers(answers);
-          navigation.navigate('results', { profile: JSON.stringify({ founderType, ...profile }), answers: answers });
+          navigation.navigate('results', {
+            profile: JSON.stringify({ founderType, ...profile }),
+            answers: answers,
+          });
         }, 1000);
       } catch (e) {
         console.error('Error generating profile:', e);
@@ -117,31 +138,39 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
   const handleRetry = useCallback(() => {
     setError(false);
     setSubtitleIndex(0);
-    setRetryCount(c => c + 1);
+    setRetryCount((c) => c + 1);
   }, []);
 
   // Handle globalAnswersRef changes separately
   useEffect(() => {
     if (answers) return; // Already have answers from route.params
-    
+
     const checkGlobalAnswers = () => {
       const globalAnswers = globalAnswersRef.current;
       if (globalAnswers && !profileGenerated) {
-        console.log('ProcessingScreen - globalAnswers detected, generating profile');
+        console.log(
+          'ProcessingScreen - globalAnswers detected, generating profile'
+        );
         const generateProfile = async () => {
           try {
             const parsedAnswers = JSON.parse(globalAnswers);
-            console.log('ProcessingScreen - parsedAnswers from global:', parsedAnswers);
-            
+            console.log(
+              'ProcessingScreen - parsedAnswers from global:',
+              parsedAnswers
+            );
+
             if (Object.keys(parsedAnswers).length === 0) {
               console.error('No answers provided - cannot generate profile');
               setError(true);
               return;
             }
-            
+
             // Calculate Founder Type locally
             const founderType = calculateFounderType(parsedAnswers);
-            const profile = FOUNDER_TYPE_RESULTS[founderType as keyof typeof FOUNDER_TYPE_RESULTS];
+            const profile =
+              FOUNDER_TYPE_RESULTS[
+                founderType as keyof typeof FOUNDER_TYPE_RESULTS
+              ];
             setProfileGenerated(true);
 
             if (!profile) {
@@ -151,7 +180,9 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
 
             setTimeout(() => {
               setCurrentProfile({ founderType, ...profile });
-              navigation.navigate('results', { profile: JSON.stringify({ founderType, ...profile }) });
+              navigation.navigate('results', {
+                profile: JSON.stringify({ founderType, ...profile }),
+              });
             }, 1000);
           } catch (e) {
             console.error('Error generating profile:', e);
@@ -204,7 +235,7 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
 
       setSubtitleIndex(0);
       const subtitleInterval = setInterval(() => {
-        setSubtitleIndex(prev => (prev + 1) % subtitles.length);
+        setSubtitleIndex((prev) => (prev + 1) % subtitles.length);
       }, 3000);
 
       const generateProfile = async () => {
@@ -212,7 +243,10 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
           const parsedAnswers = JSON.parse(answers || '{}');
           // Calculate Founder Type locally
           const founderType = calculateFounderType(parsedAnswers);
-          const profile = FOUNDER_TYPE_RESULTS[founderType as keyof typeof FOUNDER_TYPE_RESULTS];
+          const profile =
+            FOUNDER_TYPE_RESULTS[
+              founderType as keyof typeof FOUNDER_TYPE_RESULTS
+            ];
 
           if (!profile) {
             setError(true);
@@ -220,7 +254,9 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
           }
 
           setTimeout(() => {
-            navigation.navigate('results', { profile: JSON.stringify({ founderType, ...profile }) });
+            navigation.navigate('results', {
+              profile: JSON.stringify({ founderType, ...profile }),
+            });
           }, 1000);
         } catch (e) {
           console.error('Error generating profile:', e);
@@ -236,7 +272,6 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
     }
   }, [retryCount, answers, fadeAnim, navigation, error]);
 
-  
   if (error) {
     return (
       <View style={styles.container}>
@@ -244,16 +279,20 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
           <Text style={styles.errorEmoji}>⚠️</Text>
           <Text style={styles.errorTitle}>AI Service Unavailable</Text>
           <Text style={styles.errorText}>
-            Our AI service is temporarily overloaded. Please try again in a few minutes.
+            Our AI service is temporarily overloaded. Please try again in a few
+            minutes.
           </Text>
           <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={() => {
-            // Clear all stored data and reset state
-            clearProgress();
-            navigation.navigate('questions');
-          }}>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => {
+              // Clear all stored data and reset state
+              clearProgress();
+              navigation.navigate('questions');
+            }}
+          >
             <Text style={styles.cancelButtonText}>Start Over</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -261,12 +300,30 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
     );
   }
 
-  const circleScale1 = pulse1.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1.8] });
-  const circleOpacity1 = pulse1.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0.7, 0.3, 0] });
-  const circleScale2 = pulse2.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1.8] });
-  const circleOpacity2 = pulse2.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0.7, 0.3, 0] });
-  const circleScale3 = pulse3.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1.8] });
-  const circleOpacity3 = pulse3.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0.7, 0.3, 0] });
+  const circleScale1 = pulse1.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.4, 1.8],
+  });
+  const circleOpacity1 = pulse1.interpolate({
+    inputRange: [0, 0.6, 1],
+    outputRange: [0.7, 0.3, 0],
+  });
+  const circleScale2 = pulse2.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.4, 1.8],
+  });
+  const circleOpacity2 = pulse2.interpolate({
+    inputRange: [0, 0.6, 1],
+    outputRange: [0.7, 0.3, 0],
+  });
+  const circleScale3 = pulse3.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.4, 1.8],
+  });
+  const circleOpacity3 = pulse3.interpolate({
+    inputRange: [0, 0.6, 1],
+    outputRange: [0.7, 0.3, 0],
+  });
 
   return (
     <SafeAreaView style={styles.container}>
@@ -275,19 +332,19 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
           <Animated.View
             style={[
               styles.pulseCircle,
-              { transform: [{ scale: circleScale1 }], opacity: circleOpacity1 }
+              { transform: [{ scale: circleScale1 }], opacity: circleOpacity1 },
             ]}
           />
           <Animated.View
             style={[
               styles.pulseCircle,
-              { transform: [{ scale: circleScale2 }], opacity: circleOpacity2 }
+              { transform: [{ scale: circleScale2 }], opacity: circleOpacity2 },
             ]}
           />
           <Animated.View
             style={[
               styles.pulseCircle,
-              { transform: [{ scale: circleScale3 }], opacity: circleOpacity3 }
+              { transform: [{ scale: circleScale3 }], opacity: circleOpacity3 },
             ]}
           />
           <View style={styles.pulseCenter} />
@@ -299,7 +356,6 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {

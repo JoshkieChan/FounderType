@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import * as Sentry from '@sentry/react-native';
@@ -9,11 +16,18 @@ import { useHaptics } from '../hooks/useHaptics';
 import { useProgressPersistence } from '../hooks/useProgressPersistence';
 import { globalAnswersRef } from '../lib/globalAnswers';
 
-export default function QuestionsScreen({ navigation, setCurrentAnswers }: { navigation: any; setCurrentAnswers: (answers: any) => void }) {
+export default function QuestionsScreen({
+  navigation,
+  setCurrentAnswers,
+}: {
+  navigation: any;
+  setCurrentAnswers: (answers: any) => void;
+}) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<UserAnswers>({});
   const { selection, light } = useHaptics();
-  const { saveProgress, loadProgress, clearProgress, hasIncompleteSession } = useProgressPersistence();
+  const { saveProgress, loadProgress, clearProgress, hasIncompleteSession } =
+    useProgressPersistence();
 
   useEffect(() => {
     const checkProgress = async () => {
@@ -25,32 +39,35 @@ export default function QuestionsScreen({ navigation, setCurrentAnswers }: { nav
             'Continue Previous Session?',
             'You have an incomplete session from earlier. Would you like to continue where you left off?',
             [
-              { 
-                text: 'Start Over', 
-                style: 'destructive', 
+              {
+                text: 'Start Over',
+                style: 'destructive',
                 onPress: () => {
                   clearProgress();
-                }
+                },
               },
-              { 
-                text: 'Continue', 
+              {
+                text: 'Continue',
                 onPress: () => {
                   setCurrentQuestion(progress.currentQuestion);
                   setAnswers(progress.answers);
-                }
-              }
+                },
+              },
             ]
           );
         }
       }
     };
-    
+
     checkProgress();
   }, []);
 
   const handleAnswer = async (answer: string) => {
     selection();
-    const newAnswers = { ...answers, [FOUNDER_TYPE_QUESTIONS[currentQuestion].id]: answer };
+    const newAnswers = {
+      ...answers,
+      [FOUNDER_TYPE_QUESTIONS[currentQuestion].id]: answer,
+    };
     setAnswers(newAnswers);
 
     // Save progress after each answer
@@ -61,7 +78,7 @@ export default function QuestionsScreen({ navigation, setCurrentAnswers }: { nav
       // Clear progress when completing the assessment
       Sentry.addBreadcrumb({
         message: 'assessment_completed',
-        level: 'info'
+        level: 'info',
       });
       await clearProgress();
       console.log('QuestionsScreen - newAnswers:', newAnswers);
@@ -88,9 +105,12 @@ export default function QuestionsScreen({ navigation, setCurrentAnswers }: { nav
 
   const onGestureEvent = (event: any) => {
     const { translationX } = event.nativeEvent;
-    
+
     // Swipe left (positive translationX) - go to next question
-    if (translationX > 50 && currentQuestion < FOUNDER_TYPE_QUESTIONS.length - 1) {
+    if (
+      translationX > 50 &&
+      currentQuestion < FOUNDER_TYPE_QUESTIONS.length - 1
+    ) {
       light();
       setCurrentQuestion(currentQuestion + 1);
     }
@@ -108,7 +128,10 @@ export default function QuestionsScreen({ navigation, setCurrentAnswers }: { nav
   };
 
   return (
-    <PanGestureHandler onGestureEvent={onGestureEvent} onHandlerStateChange={onHandlerStateChange}>
+    <PanGestureHandler
+      onGestureEvent={onGestureEvent}
+      onHandlerStateChange={onHandlerStateChange}
+    >
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
@@ -121,7 +144,7 @@ export default function QuestionsScreen({ navigation, setCurrentAnswers }: { nav
                 style={[
                   styles.dot,
                   index === currentQuestion && styles.activeDot,
-                  index < currentQuestion && styles.completedDot
+                  index < currentQuestion && styles.completedDot,
                 ]}
               />
             ))}
@@ -130,27 +153,32 @@ export default function QuestionsScreen({ navigation, setCurrentAnswers }: { nav
         </View>
 
         <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.questionNumber}>Question {currentQuestion + 1} of {FOUNDER_TYPE_QUESTIONS.length}</Text>
-          <Text style={styles.questionText}>{FOUNDER_TYPE_QUESTIONS[currentQuestion].text}</Text>
+          <Text style={styles.questionNumber}>
+            Question {currentQuestion + 1} of {FOUNDER_TYPE_QUESTIONS.length}
+          </Text>
+          <Text style={styles.questionText}>
+            {FOUNDER_TYPE_QUESTIONS[currentQuestion].text}
+          </Text>
 
           <View style={styles.optionsContainer}>
-            {FOUNDER_TYPE_QUESTIONS[currentQuestion].options.map((option: string, index: number) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.optionButton}
-                onPress={() => handleAnswer(option)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.optionText}>{option}</Text>
-              </TouchableOpacity>
-            ))}
+            {FOUNDER_TYPE_QUESTIONS[currentQuestion].options.map(
+              (option: string, index: number) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.optionButton}
+                  onPress={() => handleAnswer(option)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.optionText}>{option}</Text>
+                </TouchableOpacity>
+              )
+            )}
           </View>
         </ScrollView>
       </SafeAreaView>
     </PanGestureHandler>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {

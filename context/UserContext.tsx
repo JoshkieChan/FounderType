@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from 'react';
 import { supabase } from '../lib/supabase';
 import { Commitment } from '../types/commitment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,8 +25,12 @@ const UserContext = createContext<UserContextValue | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<{ id: string } | null>(null);
-  const [activeCommitment, setActiveCommitment] = useState<Commitment | null>(null);
-  const [lastCycleResult, setLastCycleResult] = useState<'completed' | 'abandoned' | 'none'>('none');
+  const [activeCommitment, setActiveCommitment] = useState<Commitment | null>(
+    null
+  );
+  const [lastCycleResult, setLastCycleResult] = useState<
+    'completed' | 'abandoned' | 'none'
+  >('none');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,7 +83,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser({ id: session.user.id });
         fetchData(session.user.id);
@@ -102,7 +114,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       'foundertype_active_commitment_text',
       'foundertype_active_deadline',
       'foundertype_active_commitment',
-      'foundertype_has_completed_commitment'
+      'foundertype_has_completed_commitment',
     ]);
   };
 
