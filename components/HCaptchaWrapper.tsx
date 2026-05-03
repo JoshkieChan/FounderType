@@ -13,18 +13,9 @@ interface HCaptchaWrapperProps {
 }
 
 export default function HCaptchaWrapper({ onVerify, onExpire, onError }: HCaptchaWrapperProps) {
-  if (Platform.OS !== 'web') {
-    return null; // Captcha handled differently on mobile (usually via Supabase directly or WebView)
+  if (Platform.OS === 'web') {
+    return null; // HCaptcha web component incompatible with Metro bundler
   }
 
-  return (
-    <View style={{ marginVertical: 16, alignItems: 'center' }}>
-      <HCaptcha
-        sitekey={process.env.EXPO_PUBLIC_HCAPTCHA_SITE_KEY}
-        onVerify={onVerify}
-        onExpire={onExpire}
-        onError={onError}
-      />
-    </View>
-  );
+  return null; // Captcha handled differently on mobile
 }

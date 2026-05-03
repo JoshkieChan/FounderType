@@ -24,8 +24,7 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png",
-      "bundler": "webpack"
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "@sentry/react-native",
