@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loadProfile, getCurrentUserId, getCachedActiveCommitment } from '../lib/storage';
-import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 
 interface Commitment {
@@ -125,65 +124,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
 
       // Add placeholder completed/abandoned commitments
       const now = new Date();
-      const placeholders: Commitment[] = [
-        // COMPLETED examples
-        {
-          id: 'placeholder-completed-1',
-          user_id: null,
-          founder_type: 'The Unmonetized Maker',
-          commitment_text: 'Launch MVP and get 5 paying customers by April 20',
-          deadline: '2026-04-20T00:00:00.000Z',
-          status: 'completed',
-          created_at: '2026-03-23T00:00:00.000Z',
-          completed_at: '2026-04-20T00:00:00.000Z',
-          edited_at: null,
-        },
-        {
-          id: 'placeholder-completed-2',
-          user_id: null,
-          founder_type: 'The Grinder',
-          commitment_text: 'Ship v1 landing page with payment integration by April 10',
-          deadline: '2026-04-10T00:00:00.000Z',
-          status: 'completed',
-          created_at: '2026-03-11T00:00:00.000Z',
-          completed_at: '2026-03-30T00:00:00.000Z',
-          edited_at: null,
-        },
-        // ABANDONED examples
-        {
-          id: 'placeholder-abandoned-1',
-          user_id: null,
-          founder_type: null,
-          commitment_text: 'Build email list to 100 subscribers by April 1',
-          deadline: '2026-04-01T00:00:00.000Z',
-          status: 'abandoned',
-          created_at: '2026-03-01T00:00:00.000Z',
-          completed_at: null,
-          edited_at: null,
-        },
-        {
-          id: 'placeholder-abandoned-2',
-          user_id: null,
-          founder_type: 'The Sprint Seeker',
-          commitment_text: 'Post 10 pieces of content on LinkedIn by April 5',
-          deadline: '2026-04-05T00:00:00.000Z',
-          status: 'abandoned',
-          created_at: '2026-03-06T00:00:00.000Z',
-          completed_at: null,
-          edited_at: null,
-        },
-        {
-          id: 'placeholder-abandoned-3',
-          user_id: null,
-          founder_type: null,
-          commitment_text: 'Get first paying customer by March 25',
-          deadline: '2026-03-25T00:00:00.000Z',
-          status: 'abandoned',
-          created_at: '2026-02-23T00:00:00.000Z',
-          completed_at: null,
-          edited_at: null,
-        },
-      ];
+      const placeholders: Commitment[] = [];
 
       // Combine real and placeholder commitments, sort by most recent activity date
       const allCommitments = [...cleanedCommitments, ...placeholders];
@@ -198,45 +139,43 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
     finally { setLoading(false); }
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadCommitments();
-      (async () => {
-        try {
-          const profileUserId = await getCurrentUserId();
-          if (profileUserId) {
-            const p = await loadProfile(profileUserId);
-            if (p) setHasSavedProfile(true);
-          }
+  useEffect(() => {
+    loadCommitments();
+    (async () => {
+      try {
+        const profileUserId = await getCurrentUserId();
+        if (profileUserId) {
+          const p = await loadProfile(profileUserId);
+          if (p) setHasSavedProfile(true);
+        }
 
-          // Check user commitment status
-          const hasActive = await AsyncStorage.getItem('foundertype_has_active_commitment');
-          const hasCompleted = await AsyncStorage.getItem('foundertype_has_completed_commitment');
+        // Check user commitment status
+        const hasActive = await AsyncStorage.getItem('foundertype_has_active_commitment');
+        const hasCompleted = await AsyncStorage.getItem('foundertype_has_completed_commitment');
 
-          if (hasActive === 'true') {
-            const text = await AsyncStorage.getItem('foundertype_active_commitment_text') || '';
-            const deadline = await AsyncStorage.getItem('foundertype_active_deadline');
-            const days = deadline ? Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
-            setActiveText(text);
-            setActiveDays(days);
-            setUserStatus('active');
+        if (hasActive === 'true') {
+          const text = await AsyncStorage.getItem('foundertype_active_commitment_text') || '';
+          const deadline = await AsyncStorage.getItem('foundertype_active_deadline');
+          const days = deadline ? Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
+          setActiveText(text);
+          setActiveDays(days);
+          setUserStatus('active');
+        } else {
+          if (hasCompleted === 'true') {
+            setUserStatus('completed');
+            // Clear flag so it disappears on next refresh
+            await AsyncStorage.removeItem('foundertype_has_completed_commitment');
           } else {
-            if (hasCompleted === 'true') {
-              setUserStatus('completed');
-              // Clear flag so it disappears on next refresh
-              await AsyncStorage.removeItem('foundertype_has_completed_commitment');
-            } else {
-              setUserStatus('none');
-            }
+            setUserStatus('none');
           }
+        }
 
-          // Get current user for edit/delete permissions
-          const currentId = await getCurrentUserId();
-          setCurrentUserId(currentId);
-        } catch (e) { /* ignore */ }
-      })();
-    }, [loadCommitments])
-  );
+        // Get current user for edit/delete permissions
+        const currentId = await getCurrentUserId();
+        setCurrentUserId(currentId);
+      } catch (e) { /* ignore */ }
+    })();
+  }, [loadCommitments]);
 
   const handleEditCommitment = (item: Commitment) => {
     // Navigate to commitment screen with edit mode
@@ -421,12 +360,6 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
               onPress={handleViewProgress}
             >
               <Text style={styles.statusCtaText}>View Progress →</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.statusCta, styles.statusDeleteCta]}
-              onPress={handleDeleteActiveCommitment}
-            >
-              <Text style={styles.statusCtaText}>Delete for Testing</Text>
             </TouchableOpacity>
           </View>
         </View>
