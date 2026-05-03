@@ -124,7 +124,7 @@ export function usePublicFeed(
 
   useEffect(() => {
     loadCommitments();
-  }, [loadCommitments]);
+  }, []);
 
   return {
     commitments,
