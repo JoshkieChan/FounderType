@@ -2,10 +2,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PROFILE_KEY = 'foundertype_latest_profile';
 
+interface TopMatch {
+  founderType: string;
+  score: number;
+  description: string;
+}
+
 export interface StoredProfile {
   answers: Record<number, string>;
   founderType: string;
-  topMatch: any;
+  topMatch: TopMatch;
   timestamp: number;
 }
 

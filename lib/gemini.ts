@@ -23,7 +23,7 @@ function tripCircuitBreaker() {
   console.log('Circuit breaker tripped - stopping requests for 5 minutes');
 }
 
-function extractJsonFromResponse(text: string): any | null {
+function extractJsonFromResponse(text: string): Record<string, unknown> | null {
   // Try to find JSON inside markdown code blocks
   const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (codeBlockMatch) {

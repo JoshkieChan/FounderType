@@ -1,10 +1,17 @@
 import { supabase } from './supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Commitment } from '../types/commitment';
 
 const ACTIVE_COMMITMENT_KEY = 'foundertype_active_commitment';
 
+interface Profile {
+  founderType?: string;
+  founder_type?: string;
+  [key: string]: string | undefined;
+}
+
 // Save profile for anonymous user
-export async function saveProfile(userId: string, answers: Record<number, string>, profile: any) {
+export async function saveProfile(userId: string, answers: Record<number, string>, profile: Profile) {
   try {
     const { data, error } = await supabase
       .from('profiles')
@@ -142,11 +149,11 @@ export async function updateCommitmentCheckIn(
 }
 
 // Cache active commitment locally for quick access in App.tsx
-export async function cacheActiveCommitment(commitment: any) {
+export async function cacheActiveCommitment(commitment: Commitment) {
   await AsyncStorage.setItem(ACTIVE_COMMITMENT_KEY, JSON.stringify(commitment));
 }
 
-export async function getCachedActiveCommitment(): Promise<any | null> {
+export async function getCachedActiveCommitment(): Promise<Commitment | null> {
   try {
     const stored = await AsyncStorage.getItem(ACTIVE_COMMITMENT_KEY);
     return stored ? JSON.parse(stored) : null;
@@ -156,7 +163,7 @@ export async function getCachedActiveCommitment(): Promise<any | null> {
 }
 
 // Fetch the most recent active commitment from Supabase
-export async function getActiveCommitment(userId: string): Promise<any | null> {
+export async function getActiveCommitment(userId: string): Promise<Commitment | null> {
   try {
     const { data, error } = await supabase
       .from('commitments')
