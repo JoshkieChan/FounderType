@@ -30,6 +30,7 @@ yarn-error.*
 .env
 .env.local
 .env.production
+.env.vercel
 
 # macOS
 .DS_Store
@@ -45,5 +46,4 @@ yarn-error.*
 /ios
 /android
 
-.env.local
 .vercel

@@ -7,6 +7,7 @@ import { getCurrentUserId, getCachedActiveCommitment, getActiveCommitment } from
 import { sendMissedDaysAlert } from './lib/notifications';
 import AppNavigator from './navigation/AppNavigator';
 import { supabase } from './lib/supabase';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 import { UserProvider } from './context/UserContext';
 
@@ -66,18 +67,20 @@ export default Sentry.wrap(function App() {
   };
 
   return (
-    <SafeAreaProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <UserProvider>
-          <AppNavigator 
-            currentProfile={currentProfile}
-            setCurrentProfile={setCurrentProfile}
-            currentAnswers={currentAnswers}
-            setCurrentAnswers={setCurrentAnswers}
-            globalAnswersRef={globalAnswersRef}
-          />
-        </UserProvider>
-      </GestureHandlerRootView>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <UserProvider>
+            <AppNavigator 
+              currentProfile={currentProfile}
+              setCurrentProfile={setCurrentProfile}
+              currentAnswers={currentAnswers}
+              setCurrentAnswers={setCurrentAnswers}
+              globalAnswersRef={globalAnswersRef}
+            />
+          </UserProvider>
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 });
