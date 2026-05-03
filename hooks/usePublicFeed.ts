@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Commitment } from '../types/commitment';
 
@@ -24,10 +24,13 @@ export function usePublicFeed(
   const [refreshing, setRefreshing] = useState(false);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const statusRef = useRef(statusFilter);
+  statusRef.current = statusFilter;
 
   const loadCommitments = useCallback(
     async (overrideStatus?: 'active' | 'completed' | 'abandoned' | null) => {
-      const filter = overrideStatus !== undefined ? overrideStatus : statusFilter;
+      const filter = overrideStatus !== undefined ? overrideStatus : statusRef.current;
       try {
         setError(null);
         setLoading(true);
@@ -70,12 +73,12 @@ export function usePublicFeed(
         setRefreshing(false);
       }
     },
-    [statusFilter]
+    []
   );
 
   const loadMore = useCallback(
     async (overrideStatus?: 'active' | 'completed' | 'abandoned' | null) => {
-      const filter = overrideStatus !== undefined ? overrideStatus : statusFilter;
+      const filter = overrideStatus !== undefined ? overrideStatus : statusRef.current;
       if (!hasMore || !cursor || isFetchingMore) return;
 
       try {
@@ -119,7 +122,7 @@ export function usePublicFeed(
         setIsFetchingMore(false);
       }
     },
-    [cursor, hasMore, isFetchingMore, statusFilter]
+    [cursor, hasMore, isFetchingMore]
   );
 
   useEffect(() => {
