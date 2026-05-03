@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import * as Sentry from '@sentry/react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { testSupabaseConnection } from './lib/supabase';
 import { getCurrentUserId, getCachedActiveCommitment, getActiveCommitment } from './lib/storage';
 import { sendMissedDaysAlert } from './lib/notifications';
 import AppNavigator from './navigation/AppNavigator';
 import { supabase } from './lib/supabase';
+
+import { UserProvider } from './context/UserContext';
 
 // Global ref for synchronous access to answers
 const globalAnswersRef = { current: null as string | null };
@@ -63,14 +66,18 @@ export default Sentry.wrap(function App() {
   };
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <AppNavigator 
-        currentProfile={currentProfile}
-        setCurrentProfile={setCurrentProfile}
-        currentAnswers={currentAnswers}
-        setCurrentAnswers={setCurrentAnswers}
-        globalAnswersRef={globalAnswersRef}
-      />
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <UserProvider>
+          <AppNavigator 
+            currentProfile={currentProfile}
+            setCurrentProfile={setCurrentProfile}
+            currentAnswers={currentAnswers}
+            setCurrentAnswers={setCurrentAnswers}
+            globalAnswersRef={globalAnswersRef}
+          />
+        </UserProvider>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 });
