@@ -97,6 +97,10 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
     getCurrentUserId().then(setCurrentUserId);
   }, []);
 
+  useEffect(() => {
+    loadCommitments();
+  }, []);
+
   const handleEditCommitment = (item: Commitment) => {
     navigation.navigate('commitment', { 
       editMode: true, 

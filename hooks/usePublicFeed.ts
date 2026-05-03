@@ -125,10 +125,6 @@ export function usePublicFeed(
     [cursor, hasMore, isFetchingMore]
   );
 
-  useEffect(() => {
-    loadCommitments();
-  }, []);
-
   return {
     commitments,
     loading,

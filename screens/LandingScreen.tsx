@@ -106,6 +106,10 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
   const { width } = useWindowDimensions();
   const isWide = width > 768;
 
+  useEffect(() => {
+    loadCommitments();
+  }, []);
+
   // Cap the embedded feed to a small preview subset
   const commitments = allCommitments.slice(0, isWide ? 9 : 6);
 
