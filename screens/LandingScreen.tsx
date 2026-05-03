@@ -9,7 +9,9 @@ import {
   useWindowDimensions,
   Alert,
   Platform,
+  RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loadProfile, getCurrentUserId, getCachedActiveCommitment } from '../lib/storage';
 import { supabase } from '../lib/supabase';
@@ -46,30 +48,25 @@ function getDaysRemaining(deadline: string): number {
 }
 
 function getTimelineText(item: Commitment): string {
-  const posted = new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  let timeline = '';
+  const now = new Date();
   
-  if (item.status === 'completed' && item.completed_at) {
-    const days = Math.ceil((new Date(item.completed_at).getTime() - new Date(item.created_at).getTime()) / (1000 * 60 * 60 * 24));
-    timeline = `Completed in ${days} days`;
-  } else if (item.status === 'abandoned') {
-    const days = Math.abs(getDaysRemaining(item.deadline));
-    timeline = `Expired ${days} days ago`;
-  } else {
-    timeline = `${getDaysRemaining(item.deadline)} days left`;
+  if (item.status === 'completed') {
+    const targetDate = item.completed_at ? new Date(item.completed_at) : new Date(item.created_at);
+    const diffTime = Math.abs(now.getTime() - targetDate.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return `Completed ${diffDays === 0 ? 'today' : `${diffDays} days ago`}`;
   }
   
-  // Add edit timestamp if edited
-  if (item.edited_at && item.edited_at !== item.created_at) {
-    const hoursSinceEdit = (Date.now() - new Date(item.edited_at).getTime()) / (1000 * 60 * 60);
-    if (hoursSinceEdit < 1) {
-      timeline += ' · Edited just now';
-    } else {
-      timeline += ` · Edited ${Math.floor(hoursSinceEdit)} hours ago`;
-    }
+  if (item.status === 'abandoned') {
+    const targetDate = item.abandoned_at ? new Date(item.abandoned_at) : new Date(item.deadline);
+    const diffTime = Math.abs(now.getTime() - targetDate.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return `Abandoned ${diffDays === 0 ? 'today' : `${diffDays} days ago`}`;
   }
   
-  return `${timeline} · Posted ${posted}`;
+  const diffTime = Math.abs(now.getTime() - new Date(item.created_at).getTime());
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  return `Started ${diffDays === 0 ? 'today' : `${diffDays} days ago`}`;
 }
 
 function getUserLabel(item: Commitment) {
@@ -102,6 +99,7 @@ function getHoursRemaining(item: Commitment): number {
 export default function LandingScreen({ navigation }: { navigation: any }) {
   const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [hasSavedProfile, setHasSavedProfile] = useState(false);
   const [userStatus, setUserStatus] = useState<UserStatus>('none');
   const [activeText, setActiveText] = useState('');
@@ -114,17 +112,58 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
     try {
       // Load real commitments from database
       const { data } = await supabase.from('commitments').select('*').order('created_at', { ascending: false }).limit(20);
-      const realCommitments = data || [];
-
-      // Clean up any [date] placeholders in existing commitments
-      const cleanedCommitments = realCommitments.map(commitment => ({
-        ...commitment,
-        commitment_text: commitment.commitment_text.replace(/\[date\]/g, 'May 30, 2026')
-      }));
+      
+      // Clean up any [date] placeholders and filter out test data
+      const cleanedCommitments = (data || [])
+        .filter(c => {
+          const t = c.commitment_text.toLowerCase();
+          // Filter out the specific ones seen in the screenshot that aren't marked as "test"
+          if (t.includes('newsletter') || t.includes('onboarding flow')) return false;
+          // Filter out general test data
+          if (t.includes('test')) return false;
+          return true;
+        })
+        .map(commitment => ({
+          ...commitment,
+          commitment_text: commitment.commitment_text.replace(/\[date\]/g, 'May 30, 2026')
+        }));
 
       // Add placeholder completed/abandoned commitments
       const now = new Date();
-      const placeholders: Commitment[] = [];
+      const placeholders: Commitment[] = [
+        {
+          id: 'mock-1',
+          user_id: 'mock-user-1',
+          commitment_text: 'Launch my first SaaS product MVP',
+          daily_action: 'Code 2 hours',
+          status: 'abandoned',
+          created_at: new Date(now.getTime() - 40 * 86400000).toISOString(),
+          abandoned_at: new Date(now.getTime() - 10 * 86400000).toISOString(),
+          founder_type: 'Visionary'
+        },
+        {
+          id: 'mock-2',
+          user_id: 'mock-user-2',
+          commitment_text: 'Acquire 10 beta users through cold outreach',
+          daily_action: 'Message 20 founders',
+          status: 'abandoned',
+          created_at: new Date(now.getTime() - 45 * 86400000).toISOString(),
+          abandoned_at: new Date(now.getTime() - 15 * 86400000).toISOString(),
+          founder_type: 'Hustler'
+        },
+        {
+          id: 'mock-3',
+          user_id: 'mock-user-3',
+          commitment_text: '30 days of consistent user feedback calls',
+          daily_action: '1 call per day',
+          status: 'completed',
+          completed: true,
+          created_at: new Date(now.getTime() - 60 * 86400000).toISOString(),
+          completed_at: new Date(now.getTime() - 30 * 86400000).toISOString(),
+          days_completed: 30,
+          founder_type: 'Technician'
+        }
+      ];
 
       // Combine real and placeholder commitments, sort by most recent activity date
       const allCommitments = [...cleanedCommitments, ...placeholders];
@@ -134,13 +173,91 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
         return dateB - dateA;
       });
       
+      const currentId = await getCurrentUserId();
+      if (currentId) {
+        const { data: userActive } = await supabase
+          .from('commitments')
+          .select('*')
+          .eq('user_id', currentId)
+          .eq('status', 'active')
+          .maybeSingle();
+        
+        if (userActive) {
+          const alreadyInList = allCommitments.some(c => c.id === userActive.id);
+          if (!alreadyInList) {
+            allCommitments.unshift({
+              ...userActive,
+              commitment_text: userActive.commitment_text.replace(/\[date\]/g, 'May 30, 2026')
+            });
+          }
+        }
+      }
+
       setCommitments(allCommitments);
     } catch (e) { /* ignore */ }
     finally { setLoading(false); }
   }, []);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadCommitments();
+    await checkUserStatus();
+    setRefreshing(false);
+  }, [loadCommitments]);
+
+  const checkUserStatus = async () => {
+    try {
+      const currentId = await getCurrentUserId();
+      if (currentId) {
+        // VALIDATE ACTIVE STATUS WITH DB
+        const { data: dbActive } = await supabase
+          .from('commitments')
+          .select('*')
+          .eq('user_id', currentId)
+          .eq('status', 'active')
+          .maybeSingle();
+
+        if (dbActive) {
+          // Sync DB to local
+          await AsyncStorage.setItem('foundertype_has_active_commitment', 'true');
+          await AsyncStorage.setItem('foundertype_active_commitment_text', dbActive.commitment_text);
+          await AsyncStorage.setItem('foundertype_active_deadline', dbActive.deadline);
+          await AsyncStorage.setItem('foundertype_active_commitment', JSON.stringify(dbActive));
+          
+          const deadline = dbActive.deadline;
+          const days = deadline ? Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
+          setActiveText(dbActive.commitment_text);
+          setActiveDays(days);
+          setUserStatus('active');
+        } else {
+          // No active commitment in DB -> CLEAR LOCAL
+          await AsyncStorage.multiRemove([
+            'foundertype_has_active_commitment',
+            'foundertype_active_commitment_text',
+            'foundertype_active_deadline',
+            'foundertype_active_commitment',
+            'foundertype_commitment',
+          ]);
+          setUserStatus('none');
+
+          // Check if they just completed one
+          const hasCompleted = await AsyncStorage.getItem('foundertype_has_completed_commitment');
+          if (hasCompleted === 'true') {
+            setUserStatus('completed');
+            await AsyncStorage.removeItem('foundertype_has_completed_commitment');
+          }
+        }
+        setCurrentUserId(currentId);
+      }
+    } catch (e) { /* ignore */ }
+  };
+
   useEffect(() => {
     loadCommitments();
+    checkUserStatus();
+  }, [loadCommitments]);
+
+  useEffect(() => {
     (async () => {
       try {
         const profileUserId = await getCurrentUserId();
@@ -148,31 +265,6 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
           const p = await loadProfile(profileUserId);
           if (p) setHasSavedProfile(true);
         }
-
-        // Check user commitment status
-        const hasActive = await AsyncStorage.getItem('foundertype_has_active_commitment');
-        const hasCompleted = await AsyncStorage.getItem('foundertype_has_completed_commitment');
-
-        if (hasActive === 'true') {
-          const text = await AsyncStorage.getItem('foundertype_active_commitment_text') || '';
-          const deadline = await AsyncStorage.getItem('foundertype_active_deadline');
-          const days = deadline ? Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
-          setActiveText(text);
-          setActiveDays(days);
-          setUserStatus('active');
-        } else {
-          if (hasCompleted === 'true') {
-            setUserStatus('completed');
-            // Clear flag so it disappears on next refresh
-            await AsyncStorage.removeItem('foundertype_has_completed_commitment');
-          } else {
-            setUserStatus('none');
-          }
-        }
-
-        // Get current user for edit/delete permissions
-        const currentId = await getCurrentUserId();
-        setCurrentUserId(currentId);
       } catch (e) { /* ignore */ }
     })();
   }, [loadCommitments]);
@@ -271,69 +363,6 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
     }
   };
 
-  const handleDeleteActiveCommitment = async () => {
-    const message = 'This will delete the active commitment so you can post a new one for testing.';
-
-    const runDelete = async () => {
-      try {
-        const cachedCommitment = await getCachedActiveCommitment();
-        const commitmentId = cachedCommitment?.id;
-
-        if (commitmentId && !String(commitmentId).startsWith('local-')) {
-          const { error } = await supabase
-            .from('commitments')
-            .delete()
-            .eq('id', commitmentId);
-
-          if (error) {
-            throw error;
-          }
-        }
-
-        await AsyncStorage.multiRemove([
-          'foundertype_has_active_commitment',
-          'foundertype_active_commitment_text',
-          'foundertype_active_deadline',
-          'foundertype_active_commitment',
-          'foundertype_commitment',
-        ]);
-
-        setActiveText('');
-        setActiveDays(0);
-        setUserStatus('none');
-        await loadCommitments();
-
-        if (Platform.OS === 'web') {
-          window.alert('Active commitment deleted');
-        } else {
-          Alert.alert('Deleted', 'Active commitment deleted');
-        }
-      } catch (err) {
-        console.error('Failed to delete active commitment:', err);
-        if (Platform.OS === 'web') {
-          window.alert('Failed to delete active commitment');
-        } else {
-          Alert.alert('Error', 'Failed to delete active commitment');
-        }
-      }
-    };
-
-    if (Platform.OS === 'web') {
-      if (window.confirm(message)) {
-        await runDelete();
-      }
-      return;
-    }
-
-    Alert.alert(
-      'Delete Active Commitment?',
-      message,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => { void runDelete(); } },
-      ]
-    );
-  };
 
   const FeedCard = ({ item, index }: { item: Commitment; index: number }) => (
     <View style={[styles.feedCard, isWide && styles.feedCardWide]}>
@@ -347,13 +376,20 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
   );
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <SafeAreaView style={styles.container}>
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
       {/* RETURNING USER BANNERS */}
       {userStatus === 'active' && (
         <View style={[styles.statusBanner, { backgroundColor: '#0D1F3A', borderColor: '#1E3A5F' }]}>
           <Text style={[styles.statusLabel, { color: '#3B82F6' }]}>ACTIVE COMMITMENT</Text>
           <Text style={styles.statusText}>"{activeText}"</Text>
-          <Text style={[styles.statusMeta, { color: '#93C5FD' }]}>{activeDays} days left</Text>
+          <Text style={[styles.statusMeta, { color: '#93C5FD' }]}>Day {31 - activeDays} of 30</Text>
           <View style={styles.statusActions}>
             <TouchableOpacity
               style={[styles.statusCta, { backgroundColor: '#F59E0B' }]}
@@ -445,6 +481,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
         )}
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -455,7 +492,7 @@ const styles = StyleSheet.create({
   // HERO
   hero: {
     paddingHorizontal: 24,
-    paddingTop: 80,
+    paddingTop: 40,
     paddingBottom: 40,
     alignItems: 'center',
     backgroundColor: '#0A0A0A',
@@ -666,7 +703,7 @@ const styles = StyleSheet.create({
   // RETURNING USER BANNERS
   statusBanner: {
     marginHorizontal: 24,
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 8,
     borderRadius: 12,
     padding: 20,

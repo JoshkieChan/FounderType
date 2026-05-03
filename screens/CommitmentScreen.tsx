@@ -9,6 +9,7 @@ import {
   Platform,
   TextInput,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { getCurrentUserId, getCachedActiveCommitment } from '../lib/storage';
@@ -77,18 +78,54 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
   }, [editMode, initialText, initialDailyAction]);
 
   const checkGate = async () => {
-    const hasActive = await AsyncStorage.getItem('foundertype_has_active_commitment');
-    const hasCompleted = await AsyncStorage.getItem('foundertype_has_completed_commitment');
+    setLoading(true);
+    try {
+      const currentId = await getCurrentUserId();
+      
+      if (!currentId) {
+        setGateStatus('fresh');
+        return;
+      }
 
-    if (hasActive === 'true') {
-      const text = await AsyncStorage.getItem('foundertype_active_commitment_text') || '';
-      const deadline = await AsyncStorage.getItem('foundertype_active_deadline');
-      const days = deadline ? Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
-      setActiveCommitmentText(text);
-      setActiveDaysLeft(days);
-      setGateStatus('active');
-    } else {
-      setGateStatus(hasCompleted === 'true' ? 'completed' : 'fresh');
+      // ALWAYS validate with DB to prevent "zombie" states
+      const { data: dbActive } = await supabase
+        .from('commitments')
+        .select('*')
+        .eq('user_id', currentId)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (dbActive) {
+        // Sync DB to local
+        await AsyncStorage.setItem('foundertype_has_active_commitment', 'true');
+        await AsyncStorage.setItem('foundertype_active_commitment_text', dbActive.commitment_text);
+        await AsyncStorage.setItem('foundertype_active_deadline', dbActive.deadline);
+        await AsyncStorage.setItem('foundertype_active_commitment', JSON.stringify(dbActive));
+        
+        const deadline = dbActive.deadline;
+        const days = deadline ? Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
+        setActiveCommitmentText(dbActive.commitment_text);
+        setActiveDaysLeft(days);
+        setGateStatus('active');
+      } else {
+        // No active commitment in DB -> FORCE CLEAR LOCAL
+        await AsyncStorage.multiRemove([
+          'foundertype_has_active_commitment',
+          'foundertype_active_commitment_text',
+          'foundertype_active_deadline',
+          'foundertype_active_commitment',
+          'foundertype_commitment',
+        ]);
+
+        // Check if they just completed one
+        const hasCompleted = await AsyncStorage.getItem('foundertype_has_completed_commitment');
+        setGateStatus(hasCompleted === 'true' ? 'completed' : 'fresh');
+      }
+    } catch (e) {
+      console.error('CheckGate error:', e);
+      setGateStatus('fresh');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -322,7 +359,7 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
   });
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <TouchableOpacity 
           onPress={() => navigation.goBack()} 
@@ -513,7 +550,7 @@ export default function CommitmentScreen({ navigation, route }: { navigation: an
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -521,7 +558,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0A0A0A',
-    paddingTop: Platform.OS === 'web' ? 20 : 0,
   },
   content: {
     padding: 24,

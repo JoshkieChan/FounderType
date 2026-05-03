@@ -7,6 +7,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LockoutScreen({ navigation }: { navigation: any }) {
@@ -28,7 +29,7 @@ export default function LockoutScreen({ navigation }: { navigation: any }) {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.badge}>
           <Text style={styles.badgeEmoji}>✕</Text>
@@ -62,7 +63,7 @@ export default function LockoutScreen({ navigation }: { navigation: any }) {
           <Text style={styles.ctaText}>Back to Home</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -74,7 +75,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: 16,
     paddingBottom: 40,
     alignItems: 'center',
   },

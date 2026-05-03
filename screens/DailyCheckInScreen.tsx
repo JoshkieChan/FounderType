@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { getCurrentUserId } from '../lib/storage';
@@ -455,7 +456,7 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <TouchableOpacity onPress={() => navigation.navigate('landing')} style={styles.backButton}>
           <Text style={styles.backText}>×</Text>
@@ -487,9 +488,6 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
               <Text style={styles.actionText}>Add a daily action to start checking in.</Text>
               <TouchableOpacity style={styles.editActionButton} onPress={handleEditCommitment}>
                 <Text style={styles.editActionButtonText}>Add Daily Action</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.deleteBrokenButton} onPress={() => { console.log('Delete button pressed'); handleDeleteBroken(); }}>
-                <Text style={styles.deleteBrokenButtonText}>Delete Commitment</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -542,13 +540,13 @@ export default function DailyCheckInScreen({ navigation, route }: { navigation: 
           <Text style={styles.abandonText}>I'm abandoning this commitment</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0A0A0A' },
-  content: { padding: 20, paddingTop: 40 },
+  content: { padding: 20, paddingTop: 10 },
   backButton: { alignSelf: 'flex-start', marginBottom: 20 },
   backText: { fontSize: 24, color: '#FFFFFF', fontWeight: 'bold' },
   loadingText: { color: '#FFFFFF', textAlign: 'center', marginTop: 100 },
@@ -655,18 +653,6 @@ const styles = StyleSheet.create({
     color: '#555555',
     fontSize: 12,
     textAlign: 'center',
-  },
-  deleteBrokenButton: {
-    backgroundColor: '#EF4444',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  deleteBrokenButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
   },
   editActionButton: {
     backgroundColor: '#3B82F6',

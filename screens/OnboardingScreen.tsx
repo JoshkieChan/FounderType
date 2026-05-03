@@ -1,17 +1,20 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Sentry from '@sentry/react-native';
 
 export default function OnboardingScreen({ navigation }: { navigation: any }) {
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        onPress={() => navigation.goBack()}
-        style={{ position: 'absolute', top: 20, left: 20, zIndex: 10 }}
-        hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-      >
-        <Text style={{ color: '#3B82F6', fontSize: 16 }}>← Back</Text>
-      </TouchableOpacity>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButtonContainer}
+          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+        >
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.content}>
         <View style={styles.iconContainer}>
@@ -63,7 +66,7 @@ export default function OnboardingScreen({ navigation }: { navigation: any }) {
           <Text style={styles.ctaText}>I'm ready to be honest</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -71,7 +74,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0A0A0A',
+  },
+  header: {
+    height: 60,
+    justifyContent: 'center',
     paddingHorizontal: 24,
+  },
+  backButtonContainer: {
+    zIndex: 10,
+  },
+  backButtonText: {
+    color: '#3B82F6',
+    fontSize: 16,
   },
   content: {
     flex: 1,

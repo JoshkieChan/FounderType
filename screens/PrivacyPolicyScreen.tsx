@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PrivacyPolicyScreen({ navigation }: { navigation: any }) {
   const today = new Date().toLocaleDateString('en-US', { 
@@ -9,18 +10,14 @@ export default function PrivacyPolicyScreen({ navigation }: { navigation: any })
   });
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => navigation.navigate('landing')} 
-          style={styles.backButton}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.backText}>Back</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('landing')}>
+          <Text style={styles.backButton}>Back</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentContainer}>
         <Text style={styles.title}>Privacy Policy</Text>
         <Text style={styles.date}>Effective: {today}</Text>
 
@@ -130,7 +127,7 @@ export default function PrivacyPolicyScreen({ navigation }: { navigation: any })
           </Text>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -140,28 +137,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#0A0A0A',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 16,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1A1A1A',
   },
   backButton: {
-    padding: 16,
-    minWidth: 80,
-    backgroundColor: '#333333',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backText: {
-    color: '#FFFFFF',
+    color: '#3B82F6',
     fontSize: 16,
-    fontWeight: '600',
   },
   content: {
     flex: 1,
+  },
+  contentContainer: {
     paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 40,
   },
   title: {
     fontSize: 32,

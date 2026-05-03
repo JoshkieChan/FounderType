@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { calculateFounderType, FOUNDER_TYPE_RESULTS } from '../constants/founderTypeQuestions';
@@ -268,7 +269,7 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
   const circleOpacity3 = pulse3.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0.7, 0.3, 0] });
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <View style={styles.pulseContainer}>
           <Animated.View
@@ -295,7 +296,7 @@ export default function ProcessingScreen({ route, navigation, setCurrentProfile,
         <Text style={styles.title}>Building your FounderType profile...</Text>
         <Text style={styles.subtitle}>{subtitles[subtitleIndex]}</Text>
       </Animated.View>
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TermsScreen({ navigation }: { navigation: any }) {
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backButton}>Back</Text>
@@ -74,11 +75,13 @@ export default function TermsScreen({ navigation }: { navigation: any }) {
           Questions? Email us at support@foundertype.app
         </Text>
 
-        <Text style={styles.footer}>
-          These terms are designed to be honest and straightforward. FounderType is a public accountability system. Use it to finish what you start.
-        </Text>
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            These terms are designed to be honest and straightforward. FounderType is a public accountability system. Use it to finish what you start.
+          </Text>
+        </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -100,7 +103,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingTop: 24,
     paddingBottom: 40,
   },
   title: {
@@ -127,10 +131,16 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   footer: {
-    fontSize: 14,
-    color: '#6B7280',
-    fontStyle: 'italic',
     marginTop: 32,
+    marginBottom: 40,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#333333',
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#888888',
+    fontStyle: 'italic',
     lineHeight: 22,
   },
 });

@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -117,7 +118,8 @@ export default function ResultsScreen({ route, navigation, currentProfile, curre
   const { founderType, headline, truth, fits, quits, nextMove } = founderTypeData;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <View style={styles.header}>
         <Text style={styles.headline}>{headline}</Text>
       </View>
@@ -157,7 +159,8 @@ export default function ResultsScreen({ route, navigation, currentProfile, curre
       >
         <Text style={styles.backButtonText}>← Back to Home</Text>
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -168,6 +171,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 24,
+    paddingTop: 16,
   },
   header: {
     marginBottom: 32,

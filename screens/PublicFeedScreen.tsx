@@ -10,6 +10,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { getCurrentUserId } from '../lib/storage';
@@ -25,6 +26,7 @@ interface Commitment {
   created_at: string;
   check_ins: string[];
   completed: boolean;
+  completed_at: string | null;
   abandoned: boolean;
   abandoned_at: string | null;
   abandoned_on_day: number | null;
@@ -43,6 +45,7 @@ function normalizeCommitment(raw: any): Commitment {
     created_at: raw.created_at || new Date().toISOString(),
     check_ins: raw.check_ins || [],
     completed: !!raw.completed,
+    completed_at: raw.completed_at || null,
     abandoned: !!raw.abandoned,
     abandoned_at: raw.abandoned_at || null,
     abandoned_on_day: raw.abandoned_on_day || null,
@@ -72,6 +75,28 @@ function getStatusText(status: string): string {
     case 'abandoned': return 'ABANDONED';
     default: return 'UNKNOWN';
   }
+}
+
+function getTimelineText(item: Commitment): string {
+  const now = new Date();
+  
+  if (item.status === 'completed') {
+    const targetDate = item.completed_at ? new Date(item.completed_at) : new Date(item.created_at);
+    const diffTime = Math.abs(now.getTime() - targetDate.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return `Completed ${diffDays === 0 ? 'today' : `${diffDays} days ago`}`;
+  }
+  
+  if (item.status === 'abandoned') {
+    const targetDate = item.abandoned_at ? new Date(item.abandoned_at) : new Date(item.deadline);
+    const diffTime = Math.abs(now.getTime() - targetDate.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return `Abandoned ${diffDays === 0 ? 'today' : `${diffDays} days ago`}`;
+  }
+  
+  const diffTime = Math.abs(now.getTime() - new Date(item.created_at).getTime());
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  return `Started ${diffDays === 0 ? 'today' : `${diffDays} days ago`}`;
 }
 
 function isEditable(item: Commitment, userId: string | null): boolean {
@@ -128,13 +153,84 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
         console.error('Error loading commitments:', error);
       }
 
-      const remoteCommitments = error ? [] : (data || []).map(normalizeCommitment);
+      const remoteCommitments = error ? [] : (data || [])
+        .filter(c => {
+          const t = c.commitment_text.toLowerCase();
+          // Filter out the specific ones seen in the screenshot that aren't marked as "test"
+          if (t.includes('newsletter') || t.includes('onboarding flow')) return false;
+          // Filter out general test data
+          if (t.includes('test')) return false;
+          return true;
+        })
+        .map(normalizeCommitment);
+
+      // Add placeholder completed/abandoned commitments
+      const now = new Date();
+      const placeholders: Commitment[] = [
+        {
+          id: 'mock-1',
+          user_id: 'mock-user-1',
+          commitment_text: 'Launch my first SaaS product MVP',
+          daily_action: 'Code 2 hours',
+          status: 'abandoned',
+          created_at: new Date(now.getTime() - 40 * 86400000).toISOString(),
+          abandoned_at: new Date(now.getTime() - 10 * 86400000).toISOString(),
+          founder_type: 'Visionary'
+        },
+        {
+          id: 'mock-2',
+          user_id: 'mock-user-2',
+          commitment_text: 'Acquire 10 beta users through cold outreach',
+          daily_action: 'Message 20 founders',
+          status: 'abandoned',
+          created_at: new Date(now.getTime() - 45 * 86400000).toISOString(),
+          abandoned_at: new Date(now.getTime() - 15 * 86400000).toISOString(),
+          founder_type: 'Hustler'
+        },
+        {
+          id: 'mock-3',
+          user_id: 'mock-user-3',
+          commitment_text: '30 days of consistent user feedback calls',
+          daily_action: '1 call per day',
+          status: 'completed',
+          completed: true,
+          created_at: new Date(now.getTime() - 60 * 86400000).toISOString(),
+          completed_at: new Date(now.getTime() - 30 * 86400000).toISOString(),
+          days_completed: 30,
+          founder_type: 'Technician'
+        }
+      ];
+
       const deletedIdsString = await AsyncStorage.getItem('deleted_commitments');
       const deletedIds = JSON.parse(deletedIdsString || '[]');
-      const mergedCommitments = localCommitment &&
-        !remoteCommitments.some(c => c.id === localCommitment.id || c.commitment_text === localCommitment.commitment_text)
-        ? [localCommitment, ...remoteCommitments]
-        : remoteCommitments;
+      
+      const combinedCommitments = [...remoteCommitments, ...placeholders];
+      combinedCommitments.sort((a, b) => {
+        const dateA = new Date(a.completed_at || a.abandoned_at || a.created_at).getTime();
+        const dateB = new Date(b.completed_at || b.abandoned_at || b.created_at).getTime();
+        return dateB - dateA;
+      });
+
+      // Ensure current user's active commitment is prioritized in the list
+      const currentId = await getCurrentUserId();
+      let mergedCommitments = combinedCommitments;
+      
+      if (currentId) {
+        const { data: dbActive } = await supabase
+          .from('commitments')
+          .select('*')
+          .eq('user_id', currentId)
+          .eq('status', 'active')
+          .maybeSingle();
+        
+        if (dbActive) {
+          const normalized = normalizeCommitment(dbActive);
+          // Remove it if it's already in the list (to avoid duplicates)
+          const filtered = combinedCommitments.filter(c => c.id !== normalized.id);
+          // Add it to the top
+          mergedCommitments = [normalized, ...filtered];
+        }
+      }
 
       setCommitments(mergedCommitments.filter(c => !deletedIds.includes(c.id)));
     } catch (err) {
@@ -258,7 +354,7 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
               styles.daysRemaining,
               isOverdue && styles.overdueText
             ]}>
-              {isOverdue ? `${Math.abs(daysRemaining)} days overdue` : `${daysRemaining} days left`}
+              {getTimelineText(item)}
             </Text>
           </View>
 
@@ -328,7 +424,7 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backButton}>← Back</Text>
@@ -363,7 +459,7 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
           showsVerticalScrollIndicator={false}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -378,7 +474,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: 16,
     paddingBottom: 24,
   },
   backButton: {

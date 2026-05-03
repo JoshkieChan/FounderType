@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import * as Sentry from '@sentry/react-native';
 import { FOUNDER_TYPE_QUESTIONS } from '../constants/founderTypeQuestions';
@@ -108,7 +109,7 @@ export default function QuestionsScreen({ navigation, setCurrentAnswers }: { nav
 
   return (
     <PanGestureHandler onGestureEvent={onGestureEvent} onHandlerStateChange={onHandlerStateChange}>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <Text style={styles.backText}>Back</Text>
@@ -145,7 +146,7 @@ export default function QuestionsScreen({ navigation, setCurrentAnswers }: { nav
             ))}
           </View>
         </ScrollView>
-      </View>
+      </SafeAreaView>
     </PanGestureHandler>
   );
 }
@@ -161,7 +162,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: 16,
     paddingBottom: 24,
   },
   backButton: {
