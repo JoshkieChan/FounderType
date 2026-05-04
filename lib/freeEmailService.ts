@@ -160,7 +160,7 @@ export class FreeEmailService {
   // Send commitment completion email
   static async sendCompletionEmail(userEmail: string, userName: string): Promise<void> {
     const template = this.getTemplates().commitmentCompleted;
-    const personalizedHtml = template.html.replace(/You've successfully/, `${userName || 'You\'}ve successfully`);
+    const personalizedHtml = template.html.replace(/You've successfully/, `${userName || 'You'}ve successfully`);
     
     await this.sendEmail({
       to: userEmail,
@@ -183,7 +183,7 @@ export class FreeEmailService {
   // Send milestone achievement email
   static async sendMilestoneEmail(userEmail: string, userName: string, milestone: string): Promise<void> {
     const template = this.getTemplates().milestoneAchieved;
-    const personalizedHtml = template.html.replace(/You've hit a major milestone/, `${userName || 'You\'}ve hit a major milestone: ${milestone}`);
+    const personalizedHtml = template.html.replace(/You've hit a major milestone/, `${userName || 'You'}ve hit a major milestone: ${milestone}`);
     
     await this.sendEmail({
       to: userEmail,
