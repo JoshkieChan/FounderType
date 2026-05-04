@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import Logger from './logger';
 
 export const accessibilityLabels = {
   // Navigation
@@ -64,7 +65,7 @@ export function announceToScreenReader(message: string) {
     speechSynthesis.speak(utterance);
   } else if (Platform.OS !== 'web') {
     // For React Native, you would use a library like react-native-accessibility-service
-    console.log('Screen reader announcement:', message);
+    Logger.info('Screen reader announcement:', message);
   }
 }
 

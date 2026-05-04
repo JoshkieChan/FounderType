@@ -2,7 +2,7 @@ import React from 'react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import type { HCaptchaProps } from '@hcaptcha/react-hcaptcha';
 import { Platform, Text, View } from 'react-native';
-import { ENV } from '../constants/env';
+import Logger from '../lib/logger';
 
 type HCaptchaWrapperProps = Pick<
   HCaptchaProps,
@@ -21,7 +21,7 @@ export default function HCaptchaWrapper({
   // Use your actual hCaptcha site key
   const siteKey = '2c0c3648-eb10-44b0-ab5e-1580a6085e80';
   
-  console.log('HCaptcha Debug - Site key from env:', siteKey ? 'SET' : 'NOT_SET');
+  Logger.debug('HCaptcha Site key from env:', siteKey ? 'SET' : 'NOT_SET');
 
   if (!siteKey) {
     return (

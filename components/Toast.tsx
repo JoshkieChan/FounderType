@@ -18,7 +18,7 @@ export interface ToastProps {
   };
 }
 
-export default function Toast({
+export default React.memo(function Toast({
   message,
   type = 'info',
   duration = 3000,
@@ -121,7 +121,7 @@ export default function Toast({
       </TouchableOpacity>
     </Animated.View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
