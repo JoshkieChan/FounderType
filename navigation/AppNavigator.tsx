@@ -105,7 +105,7 @@ export default function AppNavigator({
   setCurrentAnswers,
   globalAnswersRef,
 }: AppNavigatorProps) {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('landing');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
   const [params, setParams] = useState<NavigationParams>({});
   const [directParams, setDirectParams] = useState<NavigationParams | null>(
     null
