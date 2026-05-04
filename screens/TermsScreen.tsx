@@ -8,7 +8,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function TermsScreen({ navigation }: { navigation: any }) {
+interface TermsScreenProps {
+  navigation: {
+    goBack: () => void;
+  };
+}
+
+export default function TermsScreen({ navigation }: TermsScreenProps) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>

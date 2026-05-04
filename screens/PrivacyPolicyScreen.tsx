@@ -8,16 +8,16 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+interface PrivacyPolicyScreenProps {
+  navigation: {
+    goBack: () => void;
+  };
+}
+
 export default function PrivacyPolicyScreen({
   navigation,
-}: {
-  navigation: any;
-}) {
-  const today = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+}: PrivacyPolicyScreenProps) {
+  const effectiveDate = 'May 2, 2026';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -33,7 +33,7 @@ export default function PrivacyPolicyScreen({
         contentContainerStyle={styles.contentContainer}
       >
         <Text style={styles.title}>Privacy Policy</Text>
-        <Text style={styles.date}>Effective: {today}</Text>
+        <Text style={styles.date}>Effective: {effectiveDate}</Text>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>What We Collect</Text>
@@ -223,34 +223,35 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: 'bold',
     color: '#FFFFFF',
     marginBottom: 8,
   },
   date: {
-    fontSize: 16,
-    color: '#888888',
-    marginBottom: 32,
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 24,
   },
   section: {
     marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
     color: '#FFFFFF',
+    marginTop: 24,
     marginBottom: 12,
   },
   sectionText: {
-    fontSize: 16,
-    color: '#CCCCCC',
+    fontSize: 15,
+    color: '#D1D5DB',
     lineHeight: 24,
     marginBottom: 12,
   },
   bulletPoint: {
-    fontSize: 16,
-    color: '#CCCCCC',
+    fontSize: 15,
+    color: '#D1D5DB',
     lineHeight: 24,
     marginBottom: 8,
     paddingLeft: 20,
@@ -275,7 +276,7 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 14,
     color: '#888888',
-    lineHeight: 20,
     fontStyle: 'italic',
+    lineHeight: 22,
   },
 });
