@@ -1,21 +1,34 @@
 {
-  "buildCommand": "expo build:web",
+  "buildCommand": "expo export:web",
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": null,
   "regions": ["iad1"],
-  "functions": {
-    "src/**/*.js": {
-      "maxDuration": 10
-    }
-  },
   "headers": [
     {
-      "source": "/api/(.*)",
+      "source": "/static/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "s-maxage=60, stale-while-revalidate=30"
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/_next/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
         }
       ]
     }
