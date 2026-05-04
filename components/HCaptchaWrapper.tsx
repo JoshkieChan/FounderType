@@ -17,12 +17,14 @@ export default function HCaptchaWrapper({
     return null; // Captcha handled differently on mobile
   }
 
+  // eslint-disable-next-line no-undef
   const nextPublicSiteKey = typeof process !== 'undefined' ? process.env?.NEXT_PUBLIC_HCAPTCHA_SITE_KEY : undefined;
   const expoPublicSiteKey = typeof process !== 'undefined' ? process.env?.EXPO_PUBLIC_HCAPTCHA_SITE_KEY : undefined;
   
   // Debug logging
   console.log('HCaptcha Debug - NEXT_PUBLIC_HCAPTCHA_SITE_KEY:', nextPublicSiteKey ? 'SET' : 'NOT_SET');
   console.log('HCaptcha Debug - EXPO_PUBLIC_HCAPTCHA_SITE_KEY:', expoPublicSiteKey ? 'SET' : 'NOT_SET');
+  console.log('HCaptcha Debug - NEXT_PUBLIC value:', nextPublicSiteKey);
   
   const siteKey = nextPublicSiteKey || expoPublicSiteKey;
 
@@ -31,6 +33,9 @@ export default function HCaptchaWrapper({
       <View style={{ marginVertical: 16, alignItems: 'center' }}>
         <Text style={{ color: '#EF4444', fontSize: 14 }}>
           Security check is not configured.
+        </Text>
+        <Text style={{ color: '#888888', fontSize: 12, textAlign: 'center', marginTop: 8 }}>
+          Please add NEXT_PUBLIC_HCAPTCHA_SITE_KEY to your environment variables.
         </Text>
       </View>
     );
