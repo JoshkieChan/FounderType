@@ -19,7 +19,7 @@ export default function HCaptchaWrapper({
   }
 
   // Use your actual hCaptcha site key
-  const siteKey = '10000000-ffff-ffff-ffff-000000000001'; // Replace with your actual site key
+  const siteKey = '12c0c3648-eb10-44b0-ab5e-1580a6085e80';
   
   console.log('HCaptcha Debug - Site key from env:', siteKey ? 'SET' : 'NOT_SET');
 
