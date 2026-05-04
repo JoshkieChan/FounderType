@@ -17,8 +17,9 @@ export default function HCaptchaWrapper({
     return null; // Captcha handled differently on mobile
   }
 
-  // eslint-disable-next-line no-undef
-  const siteKey = process.env.EXPO_PUBLIC_HCAPTCHA_SITE_KEY;
+  const siteKey =
+    (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
+    (typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_HCAPTCHA_SITE_KEY);
 
   if (!siteKey) {
     return (
