@@ -11,7 +11,6 @@
       "dest": "/$1"
     }
   ],
-  "regions": ["iad1", "hnd1"],
   "headers": [
     {
       "source": "/static/(.*)",
