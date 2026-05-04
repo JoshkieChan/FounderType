@@ -1,15 +1,6 @@
 {
   "outputDirectory": "web-build",
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "web-build"
-      }
-    }
-  ],
   "routes": [
     {
       "src": "/api/(.*)",
@@ -21,12 +12,6 @@
     }
   ],
   "regions": ["iad1", "hnd1"],
-  "functions": {
-    "api/**/*.js": {
-      "maxDuration": 10,
-      "memory": 512
-    }
-  },
   "headers": [
     {
       "source": "/static/(.*)",
