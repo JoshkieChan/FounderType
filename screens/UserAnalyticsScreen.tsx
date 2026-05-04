@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
@@ -35,6 +35,8 @@ interface AnalyticsData {
     icon: keyof typeof Ionicons.glyphMap;
   }[];
 }
+
+const Container = Platform.OS === 'web' ? View : SafeAreaView;
 
 export default function UserAnalyticsScreen() {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
@@ -132,18 +134,18 @@ export default function UserAnalyticsScreen() {
 
   if (loading && !analyticsData) {
     return (
-      <SafeAreaView style={styles.container}>
+      <Container style={styles.container}>
         <View style={styles.loadingContainer}>
           <Ionicons name="analytics-outline" size={48} color="#6b7280" />
           <Text style={styles.loadingText}>Loading your analytics...</Text>
         </View>
-      </SafeAreaView>
+      </Container>
     );
   }
 
   if (!analyticsData) {
     return (
-      <SafeAreaView style={styles.container}>
+      <Container style={styles.container}>
         <View style={styles.errorContainer}>
           <Ionicons name="wifi-off" size={48} color="#ef4444" />
           <Text style={styles.errorText}>Unable to load analytics</Text>
@@ -151,12 +153,12 @@ export default function UserAnalyticsScreen() {
             <Text style={styles.retryText}>Retry</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </Container>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <Container style={styles.container}>
       <ScrollView 
         style={styles.scrollView}
         refreshControl={
@@ -355,7 +357,7 @@ export default function UserAnalyticsScreen() {
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </Container>
   );
 }
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -15,6 +15,8 @@ interface SettingsItem {
   onToggle?: (value: boolean) => void;
   onPress?: () => void;
 }
+
+const Container = Platform.OS === 'web' ? View : SafeAreaView;
 
 export default function SettingsScreen() {
   const { theme, isDark, colors, setTheme, toggleTheme } = useTheme();
@@ -233,7 +235,7 @@ export default function SettingsScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <Container style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.card }]}>
         <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
         <View style={styles.connectionStatus}>
@@ -260,7 +262,7 @@ export default function SettingsScreen() {
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </Container>
   );
 }
 

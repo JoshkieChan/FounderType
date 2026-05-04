@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -43,6 +43,8 @@ const onboardingSteps: OnboardingStep[] = [
   },
 ];
 
+const Container = Platform.OS === 'web' ? View : SafeAreaView;
+
 export default function OnboardingScreen() {
   const [currentStep, setCurrentStep] = useState(0);
   const navigation = useNavigation();
@@ -68,7 +70,7 @@ export default function OnboardingScreen() {
   const step = onboardingSteps[currentStep];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <Container style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
@@ -117,7 +119,7 @@ export default function OnboardingScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </Container>
   );
 }
 
