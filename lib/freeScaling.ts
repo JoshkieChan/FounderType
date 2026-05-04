@@ -27,19 +27,19 @@ export class FreeScalingOptimizer {
       regions: ['iad1', 'hnd1'], // Free tier regions
       functions: {
         maxDuration: 10, // Free tier limit
-        memory: 512 // Free tier limit
-      }
+        memory: 512, // Free tier limit
+      },
     },
     supabase: {
       connectionPooling: true,
       caching: true,
-      optimizations: true
+      optimizations: true,
     },
     client: {
       caching: true,
       bundleOptimization: true,
-      lazyLoading: true
-    }
+      lazyLoading: true,
+    },
   };
 
   // Generate Vercel configuration for free tier
@@ -51,31 +51,31 @@ export class FreeScalingOptimizer {
           src: 'package.json',
           use: '@vercel/static-build',
           config: {
-            distDir: 'web-build'
-          }
+            distDir: 'web-build',
+          },
         },
         {
           src: 'server.js',
-          use: '@vercel/node'
-        }
+          use: '@vercel/node',
+        },
       ],
       routes: [
         {
           src: '/api/(.*)',
           dest: '/api/$1',
-          methods: ['GET', 'POST', 'PUT', 'DELETE']
+          methods: ['GET', 'POST', 'PUT', 'DELETE'],
         },
         {
           src: '/(.*)',
-          dest: '/$1'
-        }
+          dest: '/$1',
+        },
       ],
       regions: this.config.vercel.regions,
       functions: {
         'api/**/*.js': {
           maxDuration: this.config.vercel.functions.maxDuration,
-          memory: this.config.vercel.functions.memory
-        }
+          memory: this.config.vercel.functions.memory,
+        },
       },
       headers: [
         {
@@ -83,20 +83,20 @@ export class FreeScalingOptimizer {
           headers: [
             {
               key: 'Cache-Control',
-              value: 'public, max-age=31536000, immutable'
-            }
-          ]
+              value: 'public, max-age=31536000, immutable',
+            },
+          ],
         },
         {
           source: '/_next/static/(.*)',
           headers: [
             {
               key: 'Cache-Control',
-              value: 'public, max-age=31536000, immutable'
-            }
-          ]
-        }
-      ]
+              value: 'public, max-age=31536000, immutable',
+            },
+          ],
+        },
+      ],
     };
   }
 
@@ -237,7 +237,7 @@ cache.set('user-profile', data);
       'Remove unused dependencies',
       'Use tree shaking for dead code elimination',
       'Minimize and compress assets',
-      'Use CDN for external libraries'
+      'Use CDN for external libraries',
     ];
   }
 
@@ -395,19 +395,20 @@ export const freeScalingConfig = {
     regions: ['iad1', 'hnd1'],
     functions: {
       maxDuration: 10,
-      memory: 512
-    }
+      memory: 512,
+    },
   },
   supabase: {
     connectionPooling: true,
     caching: true,
-    optimizations: true
+    optimizations: true,
   },
   client: {
     caching: true,
     bundleOptimization: true,
-    lazyLoading: true
-  }
+    lazyLoading: true,
+  },
 };
 export const vercelConfig = FreeScalingOptimizer.getVercelConfig();
-export const supabaseOptimizations = FreeScalingOptimizer.getSupabaseOptimizations();
+export const supabaseOptimizations =
+  FreeScalingOptimizer.getSupabaseOptimizations();

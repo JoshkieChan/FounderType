@@ -35,8 +35,8 @@ export class MicroservicesArchitecture {
         minInstances: 2,
         maxInstances: 10,
         targetCpuUtilization: 70,
-        targetMemoryUtilization: 80
-      }
+        targetMemoryUtilization: 80,
+      },
     });
 
     // Commitment Service
@@ -49,8 +49,8 @@ export class MicroservicesArchitecture {
         minInstances: 3,
         maxInstances: 20,
         targetCpuUtilization: 75,
-        targetMemoryUtilization: 85
-      }
+        targetMemoryUtilization: 85,
+      },
     });
 
     // Feed Service
@@ -63,8 +63,8 @@ export class MicroservicesArchitecture {
         minInstances: 2,
         maxInstances: 15,
         targetCpuUtilization: 70,
-        targetMemoryUtilization: 80
-      }
+        targetMemoryUtilization: 80,
+      },
     });
 
     // AI Service (Gemini)
@@ -77,8 +77,8 @@ export class MicroservicesArchitecture {
         minInstances: 1,
         maxInstances: 5,
         targetCpuUtilization: 60,
-        targetMemoryUtilization: 70
-      }
+        targetMemoryUtilization: 70,
+      },
     });
 
     // Notification Service
@@ -91,8 +91,8 @@ export class MicroservicesArchitecture {
         minInstances: 1,
         maxInstances: 5,
         targetCpuUtilization: 65,
-        targetMemoryUtilization: 75
-      }
+        targetMemoryUtilization: 75,
+      },
     });
   }
 
@@ -449,11 +449,11 @@ export class ServiceDiscovery {
 
   static async healthCheckAll(): Promise<Record<string, boolean>> {
     const results: Record<string, boolean> = {};
-    
+
     for (const [serviceName, instances] of this.services.entries()) {
       results[serviceName] = instances.length > 0;
     }
-    
+
     return results;
   }
 }
@@ -496,7 +496,7 @@ export class CircuitBreaker {
   private onFailure(): void {
     this.failures++;
     this.lastFailureTime = Date.now();
-    
+
     if (this.failures >= this.threshold) {
       this.state = 'open';
     }

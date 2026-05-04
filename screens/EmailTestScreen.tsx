@@ -78,7 +78,10 @@ export default function EmailTestScreen({
 
     setLoading(true);
     try {
-      await FreeEmailService.sendCompletionEmail(testEmail, userName || 'Founder');
+      await FreeEmailService.sendCompletionEmail(
+        testEmail,
+        userName || 'Founder'
+      );
       Alert.alert('Success', 'Completion email sent!');
     } catch (error) {
       Alert.alert('Error', 'Failed to send completion email');
@@ -95,7 +98,10 @@ export default function EmailTestScreen({
 
     setLoading(true);
     try {
-      await FreeEmailService.sendDailyReminder(testEmail, userName || 'Founder');
+      await FreeEmailService.sendDailyReminder(
+        testEmail,
+        userName || 'Founder'
+      );
       Alert.alert('Success', 'Daily reminder sent!');
     } catch (error) {
       Alert.alert('Error', 'Failed to send daily reminder');
@@ -202,11 +208,9 @@ export default function EmailTestScreen({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Email Service Info</Text>
           <Text style={styles.infoText}>
-            • Service: Resend (free tier){'\n'}
-            • Limit: 100 emails per day{'n'}
-            • Templates: Completion, Daily Reminder, Milestone{'n'}
-            • Tracking: Daily limit management{'n'}
-            • From: noreply@foundertype.app
+            • Service: Resend (free tier){'\n'}• Limit: 100 emails per day{'n'}•
+            Templates: Completion, Daily Reminder, Milestone{'n'}• Tracking:
+            Daily limit management{'n'}• From: noreply@foundertype.app
           </Text>
         </View>
       </ScrollView>

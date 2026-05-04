@@ -443,11 +443,14 @@ export default function DailyCheckInScreen({
         });
         if (error) throw error;
       } else {
-        const error = await cachedSupabase.updateCommitment(activeCommitment.id, {
-          status: 'completed',
-          completed: true,
-          completed_at: completedAt,
-        });
+        const error = await cachedSupabase.updateCommitment(
+          activeCommitment.id,
+          {
+            status: 'completed',
+            completed: true,
+            completed_at: completedAt,
+          }
+        );
         if (error) throw error;
       }
 

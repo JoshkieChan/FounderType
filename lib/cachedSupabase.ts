@@ -9,7 +9,11 @@ export interface CachedQueryOptions {
 }
 
 // Cache key generator for Supabase queries
-function generateCacheKey(table: string, operation: string, query: any): string {
+function generateCacheKey(
+  table: string,
+  operation: string,
+  query: any
+): string {
   return `supabase:${table}:${operation}:${JSON.stringify(query)}`;
 }
 
@@ -19,7 +23,7 @@ export async function cachedSelect<T>(
   options: CachedQueryOptions = {}
 ): Promise<T | null> {
   const { cacheTTL = 60000, skipCache = false } = options;
-  
+
   if (skipCache) {
     const { data, error } = await supabase.from(table).select('*');
     if (error) throw error;
@@ -27,13 +31,15 @@ export async function cachedSelect<T>(
   }
 
   const cacheKey = generateCacheKey(table, 'select', {});
-  
+
   try {
     const cached = cachedAPI.request<T>(`/supabase/${table}`, {}, cacheTTL);
     return cached;
   } catch (error) {
     // Fallback to direct query if cache fails
-    const { data, error: supabaseError } = await supabase.from(table).select('*');
+    const { data, error: supabaseError } = await supabase
+      .from(table)
+      .select('*');
     if (supabaseError) throw supabaseError;
     return data as T;
   }
@@ -46,7 +52,7 @@ export async function cachedSelectWithFilters<T>(
   options: CachedQueryOptions = {}
 ): Promise<T | null> {
   const { cacheTTL = 60000, skipCache = false } = options;
-  
+
   if (skipCache) {
     let query = supabase.from(table).select('*');
     Object.entries(filters).forEach(([key, value]) => {
@@ -58,9 +64,13 @@ export async function cachedSelectWithFilters<T>(
   }
 
   const cacheKey = generateCacheKey(table, 'select', filters);
-  
+
   try {
-    const cached = cachedAPI.request<T>(`/supabase/${table}?${JSON.stringify(filters)}`, {}, cacheTTL);
+    const cached = cachedAPI.request<T>(
+      `/supabase/${table}?${JSON.stringify(filters)}`,
+      {},
+      cacheTTL
+    );
     return cached;
   } catch (error) {
     // Fallback to direct query if cache fails
@@ -82,10 +92,10 @@ export async function cachedInsert<T>(
 ): Promise<T | null> {
   const { error } = await supabase.from(table).insert(data);
   if (error) throw error;
-  
+
   // Invalidate cache for this table
   cachedAPI.invalidateCommitmentCache();
-  
+
   return data as T;
 }
 
@@ -100,13 +110,13 @@ export async function cachedUpdate<T>(
   Object.entries(filters).forEach(([key, value]) => {
     query = query.eq(key, value);
   });
-  
+
   const { error } = await query;
   if (error) throw error;
-  
+
   // Invalidate cache for this table
   cachedAPI.invalidateCommitmentCache();
-  
+
   return data as T;
 }
 
@@ -120,10 +130,10 @@ export async function cachedDelete(
   Object.entries(filters).forEach(([key, value]) => {
     query = query.eq(key, value);
   });
-  
+
   const { error } = await query;
   if (error) throw error;
-  
+
   // Invalidate cache for this table
   cachedAPI.invalidateCommitmentCache();
 }
@@ -136,44 +146,66 @@ export async function cachedUpsert<T>(
 ): Promise<T | null> {
   const { error } = await supabase.from(table).upsert(data);
   if (error) throw error;
-  
+
   // Invalidate cache for this table
   cachedAPI.invalidateCommitmentCache();
-  
+
   return data as T;
 }
 
 // Specific cached methods for common queries
 export const cachedSupabase = {
   // Commitments
-  getCommitments: (page = 1, limit = 20) => 
-    cachedSelectWithFilters('commitments', { is_public: true }, { cacheTTL: 30000 }),
-  
+  getCommitments: (page = 1, limit = 20) =>
+    cachedSelectWithFilters(
+      'commitments',
+      { is_public: true },
+      { cacheTTL: 30000 }
+    ),
+
   getUserCommitments: (userId: string) =>
-    cachedSelectWithFilters('commitments', { user_id: userId }, { cacheTTL: 60000 }),
-  
+    cachedSelectWithFilters(
+      'commitments',
+      { user_id: userId },
+      { cacheTTL: 60000 }
+    ),
+
   getCommitmentById: (id: string) =>
     cachedSelectWithFilters('commitments', { id }, { cacheTTL: 120000 }),
-  
+
   // Profiles
   getUserProfile: (userId: string) =>
-    cachedSelectWithFilters('profiles', { user_id: userId }, { cacheTTL: 1800000 }),
-  
+    cachedSelectWithFilters(
+      'profiles',
+      { user_id: userId },
+      { cacheTTL: 1800000 }
+    ),
+
   // Daily Progress
   getDailyProgress: (commitmentId: string) =>
-    cachedSelectWithFilters('daily_progress', { commitment_id: commitmentId }, { cacheTTL: 60000 }),
-  
+    cachedSelectWithFilters(
+      'daily_progress',
+      { commitment_id: commitmentId },
+      { cacheTTL: 60000 }
+    ),
+
   // Write operations (with cache invalidation)
   insertCommitment: (data: any) => cachedInsert('commitments', data),
-  updateCommitment: (id: string, data: any) => cachedUpdate('commitments', { id }, data),
+  updateCommitment: (id: string, data: any) =>
+    cachedUpdate('commitments', { id }, data),
   deleteCommitment: (id: string) => cachedDelete('commitments', { id }),
-  
+
   insertDailyProgress: (data: any) => cachedInsert('daily_progress', data),
-  updateDailyProgress: (commitmentId: string, dayNumber: number, data: any) => 
-    cachedUpdate('daily_progress', { commitment_id: commitmentId, day_number: dayNumber }, data),
-  
+  updateDailyProgress: (commitmentId: string, dayNumber: number, data: any) =>
+    cachedUpdate(
+      'daily_progress',
+      { commitment_id: commitmentId, day_number: dayNumber },
+      data
+    ),
+
   upsertProfile: (data: any) => cachedUpsert('profiles', data),
-  updateProfile: (userId: string, data: any) => cachedUpdate('profiles', { user_id: userId }, data),
+  updateProfile: (userId: string, data: any) =>
+    cachedUpdate('profiles', { user_id: userId }, data),
 };
 
 // Export the original supabase client for direct access when needed

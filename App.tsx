@@ -37,9 +37,10 @@ const globalAnswersRef = { current: null as string | null };
 
 export default Sentry.wrap(function App() {
   const [currentProfile, setCurrentProfile] = useState<Profile | null>(null);
-  const [currentAnswers, setCurrentAnswers] = useState<
-    Record<number, string> | null
-  >(null);
+  const [currentAnswers, setCurrentAnswers] = useState<Record<
+    number,
+    string
+  > | null>(null);
 
   useEffect(() => {
     testSupabaseConnection();

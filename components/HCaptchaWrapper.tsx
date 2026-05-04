@@ -20,7 +20,7 @@ export default function HCaptchaWrapper({
 
   // Use your actual hCaptcha site key
   const siteKey = '2c0c3648-eb10-44b0-ab5e-1580a6085e80';
-  
+
   Logger.debug('HCaptcha Site key from env:', siteKey ? 'SET' : 'NOT_SET');
 
   if (!siteKey) {
@@ -29,8 +29,16 @@ export default function HCaptchaWrapper({
         <Text style={{ color: '#EF4444', fontSize: 14 }}>
           Security check is not configured.
         </Text>
-        <Text style={{ color: '#888888', fontSize: 12, textAlign: 'center', marginTop: 8 }}>
-          Please add NEXT_PUBLIC_HCAPTCHA_SITE_KEY to your environment variables.
+        <Text
+          style={{
+            color: '#888888',
+            fontSize: 12,
+            textAlign: 'center',
+            marginTop: 8,
+          }}
+        >
+          Please add NEXT_PUBLIC_HCAPTCHA_SITE_KEY to your environment
+          variables.
         </Text>
       </View>
     );

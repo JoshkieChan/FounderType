@@ -13,7 +13,7 @@ A React Native/Expo application for tracking and sharing personal commitments wi
 
 ## Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
 - Expo CLI
 - iOS Simulator / Android Emulator (for mobile development)
@@ -21,22 +21,26 @@ A React Native/Expo application for tracking and sharing personal commitments wi
 ## Setup
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/JoshkieChan/FounderType.git
 cd FounderType
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install --legacy-peer-deps
 ```
 
 3. Set up environment variables:
+
 ```bash
 cp .env.example .env.local
 ```
 
 Edit `.env.local` with your actual values:
+
 ```env
 EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -48,26 +52,28 @@ SENTRY_AUTH_TOKEN=your_sentry_auth_token
 ```
 
 4. Start the development server:
+
 ```bash
 npm start
 ```
 
 5. Run on your preferred platform:
+
 - iOS: Press `i` in the terminal
 - Android: Press `a` in the terminal
 - Web: Press `w` in the terminal
 
 ## Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `EXPO_PUBLIC_SUPABASE_URL` | Your Supabase project URL | Yes |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon key | Yes |
-| `EXPO_PUBLIC_GEMINI_API_KEY` | Google Gemini API key | Yes |
-| `EXPO_PUBLIC_REVENUECAT_IOS_KEY` | RevenueCat iOS key | No |
-| `EXPO_PUBLIC_SENTRY_DSN` | Sentry DSN for error tracking | No |
-| `EXPO_PUBLIC_HCAPTCHA_SITE_KEY` | hCaptcha site key | No |
-| `SENTRY_AUTH_TOKEN` | Sentry auth token | No |
+| Variable                         | Description                   | Required |
+| -------------------------------- | ----------------------------- | -------- |
+| `EXPO_PUBLIC_SUPABASE_URL`       | Your Supabase project URL     | Yes      |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY`  | Your Supabase anon key        | Yes      |
+| `EXPO_PUBLIC_GEMINI_API_KEY`     | Google Gemini API key         | Yes      |
+| `EXPO_PUBLIC_REVENUECAT_IOS_KEY` | RevenueCat iOS key            | No       |
+| `EXPO_PUBLIC_SENTRY_DSN`         | Sentry DSN for error tracking | No       |
+| `EXPO_PUBLIC_HCAPTCHA_SITE_KEY`  | hCaptcha site key             | No       |
+| `SENTRY_AUTH_TOKEN`              | Sentry auth token             | No       |
 
 ## Project Structure
 
@@ -97,6 +103,7 @@ FounderType/
 ### Code Style
 
 This project uses:
+
 - TypeScript for type safety
 - ESLint/Prettier for code formatting
 - Tailwind CSS for styling
@@ -116,6 +123,7 @@ The project uses Supabase as the backend. Database migrations are located in the
 ### Mobile
 
 Build and deploy using EAS Build:
+
 ```bash
 eas build --platform ios
 eas build --platform android
@@ -139,15 +147,18 @@ eas build --platform android
 ## Troubleshooting
 
 ### Build fails with peer dependency errors
+
 ```bash
 npm install --legacy-peer-deps
 ```
 
 ### Environment variables not loading
+
 - Ensure variables are prefixed with `EXPO_PUBLIC_` for Expo
 - For web deployment, use `NEXT_PUBLIC_` prefix in Vercel
 
 ### Blank screen on web
+
 - Check browser console for errors
 - Ensure SafeAreaProvider is wrapping your app
 - Verify environment variables are set correctly

@@ -29,10 +29,12 @@ export class FreeEmailService {
   private static readonly DEFAULT_FROM = 'noreply@foundertype.app';
 
   // Send email using Resend API
-  static async sendEmail(options: EmailOptions): Promise<{ success: boolean; error?: string }> {
+  static async sendEmail(
+    options: EmailOptions
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       const apiKey = process.env.EXPO_PUBLIC_RESEND_API_KEY;
-      
+
       if (!apiKey) {
         console.warn('Resend API key not found, email not sent');
         return { success: false, error: 'API key not configured' };
@@ -41,7 +43,7 @@ export class FreeEmailService {
       const response = await fetch(this.RESEND_API_URL, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -55,7 +57,10 @@ export class FreeEmailService {
 
       if (!response.ok) {
         const errorData = await response.json();
-        return { success: false, error: errorData.message || 'Failed to send email' };
+        return {
+          success: false,
+          error: errorData.message || 'Failed to send email',
+        };
       }
 
       return { success: true };
@@ -158,10 +163,16 @@ export class FreeEmailService {
   }
 
   // Send commitment completion email
-  static async sendCompletionEmail(userEmail: string, userName: string): Promise<void> {
+  static async sendCompletionEmail(
+    userEmail: string,
+    userName: string
+  ): Promise<void> {
     const template = this.getTemplates().commitmentCompleted;
-    const personalizedHtml = template.html.replace(/You've successfully/, `${userName || 'You'}ve successfully`);
-    
+    const personalizedHtml = template.html.replace(
+      /You've successfully/,
+      `${userName || 'You'}ve successfully`
+    );
+
     await this.sendEmail({
       to: userEmail,
       subject: template.subject,
@@ -170,9 +181,12 @@ export class FreeEmailService {
   }
 
   // Send daily reminder email
-  static async sendDailyReminder(userEmail: string, userName: string): Promise<void> {
+  static async sendDailyReminder(
+    userEmail: string,
+    userName: string
+  ): Promise<void> {
     const template = this.getTemplates().dailyReminder;
-    
+
     await this.sendEmail({
       to: userEmail,
       subject: template.subject,
@@ -181,10 +195,17 @@ export class FreeEmailService {
   }
 
   // Send milestone achievement email
-  static async sendMilestoneEmail(userEmail: string, userName: string, milestone: string): Promise<void> {
+  static async sendMilestoneEmail(
+    userEmail: string,
+    userName: string,
+    milestone: string
+  ): Promise<void> {
     const template = this.getTemplates().milestoneAchieved;
-    const personalizedHtml = template.html.replace(/You've hit a major milestone/, `${userName || 'You'}ve hit a major milestone: ${milestone}`);
-    
+    const personalizedHtml = template.html.replace(
+      /You've hit a major milestone/,
+      `${userName || 'You'}ve hit a major milestone: ${milestone}`
+    );
+
     await this.sendEmail({
       to: userEmail,
       subject: template.subject,
@@ -193,7 +214,11 @@ export class FreeEmailService {
   }
 
   // Check daily email limit (100 emails/day for Resend free tier)
-  static async checkDailyLimit(): Promise<{ canSend: boolean; sentToday: number; remaining: number }> {
+  static async checkDailyLimit(): Promise<{
+    canSend: boolean;
+    sentToday: number;
+    remaining: number;
+  }> {
     try {
       // This would typically involve checking your own database
       // For now, we'll use localStorage as a simple tracker
@@ -201,7 +226,7 @@ export class FreeEmailService {
       const sentCount = localStorage.getItem(`emails_sent_${today}`) || '0';
       const sent = parseInt(sentCount, 10);
       const remaining = Math.max(0, 100 - sent);
-      
+
       return {
         canSend: remaining > 0,
         sentToday: sent,
@@ -226,18 +251,20 @@ export class FreeEmailService {
   }
 
   // Send email with limit checking
-  static async sendEmailWithLimit(options: EmailOptions): Promise<{ success: boolean; error?: string }> {
+  static async sendEmailWithLimit(
+    options: EmailOptions
+  ): Promise<{ success: boolean; error?: string }> {
     const limitCheck = await this.checkDailyLimit();
-    
+
     if (!limitCheck.canSend) {
-      return { 
-        success: false, 
-        error: `Daily email limit reached. ${limitCheck.remaining} emails remaining.` 
+      return {
+        success: false,
+        error: `Daily email limit reached. ${limitCheck.remaining} emails remaining.`,
       };
     }
 
     const result = await this.sendEmail(options);
-    
+
     if (result.success) {
       await this.trackEmailSent();
     }
@@ -256,8 +283,16 @@ export function useEmailService() {
     return await FreeEmailService.sendDailyReminder(userEmail, userName);
   };
 
-  const sendMilestoneEmail = async (userEmail: string, userName: string, milestone: string) => {
-    return await FreeEmailService.sendMilestoneEmail(userEmail, userName, milestone);
+  const sendMilestoneEmail = async (
+    userEmail: string,
+    userName: string,
+    milestone: string
+  ) => {
+    return await FreeEmailService.sendMilestoneEmail(
+      userEmail,
+      userName,
+      milestone
+    );
   };
 
   const checkLimit = async () => {

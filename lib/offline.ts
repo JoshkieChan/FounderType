@@ -97,11 +97,14 @@ class OfflineManager {
         await this.processItem(item);
       } catch (error) {
         Logger.error('Failed to process queue item:', error);
-        
+
         item.retryCount++;
         if (item.retryCount < this.maxRetries) {
           this.queue.push(item);
-          Logger.info('Item queued for retry:', { id: item.id, retryCount: item.retryCount });
+          Logger.info('Item queued for retry:', {
+            id: item.id,
+            retryCount: item.retryCount,
+          });
         } else {
           Logger.error('Max retries exceeded for item:', { id: item.id });
         }

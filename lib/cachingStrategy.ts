@@ -43,7 +43,7 @@ export class MemoryCache<T> {
 
   get(key: string): T | null {
     const item = this.cache.get(key);
-    
+
     if (!item) {
       return null;
     }
@@ -164,39 +164,54 @@ export class CacheManager {
 
   private initializeCaches(): void {
     // User profiles cache
-    this.caches.set('profiles', new MemoryCache({
-      ttl: 1800, // 30 minutes
-      maxSize: 10000,
-      strategy: 'lru'
-    }));
+    this.caches.set(
+      'profiles',
+      new MemoryCache({
+        ttl: 1800, // 30 minutes
+        maxSize: 10000,
+        strategy: 'lru',
+      })
+    );
 
     // Commitments cache
-    this.caches.set('commitments', new MemoryCache({
-      ttl: 600, // 10 minutes
-      maxSize: 50000,
-      strategy: 'lru'
-    }));
+    this.caches.set(
+      'commitments',
+      new MemoryCache({
+        ttl: 600, // 10 minutes
+        maxSize: 50000,
+        strategy: 'lru',
+      })
+    );
 
     // Feed data cache
-    this.caches.set('feed', new MemoryCache({
-      ttl: 300, // 5 minutes
-      maxSize: 1000,
-      strategy: 'lru'
-    }));
+    this.caches.set(
+      'feed',
+      new MemoryCache({
+        ttl: 300, // 5 minutes
+        maxSize: 1000,
+        strategy: 'lru',
+      })
+    );
 
     // API responses cache
-    this.caches.set('api', new MemoryCache({
-      ttl: 60, // 1 minute
-      maxSize: 5000,
-      strategy: 'fifo'
-    }));
+    this.caches.set(
+      'api',
+      new MemoryCache({
+        ttl: 60, // 1 minute
+        maxSize: 5000,
+        strategy: 'fifo',
+      })
+    );
 
     // Gemini AI responses cache
-    this.caches.set('gemini', new MemoryCache({
-      ttl: 3600, // 1 hour
-      maxSize: 1000,
-      strategy: 'lfu'
-    }));
+    this.caches.set(
+      'gemini',
+      new MemoryCache({
+        ttl: 3600, // 1 hour
+        maxSize: 1000,
+        strategy: 'lfu',
+      })
+    );
   }
 
   get<T>(cacheName: string, key: string): T | null {
@@ -223,17 +238,17 @@ export class CacheManager {
         cache.clear();
       }
     } else {
-      this.caches.forEach(cache => cache.clear());
+      this.caches.forEach((cache) => cache.clear());
     }
   }
 
   getStats(): Record<string, any> {
     const stats: Record<string, any> = {};
-    
+
     for (const [name, cache] of this.caches.entries()) {
       stats[name] = cache.getStats();
     }
-    
+
     return stats;
   }
 }
@@ -306,7 +321,7 @@ export class CacheInvalidator {
   invalidateUser(userId: string): void {
     this.cacheManager.delete('profiles', CacheKeys.userProfile(userId));
     this.cacheManager.delete('commitments', CacheKeys.userCommitments(userId));
-    
+
     // Invalidate feed pages that might contain this user's commitments
     for (let i = 1; i <= 10; i++) {
       this.cacheManager.delete('feed', CacheKeys.feed(i));
@@ -316,7 +331,7 @@ export class CacheInvalidator {
   // Invalidate commitment-related caches
   invalidateCommitment(commitmentId: string): void {
     this.cacheManager.delete('commitments', CacheKeys.commitment(commitmentId));
-    
+
     // Invalidate feed pages
     for (let i = 1; i <= 10; i++) {
       this.cacheManager.delete('feed', CacheKeys.feed(i));

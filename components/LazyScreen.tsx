@@ -13,11 +13,7 @@ export default function LazyScreen({ children, fallback }: LazyScreenProps) {
     </View>
   );
 
-  return (
-    <Suspense fallback={fallback || defaultFallback}>
-      {children}
-    </Suspense>
-  );
+  return <Suspense fallback={fallback || defaultFallback}>{children}</Suspense>;
 }
 
 const styles = StyleSheet.create({

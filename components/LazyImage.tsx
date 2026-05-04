@@ -56,32 +56,29 @@ export default function LazyImage({
   return (
     <View style={style}>
       {!loaded && placeholder && (
-        <View style={{ position: 'absolute' }}>
-          {placeholder}
-        </View>
+        <View style={{ position: 'absolute' }}>{placeholder}</View>
       )}
-      
+
       {inView && (
         <Image
           ref={imageRef}
           source={source}
-          style={[
-            style,
-            { opacity: loaded ? 1 : 0 }
-          ]}
+          style={[style, { opacity: loaded ? 1 : 0 }]}
           onLoadStart={startLoading}
           onLoad={handleLoad}
           onError={handleError}
         />
       )}
-      
+
       {loading && (
-        <View style={{
-          position: 'absolute',
-          justifyContent: 'center',
-          alignItems: 'center',
-          ...style
-        }}>
+        <View
+          style={{
+            position: 'absolute',
+            justifyContent: 'center',
+            alignItems: 'center',
+            ...style,
+          }}
+        >
           <ActivityIndicator size="small" color="#3B82F6" />
         </View>
       )}

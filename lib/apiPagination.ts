@@ -34,7 +34,7 @@ export class PaginationService {
       page = 1,
       limit = this.DEFAULT_LIMIT,
       sortBy = 'created_at',
-      sortOrder = 'desc'
+      sortOrder = 'desc',
     } = params;
 
     // Validate limit
@@ -42,9 +42,7 @@ export class PaginationService {
 
     try {
       // Build Supabase query
-      let query = supabase
-        .from(table)
-        .select('*', { count: 'exact' });
+      let query = supabase.from(table).select('*', { count: 'exact' });
 
       // Apply sorting
       query = query.order(sortBy, { ascending: sortOrder === 'asc' });
@@ -78,12 +76,17 @@ export class PaginationService {
     params: PaginationParams = {}
   ): Promise<PaginatedResponse<any>> {
     let query = supabase.from('commitments').select('*', { count: 'exact' });
-    
+
     if (userId) {
       query = query.eq('user_id', userId);
     }
 
-    const { page = 1, limit = this.DEFAULT_LIMIT, sortBy = 'created_at', sortOrder = 'desc' } = params;
+    const {
+      page = 1,
+      limit = this.DEFAULT_LIMIT,
+      sortBy = 'created_at',
+      sortOrder = 'desc',
+    } = params;
     const validLimit = Math.min(limit, this.MAX_LIMIT);
     const offset = (page - 1) * validLimit;
 
@@ -93,7 +96,11 @@ export class PaginationService {
     const { data, error, count } = await query;
     if (error) throw error;
 
-    return this.transformResponse({ data, total: count || 0 }, page, validLimit);
+    return this.transformResponse(
+      { data, total: count || 0 },
+      page,
+      validLimit
+    );
   }
 
   // Feed pagination (public commitments)
@@ -116,7 +123,12 @@ export class PaginationService {
     commitmentId: string,
     params: PaginationParams = {}
   ): Promise<PaginatedResponse<any>> {
-    const { page = 1, limit = this.DEFAULT_LIMIT, sortBy = 'created_at', sortOrder = 'desc' } = params;
+    const {
+      page = 1,
+      limit = this.DEFAULT_LIMIT,
+      sortBy = 'created_at',
+      sortOrder = 'desc',
+    } = params;
     const validLimit = Math.min(limit, this.MAX_LIMIT);
     const offset = (page - 1) * validLimit;
 
@@ -129,7 +141,11 @@ export class PaginationService {
 
     if (error) throw error;
 
-    return this.transformResponse({ data, total: count || 0 }, page, validLimit);
+    return this.transformResponse(
+      { data, total: count || 0 },
+      page,
+      validLimit
+    );
   }
 
   // Search with pagination
@@ -137,7 +153,12 @@ export class PaginationService {
     query: string,
     params: PaginationParams = {}
   ): Promise<PaginatedResponse<any>> {
-    const { page = 1, limit = this.DEFAULT_LIMIT, sortBy = 'created_at', sortOrder = 'desc' } = params;
+    const {
+      page = 1,
+      limit = this.DEFAULT_LIMIT,
+      sortBy = 'created_at',
+      sortOrder = 'desc',
+    } = params;
     const validLimit = Math.min(limit, this.MAX_LIMIT);
     const offset = (page - 1) * validLimit;
 
@@ -150,7 +171,11 @@ export class PaginationService {
 
     if (error) throw error;
 
-    return this.transformResponse({ data, total: count || 0 }, page, validLimit);
+    return this.transformResponse(
+      { data, total: count || 0 },
+      page,
+      validLimit
+    );
   }
 
   // Transform API response to standard format
@@ -162,7 +187,7 @@ export class PaginationService {
     // Handle different response formats
     const data = response.data || response.items || response;
     const totalItems = response.total || response.count || response.length || 0;
-    
+
     const totalPages = Math.ceil(totalItems / limit);
     const hasNext = currentPage < totalPages;
     const hasPrev = currentPage > 1;
@@ -174,8 +199,8 @@ export class PaginationService {
         totalPages,
         totalItems,
         hasNext,
-        hasPrev
-      }
+        hasPrev,
+      },
     };
   }
 
@@ -186,7 +211,7 @@ export class PaginationService {
     totalItems: number
   ) {
     const totalPages = Math.ceil(totalItems / limit);
-    
+
     return {
       currentPage,
       totalPages,
@@ -194,7 +219,7 @@ export class PaginationService {
       hasNext: currentPage < totalPages,
       hasPrev: currentPage > 1,
       startItem: (currentPage - 1) * limit + 1,
-      endItem: Math.min(currentPage * limit, totalItems)
+      endItem: Math.min(currentPage * limit, totalItems),
     };
   }
 
@@ -206,7 +231,7 @@ export class PaginationService {
   ): Promise<PaginatedResponse<T>> {
     return this.fetchPaginated<T>(table, {
       ...params,
-      page: currentPage + 1
+      page: currentPage + 1,
     });
   }
 
@@ -238,28 +263,31 @@ export function usePagination<T>(
     totalPages: 1,
     totalItems: 0,
     hasNext: false,
-    hasPrev: false
+    hasPrev: false,
   });
   const [params, setParams] = React.useState(initialParams);
 
-  const loadPage = React.useCallback(async (page: number) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await PaginationService.fetchPaginated<T>(table, {
-        ...params,
-        page
-      });
-      
-      setData(response.data);
-      setPagination(response.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data');
-    } finally {
-      setLoading(false);
-    }
-  }, [table, params]);
+  const loadPage = React.useCallback(
+    async (page: number) => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await PaginationService.fetchPaginated<T>(table, {
+          ...params,
+          page,
+        });
+
+        setData(response.data);
+        setPagination(response.pagination);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [table, params]
+  );
 
   const loadNext = React.useCallback(() => {
     if (pagination.hasNext && !loading) {
@@ -290,7 +318,7 @@ export function usePagination<T>(
     loadNext,
     loadPrev,
     refresh,
-    setParams
+    setParams,
   };
 }
 
@@ -315,10 +343,10 @@ export function useInfiniteScroll<T>(
     try {
       const response = await PaginationService.fetchPaginated<T>(table, {
         ...params,
-        page: page + 1
+        page: page + 1,
       });
 
-      setData(prev => [...prev, ...response.data]);
+      setData((prev) => [...prev, ...response.data]);
       setHasMore(response.pagination.hasNext);
       setPage(page + 1);
     } catch (err) {
@@ -347,6 +375,6 @@ export function useInfiniteScroll<T>(
     hasMore,
     loadMore,
     refresh,
-    setParams
+    setParams,
   };
 }

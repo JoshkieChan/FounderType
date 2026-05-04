@@ -41,13 +41,28 @@ class PerformanceMonitor {
 
     window.addEventListener('load', () => {
       setTimeout(() => {
-        const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-        
+        const navigation = performance.getEntriesByType(
+          'navigation'
+        )[0] as PerformanceNavigationTiming;
+
         if (navigation) {
-          this.recordMetric('dom_content_loaded', navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart);
-          this.recordMetric('page_load_time', navigation.loadEventEnd - navigation.loadEventStart);
-          this.recordMetric('time_to_first_byte', navigation.responseStart - navigation.requestStart);
-          this.recordMetric('dom_interactive', navigation.domInteractive - navigation.navigationStart);
+          this.recordMetric(
+            'dom_content_loaded',
+            navigation.domContentLoadedEventEnd -
+              navigation.domContentLoadedEventStart
+          );
+          this.recordMetric(
+            'page_load_time',
+            navigation.loadEventEnd - navigation.loadEventStart
+          );
+          this.recordMetric(
+            'time_to_first_byte',
+            navigation.responseStart - navigation.requestStart
+          );
+          this.recordMetric(
+            'dom_interactive',
+            navigation.domInteractive - navigation.navigationStart
+          );
         }
       }, 0);
     });
@@ -72,7 +87,7 @@ class PerformanceMonitor {
       // Cumulative Layout Shift
       this.observeMetric('layout-shift', (entries) => {
         let clsValue = 0;
-        entries.forEach(entry => {
+        entries.forEach((entry) => {
           if (!(entry as any).hadRecentInput) {
             clsValue += (entry as any).value;
           }
@@ -82,19 +97,21 @@ class PerformanceMonitor {
 
       // First Contentful Paint
       this.observeMetric('paint', (entries) => {
-        entries.forEach(entry => {
+        entries.forEach((entry) => {
           if (entry.name === 'first-contentful-paint') {
             this.recordMetric('fcp', entry.startTime);
           }
         });
       });
-
     } catch (error) {
       console.warn('Performance monitoring not fully supported:', error);
     }
   }
 
-  private observeMetric(type: string, callback: (entries: any[]) => void): void {
+  private observeMetric(
+    type: string,
+    callback: (entries: any[]) => void
+  ): void {
     try {
       const observer = new PerformanceObserver((list) => {
         callback(list.getEntries());
@@ -125,12 +142,12 @@ class PerformanceMonitor {
     // Track scroll performance
     let scrollStartTime: number;
     let scrollTimeout: NodeJS.Timeout;
-    
+
     document.addEventListener('scroll', () => {
       if (!scrollStartTime) {
         scrollStartTime = performance.now();
       }
-      
+
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
         if (scrollStartTime) {
@@ -171,8 +188,8 @@ class PerformanceMonitor {
 
   getWebVitals(): WebVitals {
     const vitals: WebVitals = {};
-    
-    this.metrics.forEach(metric => {
+
+    this.metrics.forEach((metric) => {
       switch (metric.name) {
         case 'lcp':
           vitals.lcp = metric.value;
@@ -196,9 +213,9 @@ class PerformanceMonitor {
   }
 
   getAverageMetric(name: string): number {
-    const nameMetrics = this.metrics.filter(m => m.name === name);
+    const nameMetrics = this.metrics.filter((m) => m.name === name);
     if (nameMetrics.length === 0) return 0;
-    
+
     const sum = nameMetrics.reduce((acc, m) => acc + m.value, 0);
     return Math.round((sum / nameMetrics.length) * 100) / 100;
   }

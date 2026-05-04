@@ -21,17 +21,20 @@ interface OnboardingScreenProps {
 const onboardingData = [
   {
     title: 'Public Accountability',
-    description: 'Post your 30-day commitment and let the community hold you accountable.',
+    description:
+      'Post your 30-day commitment and let the community hold you accountable.',
     icon: '🎯',
   },
   {
     title: 'Daily Check-ins',
-    description: 'Track your progress every day with simple check-ins and build consistency.',
+    description:
+      'Track your progress every day with simple check-ins and build consistency.',
     icon: '✅',
   },
   {
     title: 'Founder Types',
-    description: 'Discover your founder type and get personalized insights for your journey.',
+    description:
+      'Discover your founder type and get personalized insights for your journey.',
     icon: '🚀',
   },
 ];
@@ -85,10 +88,7 @@ export default function OnboardingScreen({
             {onboardingData.map((_, index) => (
               <View
                 key={index}
-                style={[
-                  styles.dot,
-                  index === currentIndex && styles.activeDot,
-                ]}
+                style={[styles.dot, index === currentIndex && styles.activeDot]}
                 accessible={false}
               />
             ))}
@@ -106,7 +106,9 @@ export default function OnboardingScreen({
             accessibilityRole="button"
           >
             <Text style={styles.nextButtonText}>
-              {currentIndex === onboardingData.length - 1 ? 'Get Started' : 'Next'}
+              {currentIndex === onboardingData.length - 1
+                ? 'Get Started'
+                : 'Next'}
             </Text>
           </TouchableOpacity>
         </View>

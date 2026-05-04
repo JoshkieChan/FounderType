@@ -10,10 +10,7 @@ export interface ImageOptimizationOptions {
 
 export class ImageOptimizer {
   // Convert image to WebP format (browser native)
-  static async convertToWebP(
-    file: File,
-    quality: number = 80
-  ): Promise<Blob> {
+  static async convertToWebP(file: File, quality: number = 80): Promise<Blob> {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -111,8 +108,8 @@ export class ImageOptimizer {
     breakpoints: number[] = [320, 640, 960, 1280, 1920]
   ): string {
     return breakpoints
-      .filter(width => width <= originalWidth)
-      .map(width => `${baseUrl}?w=${width} ${width}w`)
+      .filter((width) => width <= originalWidth)
+      .map((width) => `${baseUrl}?w=${width} ${width}w`)
       .join(', ');
   }
 
@@ -124,15 +121,21 @@ export class ImageOptimizer {
     className?: string
   ): string {
     const avifSources = widths
-      .map(width => `<source srcset="${imageUrl}?w=${width}&format=avif} ${width}w" type="image/avif">`)
+      .map(
+        (width) =>
+          `<source srcset="${imageUrl}?w=${width}&format=avif} ${width}w" type="image/avif">`
+      )
       .join('\n    ');
 
     const webpSources = widths
-      .map(width => `<source srcset="${imageUrl}?w=${width}&format=webp" ${width}w" type="image/webp">`)
+      .map(
+        (width) =>
+          `<source srcset="${imageUrl}?w=${width}&format=webp" ${width}w" type="image/webp">`
+      )
       .join('\n    ');
 
     const imgSources = widths
-      .map(width => `${imageUrl}?w=${width} ${width}w`)
+      .map((width) => `${imageUrl}?w=${width} ${width}w`)
       .join(', ');
 
     return `
@@ -144,7 +147,9 @@ export class ImageOptimizer {
   }
 
   // Get image dimensions from file
-  static async getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  static async getImageDimensions(
+    file: File
+  ): Promise<{ width: number; height: number }> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -160,12 +165,7 @@ export class ImageOptimizer {
     file: File,
     options: ImageOptimizationOptions = {}
   ): Promise<Blob> {
-    const {
-      width,
-      height,
-      quality = 80,
-      format = 'jpeg'
-    } = options;
+    const { width, height, quality = 80, format = 'jpeg' } = options;
 
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
@@ -193,7 +193,7 @@ export class ImageOptimizer {
         ctx?.drawImage(img, 0, 0, targetWidth, targetHeight);
 
         const mimeType = format === 'webp' ? 'image/webp' : 'image/jpeg';
-        
+
         canvas.toBlob(
           (blob) => {
             if (blob) {
@@ -218,7 +218,7 @@ export class ImageOptimizer {
     options: ImageOptimizationOptions = {}
   ): string {
     const params = new URLSearchParams();
-    
+
     if (options.width) params.append('w', options.width.toString());
     if (options.height) params.append('h', options.height.toString());
     if (options.quality) params.append('q', options.quality.toString());
@@ -254,16 +254,10 @@ export function OptimizedImage({
     return `<img src="${src}" alt="${alt}" class="${className || ''}" loading="${loading}">`;
   }
 
-  const optimizedUrl = ImageOptimizer.createOptimizedUrl(src, { width, height });
-  
-  return (
-    <img
-      src={optimizedUrl}
-      alt={alt}
-      className={className}
-      loading={loading}
-      decoding={decoding}
-      style={{ width, height }}
-    />
-  );
+  const optimizedUrl = ImageOptimizer.createOptimizedUrl(src, {
+    width,
+    height,
+  });
+
+  return `<img src="${optimizedUrl}" alt="${alt}" class="${className || ''}" loading="${loading}" decoding="${decoding}" style="width: ${width}px; height: ${height}px">`;
 }

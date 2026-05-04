@@ -34,7 +34,7 @@ describe('Validator', () => {
 
     it('should validate custom rule', () => {
       const result = Validator.validate('test', {
-        custom: (value) => value === 'valid' ? null : 'Custom error'
+        custom: (value) => (value === 'valid' ? null : 'Custom error'),
       });
       expect(result.isValid).toBe(false);
       expect(result.error).toBe('Custom error');
@@ -84,13 +84,17 @@ describe('Validator', () => {
     it('should reject title with invalid characters', () => {
       const result = Validator.validateCommitmentTitle('Title with <script>');
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe('Only letters, numbers, and basic punctuation allowed');
+      expect(result.error).toBe(
+        'Only letters, numbers, and basic punctuation allowed'
+      );
     });
   });
 
   describe('validateCommitmentDescription', () => {
     it('should validate valid commitment description', () => {
-      const result = Validator.validateCommitmentDescription('This is a detailed description of my commitment that I will follow through with dedication.');
+      const result = Validator.validateCommitmentDescription(
+        'This is a detailed description of my commitment that I will follow through with dedication.'
+      );
       expect(result.isValid).toBe(true);
       expect(result.error).toBeNull();
     });
@@ -104,7 +108,9 @@ describe('Validator', () => {
 
   describe('sanitizeInput', () => {
     it('should remove HTML tags', () => {
-      const result = Validator.sanitizeInput('Hello <script>alert("xss")</script> World');
+      const result = Validator.sanitizeInput(
+        'Hello <script>alert("xss")</script> World'
+      );
       expect(result).toBe('Hello alert("xss") World');
     });
 

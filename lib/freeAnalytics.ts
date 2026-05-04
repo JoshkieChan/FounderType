@@ -34,13 +34,14 @@ export class FreeAnalytics {
       const pageView: PageView = {
         path,
         referrer: typeof window !== 'undefined' ? document.referrer : undefined,
-        userAgent: typeof window !== 'undefined' ? navigator.userAgent : undefined,
+        userAgent:
+          typeof window !== 'undefined' ? navigator.userAgent : undefined,
         timestamp: Date.now(),
         userId,
       };
 
       this.storeEvent('page_view', pageView);
-      
+
       // Vercel Analytics auto-tracking (if available)
       if (typeof window !== 'undefined' && (window as any).vercelAnalytics) {
         (window as any).vercelAnalytics.track('pageview', { path, userId });
@@ -51,7 +52,11 @@ export class FreeAnalytics {
   }
 
   // Track custom event
-  static trackEvent(event: string, properties?: Record<string, any>, userId?: string): void {
+  static trackEvent(
+    event: string,
+    properties?: Record<string, any>,
+    userId?: string
+  ): void {
     try {
       const analyticsEvent: AnalyticsEvent = {
         event,
@@ -61,7 +66,7 @@ export class FreeAnalytics {
       };
 
       this.storeEvent('custom_event', analyticsEvent);
-      
+
       // Vercel Analytics tracking (if available)
       if (typeof window !== 'undefined' && (window as any).vercelAnalytics) {
         (window as any).vercelAnalytics.track(event, { ...properties, userId });
@@ -72,7 +77,11 @@ export class FreeAnalytics {
   }
 
   // Track user engagement
-  static trackEngagement(action: string, target: string, userId?: string): void {
+  static trackEngagement(
+    action: string,
+    target: string,
+    userId?: string
+  ): void {
     this.trackEvent('engagement', { action, target }, userId);
   }
 
@@ -112,7 +121,7 @@ export class FreeAnalytics {
     try {
       const existing = this.getStoredData();
       const events = existing.events || [];
-      
+
       events.push({
         type,
         data,
@@ -147,14 +156,14 @@ export class FreeAnalytics {
     try {
       const data = this.getStoredData();
       const events = data.events || [];
-      
+
       const pageViews = events.filter((e: any) => e.type === 'page_view');
       const customEvents = events.filter((e: any) => e.type === 'custom_event');
-      
+
       // Calculate basic metrics
       const uniqueUsers = new Set();
       const uniquePaths = new Set();
-      
+
       pageViews.forEach((pv: any) => {
         if (pv.data.userId) uniqueUsers.add(pv.data.userId);
         if (pv.data.path) uniquePaths.add(pv.data.path);
@@ -162,32 +171,39 @@ export class FreeAnalytics {
 
       const totalUsers = uniqueUsers.size;
       const totalPages = uniquePaths.size;
-      
+
       // Calculate active users (last 7 days)
-      const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-      const recentEvents = events.filter((e: any) => e.timestamp > sevenDaysAgo);
+      const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const recentEvents = events.filter(
+        (e: any) => e.timestamp > sevenDaysAgo
+      );
       const recentUsers = new Set();
-      
+
       recentEvents.forEach((event: any) => {
         if (event.data.userId) recentUsers.add(event.data.userId);
       });
 
       const activeUsers = recentUsers.size;
-      
+
       // Calculate new users (first-time page views)
       const newUsers = pageViews.filter((pv: any) => {
-        const userEvents = pageViews.filter((p: any) => p.data.userId === pv.data.userId);
+        const userEvents = pageViews.filter(
+          (p: any) => p.data.userId === pv.data.userId
+        );
         return userEvents.length === 1;
       }).length;
 
       // Calculate retention rate (simplified)
-      const retentionRate = totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
-      
+      const retentionRate =
+        totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
+
       // Calculate average session duration (simplified)
       const sessionDurations = this.calculateSessionDurations(pageViews);
-      const avgSessionDuration = sessionDurations.length > 0 
-        ? sessionDurations.reduce((a, b) => a + b, 0) / sessionDurations.length 
-        : 0;
+      const avgSessionDuration =
+        sessionDurations.length > 0
+          ? sessionDurations.reduce((a, b) => a + b, 0) /
+            sessionDurations.length
+          : 0;
 
       return {
         totalUsers,
@@ -211,12 +227,12 @@ export class FreeAnalytics {
   // Calculate session durations (simplified)
   private static calculateSessionDurations(pageViews: any[]): number[] {
     const sessions: Record<string, { start: number; end: number }> = {};
-    
+
     pageViews.forEach((pv: any) => {
       const userId = pv.data.userId || 'anonymous';
       const path = pv.data.path || '/';
       const sessionKey = `${userId}_${path}`;
-      
+
       if (!sessions[sessionKey]) {
         sessions[sessionKey] = { start: pv.timestamp, end: pv.timestamp };
       } else {
@@ -225,8 +241,8 @@ export class FreeAnalytics {
     });
 
     return Object.values(sessions)
-      .map(session => session.end - session.start)
-      .filter(duration => duration > 0 && duration < 3600000); // Filter out sessions over 1 hour
+      .map((session) => session.end - session.start)
+      .filter((duration) => duration > 0 && duration < 3600000); // Filter out sessions over 1 hour
   }
 
   // Get event counts by type
@@ -251,10 +267,13 @@ export class FreeAnalytics {
   }
 
   // Get top pages
-  static getTopPages(limit: number = 10): Array<{ path: string; views: number }> {
+  static getTopPages(
+    limit: number = 10
+  ): Array<{ path: string; views: number }> {
     try {
       const data = this.getStoredData();
-      const pageViews = data.events?.filter((e: any) => e.type === 'page_view') || [];
+      const pageViews =
+        data.events?.filter((e: any) => e.type === 'page_view') || [];
       const pageCounts: Record<string, number> = {};
 
       pageViews.forEach((pv: any) => {
@@ -303,12 +322,12 @@ export class FreeAnalytics {
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
 
-    history.pushState = function(...args) {
+    history.pushState = function (...args) {
       originalPushState.apply(history, args);
       FreeAnalytics.trackPageView(window.location.pathname);
     };
 
-    history.replaceState = function(...args) {
+    history.replaceState = function (...args) {
       originalReplaceState.apply(history, args);
       FreeAnalytics.trackPageView(window.location.pathname);
     };

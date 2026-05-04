@@ -5,8 +5,8 @@ export interface CDNConfig {
   regions: string[];
   cacheHeaders: {
     'Cache-Control': string;
-    'Expires': string;
-    'ETag': string;
+    Expires: string;
+    ETag: string;
   };
   compression: boolean;
   optimization: {
@@ -27,16 +27,16 @@ export class CDNManager {
       regions: ['us-east-1', 'eu-west-1', 'asia-southeast-1'],
       cacheHeaders: {
         'Cache-Control': 'public, max-age=31536000, immutable',
-        'Expires': new Date(Date.now() + 31536000000).toUTCString(),
-        'ETag': ''
+        Expires: new Date(Date.now() + 31536000000).toUTCString(),
+        ETag: '',
       },
       compression: true,
       optimization: {
         images: true,
         fonts: true,
         scripts: true,
-        styles: true
-      }
+        styles: true,
+      },
     };
   }
 
@@ -55,12 +55,15 @@ export class CDNManager {
   }
 
   // Generate optimized image URL
-  getImageUrl(path: string, options?: {
-    width?: number;
-    height?: number;
-    quality?: number;
-    format?: 'webp' | 'avif' | 'jpg' | 'png';
-  }): string {
+  getImageUrl(
+    path: string,
+    options?: {
+      width?: number;
+      height?: number;
+      quality?: number;
+      format?: 'webp' | 'avif' | 'jpg' | 'png';
+    }
+  ): string {
     const baseUrl = this.getAssetUrl(path);
     if (!options) return baseUrl;
 
@@ -78,16 +81,24 @@ export class CDNManager {
     const hints: string[] = [];
 
     // Critical CSS
-    hints.push(`<link rel="preload" href="${this.getAssetUrl('css/main.css')}" as="style">`);
-    
+    hints.push(
+      `<link rel="preload" href="${this.getAssetUrl('css/main.css')}" as="style">`
+    );
+
     // Critical JavaScript
-    hints.push(`<link rel="preload" href="${this.getAssetUrl('js/main.js')}" as="script">`);
-    
+    hints.push(
+      `<link rel="preload" href="${this.getAssetUrl('js/main.js')}" as="script">`
+    );
+
     // Critical fonts
-    hints.push(`<link rel="preload" href="${this.getAssetUrl('fonts/inter.woff2')}" as="font" type="font/woff2" crossorigin>`);
-    
+    hints.push(
+      `<link rel="preload" href="${this.getAssetUrl('fonts/inter.woff2')}" as="font" type="font/woff2" crossorigin>`
+    );
+
     // Critical images
-    hints.push(`<link rel="preload" href="${this.getImageUrl('images/logo.png', { width: 200, height: 200 })}" as="image">`);
+    hints.push(
+      `<link rel="preload" href="${this.getImageUrl('images/logo.png', { width: 200, height: 200 })}" as="image">`
+    );
 
     return hints;
   }
@@ -139,7 +150,7 @@ self.addEventListener('fetch', (event) => {
     return {
       output: {
         publicPath: this.config.baseUrl + '/',
-        crossOriginLoading: 'anonymous'
+        crossOriginLoading: 'anonymous',
       },
       optimization: {
         splitChunks: {
@@ -154,10 +165,10 @@ self.addEventListener('fetch', (event) => {
               name: 'common',
               minChunks: 2,
               chunks: 'all',
-              enforce: true
-            }
-          }
-        }
+              enforce: true,
+            },
+          },
+        },
       },
       module: {
         rules: [
@@ -165,18 +176,18 @@ self.addEventListener('fetch', (event) => {
             test: /\\.(png|jpg|jpeg|gif|svg|webp)$/i,
             type: 'asset/resource',
             generator: {
-              filename: 'images/[name].[hash][ext]'
-            }
+              filename: 'images/[name].[hash][ext]',
+            },
           },
           {
             test: /\\.(woff|woff2|eot|ttf|otf)$/i,
             type: 'asset/resource',
             generator: {
-              filename: 'fonts/[name].[hash][ext]'
-            }
-          }
-        ]
-      }
+              filename: 'fonts/[name].[hash][ext]',
+            },
+          },
+        ],
+      },
     };
   }
 
@@ -186,11 +197,11 @@ self.addEventListener('fetch', (event) => {
       images: {
         domains: ['cdn.foundertype.com'],
         loader: 'custom',
-        loaderFile: './lib/imageLoader.js'
+        loaderFile: './lib/imageLoader.js',
       },
       assetPrefix: this.config.baseUrl,
       generateEtags: true,
-      compress: true
+      compress: true,
     };
   }
 
@@ -201,29 +212,29 @@ self.addEventListener('fetch', (event) => {
       builds: [
         {
           src: 'public/**/*',
-          use: '@vercel/static'
-        }
+          use: '@vercel/static',
+        },
       ],
       routes: [
         {
           src: '/static/(.*)',
-          headers: this.config.cacheHeaders
+          headers: this.config.cacheHeaders,
         },
         {
           src: '/images/(.*)',
           headers: {
             ...this.config.cacheHeaders,
-            'Cache-Control': 'public, max-age=31536000, immutable'
-          }
+            'Cache-Control': 'public, max-age=31536000, immutable',
+          },
         },
         {
           src: '/fonts/(.*)',
           headers: {
             ...this.config.cacheHeaders,
-            'Cache-Control': 'public, max-age=31536000, immutable'
-          }
-        }
-      ]
+            'Cache-Control': 'public, max-age=31536000, immutable',
+          },
+        },
+      ],
     };
   }
 }
@@ -232,23 +243,31 @@ self.addEventListener('fetch', (event) => {
 export class ImageOptimizer {
   // Generate responsive image srcset
   static generateSrcSet(baseUrl: string, sizes: number[]): string {
-    return sizes
-      .map(size => `${baseUrl}?w=${size} ${size}w`)
-      .join(', ');
+    return sizes.map((size) => `${baseUrl}?w=${size} ${size}w`).join(', ');
   }
 
   // Generate picture element for modern formats
-  static generatePictureElement(imageUrl: string, alt: string, widths: number[]): string {
+  static generatePictureElement(
+    imageUrl: string,
+    alt: string,
+    widths: number[]
+  ): string {
     const webpSources = widths
-      .map(width => `<source srcset="${imageUrl}?w=${width}&format=webp" media="(max-width: ${width}px)" type="image/webp">`)
+      .map(
+        (width) =>
+          `<source srcset="${imageUrl}?w=${width}&format=webp" media="(max-width: ${width}px)" type="image/webp">`
+      )
       .join('\n    ');
 
     const avifSources = widths
-      .map(width => `<source srcset="${imageUrl}?w=${width}&format=avif" media="(max-width: ${width}px)" type="image/avif">`)
+      .map(
+        (width) =>
+          `<source srcset="${imageUrl}?w=${width}&format=avif" media="(max-width: ${width}px)" type="image/avif">`
+      )
       .join('\n    ');
 
     const imgSources = widths
-      .map(width => `${imageUrl}?w=${width} ${width}w`)
+      .map((width) => `${imageUrl}?w=${width} ${width}w`)
       .join(', ');
 
     return `
@@ -263,7 +282,11 @@ export class ImageOptimizer {
 // Font optimization utilities
 export class FontOptimizer {
   // Generate font-face rules with display swap
-  static generateFontFace(family: string, src: string, weight: string = '400'): string {
+  static generateFontFace(
+    family: string,
+    src: string,
+    weight: string = '400'
+  ): string {
     return `
 @font-face {
   font-family: '${family}';

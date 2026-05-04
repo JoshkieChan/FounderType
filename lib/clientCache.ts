@@ -26,7 +26,7 @@ export class ClientCache {
       data,
       timestamp: Date.now(),
       ttl,
-      key
+      key,
     });
   }
 
@@ -69,7 +69,7 @@ export class ClientCache {
     return {
       size: this.cache.size,
       maxSize: this.MAX_SIZE,
-      hitRate: 0 // Would need to track hits/misses
+      hitRate: 0, // Would need to track hits/misses
     };
   }
 }
@@ -100,19 +100,19 @@ export class CachedAPI {
 
     // Make the request
     const requestPromise = fetch(url, options)
-      .then(response => {
+      .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
       })
-      .then(data => {
+      .then((data) => {
         // Cache successful responses
         this.cache.set(cacheKey, data, cacheTTL);
         this.pendingRequests.delete(cacheKey);
         return data;
       })
-      .catch(error => {
+      .catch((error) => {
         this.pendingRequests.delete(cacheKey);
         throw error;
       });
@@ -129,7 +129,11 @@ export class CachedAPI {
   }
 
   async getCommitments(page: number = 1, limit: number = 20): Promise<any> {
-    return this.request(`/api/commitments?page=${page}&limit=${limit}`, {}, 60000); // 1 minute cache
+    return this.request(
+      `/api/commitments?page=${page}&limit=${limit}`,
+      {},
+      60000
+    ); // 1 minute cache
   }
 
   async getFeed(page: number = 1, limit: number = 20): Promise<any> {
@@ -166,11 +170,12 @@ export function useCachedAPI() {
 export class ServiceWorkerCache {
   static register(): void {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(registration => {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((registration) => {
           console.log('Service Worker registered');
         })
-        .catch(error => {
+        .catch((error) => {
           console.log('Service Worker registration failed:', error);
         });
     }
@@ -279,7 +284,7 @@ export class BrowserStorage {
     const keys = Object.keys(localStorage);
     const entriesToRemove: string[] = [];
 
-    keys.forEach(key => {
+    keys.forEach((key) => {
       if (key.startsWith('cache_') || key.startsWith('metrics_')) {
         const item = localStorage.getItem(key);
         if (item) {
@@ -296,7 +301,7 @@ export class BrowserStorage {
       }
     });
 
-    entriesToRemove.forEach(key => localStorage.removeItem(key));
+    entriesToRemove.forEach((key) => localStorage.removeItem(key));
   }
 }
 
@@ -305,15 +310,17 @@ export class PerformanceMonitor {
   static trackPageLoad(): void {
     if (typeof window !== 'undefined') {
       window.addEventListener('load', () => {
-        const perfData = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+        const perfData = performance.getEntriesByType(
+          'navigation'
+        )[0] as PerformanceNavigationTiming;
         const loadTime = perfData.loadEventEnd - perfData.loadEventStart;
-        
+
         // Store in localStorage for trend analysis
         const metrics: any[] = BrowserStorage.get('page_metrics') || [];
         metrics.push({
           timestamp: Date.now(),
           loadTime,
-          url: window.location.href
+          url: window.location.href,
         });
 
         // Keep only last 50 entries
@@ -331,7 +338,7 @@ export class PerformanceMonitor {
     metrics.push({
       timestamp: Date.now(),
       url,
-      duration
+      duration,
     });
 
     // Keep only last 100 entries
@@ -345,7 +352,7 @@ export class PerformanceMonitor {
   static getMetrics(): any {
     return {
       pageMetrics: BrowserStorage.get('page_metrics') || [],
-      apiMetrics: BrowserStorage.get('api_metrics') || []
+      apiMetrics: BrowserStorage.get('api_metrics') || [],
     };
   }
 }

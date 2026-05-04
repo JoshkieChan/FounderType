@@ -20,16 +20,16 @@ export class Validator {
     }
 
     if (rules.minLength && value.length < rules.minLength) {
-      return { 
-        isValid: false, 
-        error: `Must be at least ${rules.minLength} characters long` 
+      return {
+        isValid: false,
+        error: `Must be at least ${rules.minLength} characters long`,
       };
     }
 
     if (rules.maxLength && value.length > rules.maxLength) {
-      return { 
-        isValid: false, 
-        error: `Must be no more than ${rules.maxLength} characters long` 
+      return {
+        isValid: false,
+        error: `Must be no more than ${rules.maxLength} characters long`,
       };
     }
 
@@ -55,7 +55,7 @@ export class Validator {
       custom: (value) => {
         if (value.length > 254) return 'Email address is too long';
         return null;
-      }
+      },
     });
   }
 
@@ -69,7 +69,7 @@ export class Validator {
           return 'Only letters, numbers, and basic punctuation allowed';
         }
         return null;
-      }
+      },
     });
   }
 
@@ -83,7 +83,7 @@ export class Validator {
           return 'Please provide more detail';
         }
         return null;
-      }
+      },
     });
   }
 

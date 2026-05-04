@@ -43,17 +43,25 @@ export class NotificationService {
     }
   }
 
-  static async updateSettings(settings: Partial<NotificationSettings>): Promise<void> {
+  static async updateSettings(
+    settings: Partial<NotificationSettings>
+  ): Promise<void> {
     try {
       const current = await this.getSettings();
       const updated = { ...current, ...settings };
-      await AsyncStorage.setItem('notification_settings', JSON.stringify(updated));
+      await AsyncStorage.setItem(
+        'notification_settings',
+        JSON.stringify(updated)
+      );
     } catch (error) {
       console.error('Error updating notification settings:', error);
     }
   }
 
-  static async scheduleDailyCheckIn(hour: number = 9, minute: number = 0): Promise<void> {
+  static async scheduleDailyCheckIn(
+    hour: number = 9,
+    minute: number = 0
+  ): Promise<void> {
     try {
       const settings = await this.getSettings();
       if (!settings.dailyCheckIn) return;
@@ -64,7 +72,7 @@ export class NotificationService {
       // Schedule new daily notification
       const trigger = new Date();
       trigger.setHours(hour, minute, 0, 0);
-      
+
       // If time has passed today, schedule for tomorrow
       if (trigger <= new Date()) {
         trigger.setDate(trigger.getDate() + 1);
@@ -88,7 +96,10 @@ export class NotificationService {
     }
   }
 
-  static async sendAchievementNotification(title: string, message: string): Promise<void> {
+  static async sendAchievementNotification(
+    title: string,
+    message: string
+  ): Promise<void> {
     try {
       const settings = await this.getSettings();
       if (!settings.achievements) return;
@@ -107,7 +118,10 @@ export class NotificationService {
     }
   }
 
-  static async sendReminderNotification(title: string, message: string): Promise<void> {
+  static async sendReminderNotification(
+    title: string,
+    message: string
+  ): Promise<void> {
     try {
       const settings = await this.getSettings();
       if (!settings.reminders) return;
@@ -142,7 +156,9 @@ export class NotificationService {
     }
   }
 
-  static async getScheduledNotifications(): Promise<Notifications.NotificationRequest[]> {
+  static async getScheduledNotifications(): Promise<
+    Notifications.NotificationRequest[]
+  > {
     try {
       return await Notifications.getAllScheduledNotificationsAsync();
     } catch (error) {
@@ -153,7 +169,10 @@ export class NotificationService {
 }
 
 // Legacy function for compatibility
-export const sendMissedDaysAlert = async (daysMissed: number, commitmentText: string) => {
+export const sendMissedDaysAlert = async (
+  daysMissed: number,
+  commitmentText: string
+) => {
   if (daysMissed > 0) {
     await NotificationService.sendReminderNotification(
       'Missed Check-ins!',

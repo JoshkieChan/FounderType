@@ -9,9 +9,16 @@ class RateLimiter {
   private static instances = new Map<string, RateLimiter>();
   private requests: Map<string, RateLimitEntry> = new Map();
 
-  constructor(private maxRequests: number, private windowMs: number) {}
+  constructor(
+    private maxRequests: number,
+    private windowMs: number
+  ) {}
 
-  static getInstance(key: string, maxRequests: number, windowMs: number): RateLimiter {
+  static getInstance(
+    key: string,
+    maxRequests: number,
+    windowMs: number
+  ): RateLimiter {
     if (!RateLimiter.instances.has(key)) {
       RateLimiter.instances.set(key, new RateLimiter(maxRequests, windowMs));
     }
@@ -26,7 +33,7 @@ class RateLimiter {
       // Reset or create new entry
       this.requests.set(identifier, {
         count: 1,
-        resetTime: now + this.windowMs
+        resetTime: now + this.windowMs,
       });
       return true;
     }
@@ -66,8 +73,16 @@ class RateLimiter {
 // Rate limiting middleware for API calls
 export class ApiRateLimiter {
   private static geminiLimiter = RateLimiter.getInstance('gemini', 10, 60000); // 10 requests per minute
-  private static supabaseLimiter = RateLimiter.getInstance('supabase', 100, 60000); // 100 requests per minute
-  private static commitmentLimiter = RateLimiter.getInstance('commitment', 5, 60000); // 5 commitments per minute
+  private static supabaseLimiter = RateLimiter.getInstance(
+    'supabase',
+    100,
+    60000
+  ); // 100 requests per minute
+  private static commitmentLimiter = RateLimiter.getInstance(
+    'commitment',
+    5,
+    60000
+  ); // 5 commitments per minute
 
   static canCallGemini(userId: string): boolean {
     return this.geminiLimiter.isAllowed(userId);
@@ -84,21 +99,21 @@ export class ApiRateLimiter {
   static getGeminiRateLimit(userId: string) {
     return {
       remaining: this.geminiLimiter.getRemainingRequests(userId),
-      resetTime: this.geminiLimiter.getResetTime(userId)
+      resetTime: this.geminiLimiter.getResetTime(userId),
     };
   }
 
   static getSupabaseRateLimit(userId: string) {
     return {
       remaining: this.supabaseLimiter.getRemainingRequests(userId),
-      resetTime: this.supabaseLimiter.getResetTime(userId)
+      resetTime: this.supabaseLimiter.getResetTime(userId),
     };
   }
 
   static getCommitmentRateLimit(userId: string) {
     return {
       remaining: this.commitmentLimiter.getRemainingRequests(userId),
-      resetTime: this.commitmentLimiter.getResetTime(userId)
+      resetTime: this.commitmentLimiter.getResetTime(userId),
     };
   }
 
@@ -111,6 +126,9 @@ export class ApiRateLimiter {
 }
 
 // Auto-cleanup every 5 minutes
-setInterval(() => {
-  ApiRateLimiter.cleanup();
-}, 5 * 60 * 1000);
+setInterval(
+  () => {
+    ApiRateLimiter.cleanup();
+  },
+  5 * 60 * 1000
+);

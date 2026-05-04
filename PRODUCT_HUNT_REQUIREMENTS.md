@@ -3,6 +3,7 @@
 ## ✅ CURRENT STATUS - READY FOR BOTH
 
 ### Product Hunt Requirements ✅
+
 - ✅ Clear product description
 - ✅ Screenshots/demo video needed (you'll need to create)
 - ✅ Pricing page (free tier - perfect)
@@ -12,6 +13,7 @@
 - ✅ Contact info (privacy@foundertype.app, support@foundertype.app)
 
 ### Apple Developer Requirements ✅
+
 - ✅ Privacy policy screen (PrivacyPolicyScreen.tsx)
 - ✅ Terms of service screen (TermsScreen.tsx)
 - ✅ App icon (assets/icon.png)
@@ -24,6 +26,7 @@
 ## 🎯 MANUAL TASKS YOU MUST COMPLETE
 
 ### For Product Hunt Launch:
+
 1. **Create Screenshots** (3-5 required)
    - Web: Use browser dev tools or screenshot tools
    - iOS: Use Xcode simulator screenshots
@@ -41,6 +44,7 @@
    - Maker comment: Your story
 
 ### For Apple App Store:
+
 1. **App Store Screenshots** (required)
    - 6.5" and 5.5" iPhone sizes
    - 12.9" iPad sizes
@@ -68,12 +72,14 @@
 ## 🚀 FREE OPTIMIZATION SUGGESTIONS
 
 ### Already Implemented ✅
+
 - Client-side caching (80% API reduction)
 - Database performance indexes
 - Efficient pagination
 - Bundle optimization
 
 ### Additional Free Optimizations:
+
 1. **Image Optimization** (free)
    - Use TinyPNG or Squoosh for app icons
    - WebP format for web images
@@ -97,6 +103,7 @@
 ## 📱 IMPROVEMENT SUGGESTIONS
 
 ### High Priority:
+
 1. **App Icon Variations**
    - Need different sizes for iOS/Android
    - Consider using Expo icon tool
@@ -114,6 +121,7 @@
    - Offline mode indicators
 
 ### Medium Priority:
+
 1. **Push Notifications**
    - Daily check-in reminders
    - Achievement notifications
@@ -128,6 +136,7 @@
    - Commitment completion rates
 
 ### Low Priority:
+
 1. **Dark Mode**
    - Already has dark theme
    - Consider light mode option
@@ -139,16 +148,19 @@
 ## 🔧 TECHNICAL IMPROVEMENTS
 
 ### Package Updates Needed:
+
 ```bash
 npm install --legacy-peer-deps
 ```
 
 ### Dependency Updates:
+
 - React: 18.3.1 → 19.1.0 (Expo recommended)
 - React DOM: 18.3.1 → 19.1.0
 - Other packages per Expo warnings
 
 ### Build Configuration:
+
 - Update app.json with more metadata
 - Add app store URLs
 - Configure deep linking
@@ -156,16 +168,19 @@ npm install --legacy-peer-deps
 ## 📊 SCALING PROJECTIONS
 
 ### Current Free Tier Capacity:
+
 - **Vercel:** 10K requests/month (with caching: ~50K effective)
 - **Supabase:** 500MB DB, 1GB bandwidth
 - **Estimated Users:** 1K-5K active users
 
 ### When to Upgrade:
-- >5K active users
-- >80% Supabase storage used
-- >90% Vercel request limit
+
+- > 5K active users
+- > 80% Supabase storage used
+- > 90% Vercel request limit
 
 ### Paid Tier Recommendations (when needed):
+
 - **Supabase Pro:** $25/month (8GB DB, 50GB bandwidth)
 - **Vercel Pro:** $20/month (100K requests)
 - **Total:** $45/month for 50K+ users
@@ -173,6 +188,7 @@ npm install --legacy-peer-deps
 ## ✅ FINAL CHECKLIST
 
 ### Before Product Hunt:
+
 - [ ] Create 3-5 screenshots
 - [ ] Create demo video (optional)
 - [ ] Write launch copy
@@ -180,6 +196,7 @@ npm install --legacy-peer-deps
 - [ ] Prepare for traffic spike
 
 ### Before App Store:
+
 - [ ] Complete age rating questionnaire
 - [ ] Create app store screenshots
 - [ ] Write app store description
@@ -188,6 +205,7 @@ npm install --legacy-peer-deps
 - [ ] Review Apple guidelines
 
 ### Current Status:
+
 - ✅ Privacy policy
 - ✅ Terms of service
 - ✅ App icon
@@ -200,6 +218,7 @@ npm install --legacy-peer-deps
 ## 🎯 CONCLUSION
 
 Your app is **90% ready** for both Product Hunt and Apple App Store. The main missing pieces are:
+
 1. Screenshots/demo video (manual task)
 2. App Store metadata (manual task)
 3. Package updates (quick fix)

@@ -47,7 +47,7 @@ export function usePublicFeed(
         page: 1,
         limit: PAGE_SIZE,
         sortBy: 'created_at',
-        sortOrder: 'desc'
+        sortOrder: 'desc',
       });
 
       let data = response.data || [];
@@ -97,7 +97,7 @@ export function usePublicFeed(
         page: currentPage,
         limit: PAGE_SIZE,
         sortBy: 'created_at',
-        sortOrder: 'desc'
+        sortOrder: 'desc',
       });
 
       let data = response.data || [];

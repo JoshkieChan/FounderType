@@ -108,7 +108,10 @@ class VercelAnalytics {
     });
   }
 
-  trackSupportGiven(type: 'comment' | 'follow' | 'encourage', targetUserId?: string): void {
+  trackSupportGiven(
+    type: 'comment' | 'follow' | 'encourage',
+    targetUserId?: string
+  ): void {
     this.trackEvent({
       action: 'support_given',
       category: 'social',

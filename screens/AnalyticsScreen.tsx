@@ -27,7 +27,9 @@ export default function AnalyticsScreen({
 }: {
   navigation: { goBack: () => void };
 }) {
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -140,7 +142,9 @@ export default function AnalyticsScreen({
           <Text style={styles.sectionTitle}>Commitment Overview</Text>
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
-              <Text style={styles.statNumber}>{analyticsData.totalCommitments}</Text>
+              <Text style={styles.statNumber}>
+                {analyticsData.totalCommitments}
+              </Text>
               <Text style={styles.statLabel}>Total</Text>
             </View>
             <View style={styles.statCard}>
@@ -167,10 +171,10 @@ export default function AnalyticsScreen({
           <Text style={styles.sectionTitle}>Commitment Status</Text>
           <BarChart
             data={{
-              labels: commitmentData.map(d => d.name),
+              labels: commitmentData.map((d) => d.name),
               datasets: [
                 {
-                  data: commitmentData.map(d => d.value),
+                  data: commitmentData.map((d) => d.value),
                 },
               ],
             }}
@@ -187,7 +191,9 @@ export default function AnalyticsScreen({
           <Text style={styles.chartSubtitle}>Page Load Times (ms)</Text>
           <LineChart
             data={{
-              labels: analyticsData.pageLoadTimes.slice(-10).map((_, i) => `${i + 1}`),
+              labels: analyticsData.pageLoadTimes
+                .slice(-10)
+                .map((_, i) => `${i + 1}`),
               datasets: [
                 {
                   data: analyticsData.pageLoadTimes.slice(-10),
@@ -207,7 +213,9 @@ export default function AnalyticsScreen({
           <Text style={styles.chartSubtitle}>API Response Times (ms)</Text>
           <LineChart
             data={{
-              labels: analyticsData.apiResponseTimes.slice(-10).map((_, i) => `${i + 1}`),
+              labels: analyticsData.apiResponseTimes
+                .slice(-10)
+                .map((_, i) => `${i + 1}`),
               datasets: [
                 {
                   data: analyticsData.apiResponseTimes.slice(-10),

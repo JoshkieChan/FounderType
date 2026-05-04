@@ -8,7 +8,10 @@ import {
   Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { NotificationService, NotificationSettings } from '../lib/notifications';
+import {
+  NotificationService,
+  NotificationSettings,
+} from '../lib/notifications';
 
 export default function NotificationsScreen({
   navigation,
@@ -21,7 +24,9 @@ export default function NotificationsScreen({
     reminders: true,
   });
   const [loading, setLoading] = useState(true);
-  const [scheduledNotifications, setScheduledNotifications] = useState<string[]>([]);
+  const [scheduledNotifications, setScheduledNotifications] = useState<
+    string[]
+  >([]);
 
   useEffect(() => {
     loadSettings();
@@ -41,18 +46,22 @@ export default function NotificationsScreen({
 
   const loadScheduledNotifications = async () => {
     try {
-      const notifications = await NotificationService.getScheduledNotifications();
-      setScheduledNotifications(notifications.map(n => n.content.title));
+      const notifications =
+        await NotificationService.getScheduledNotifications();
+      setScheduledNotifications(notifications.map((n) => n.content.title));
     } catch (error) {
       console.error('Error loading scheduled notifications:', error);
     }
   };
 
-  const updateSetting = async (key: keyof NotificationSettings, value: boolean) => {
+  const updateSetting = async (
+    key: keyof NotificationSettings,
+    value: boolean
+  ) => {
     try {
       await NotificationService.updateSettings({ [key]: value });
-      setSettings(prev => ({ ...prev, [key]: value }));
-      
+      setSettings((prev) => ({ ...prev, [key]: value }));
+
       // If disabling daily check-in, cancel the notification
       if (key === 'dailyCheckIn' && !value) {
         await NotificationService.cancelNotification('daily-checkin');
@@ -100,7 +109,7 @@ export default function NotificationsScreen({
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Notification Preferences</Text>
-          
+
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingTitle}>Daily Check-in Reminders</Text>
@@ -149,7 +158,10 @@ export default function NotificationsScreen({
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Test Notifications</Text>
-          <TouchableOpacity style={styles.testButton} onPress={testNotification}>
+          <TouchableOpacity
+            style={styles.testButton}
+            onPress={testNotification}
+          >
             <Text style={styles.testButtonText}>Send Test Notification</Text>
           </TouchableOpacity>
         </View>
@@ -168,11 +180,13 @@ export default function NotificationsScreen({
         </View>
 
         <View style={styles.section}>
-          <TouchableOpacity 
-            style={styles.cancelAllButton} 
+          <TouchableOpacity
+            style={styles.cancelAllButton}
             onPress={() => NotificationService.cancelAllNotifications()}
           >
-            <Text style={styles.cancelAllButtonText}>Cancel All Notifications</Text>
+            <Text style={styles.cancelAllButtonText}>
+              Cancel All Notifications
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

@@ -6,23 +6,23 @@ export const accessibilityLabels = {
   goBack: 'Go back to previous screen',
   menu: 'Open navigation menu',
   close: 'Close dialog or modal',
-  
+
   // Commitment actions
   makeCommitment: 'Create new commitment',
   editCommitment: 'Edit existing commitment',
   deleteCommitment: 'Delete commitment',
   saveCommitment: 'Save commitment changes',
-  
+
   // Form fields
   commitmentInput: 'Enter your commitment text',
   dailyActionInput: 'Enter your daily action',
   deadlineInput: 'Enter commitment deadline',
-  
+
   // Feed actions
   refreshFeed: 'Refresh commitment feed',
   loadMore: 'Load more commitments',
   shareProfile: 'Share your profile',
-  
+
   // Common actions
   submit: 'Submit form',
   cancel: 'Cancel action',
@@ -50,11 +50,15 @@ export const accessibilityRoles = {
   listitem: 'listitem',
 };
 
-export function getAccessibilityLabel(key: keyof typeof accessibilityLabels): string {
+export function getAccessibilityLabel(
+  key: keyof typeof accessibilityLabels
+): string {
   return accessibilityLabels[key];
 }
 
-export function getAccessibilityHint(key: keyof typeof accessibilityHints): string {
+export function getAccessibilityHint(
+  key: keyof typeof accessibilityHints
+): string {
   return accessibilityHints[key];
 }
 
