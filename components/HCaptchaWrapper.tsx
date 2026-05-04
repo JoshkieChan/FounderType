@@ -2,6 +2,7 @@ import React from 'react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import type { HCaptchaProps } from '@hcaptcha/react-hcaptcha';
 import { Platform, Text, View } from 'react-native';
+import { ENV } from '../constants/env';
 
 type HCaptchaWrapperProps = Pick<
   HCaptchaProps,
@@ -17,9 +18,8 @@ export default function HCaptchaWrapper({
     return null; // Captcha handled differently on mobile
   }
 
-  // Read from environment variables (works in local dev, need to fix for Vercel Expo web)
-  // TODO: Fix environment variable injection in Expo web build
-  const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || process.env.EXPO_PUBLIC_HCAPTCHA_SITE_KEY;
+  // Read from environment constants
+  const siteKey = ENV.HCAPTCHA_SITE_KEY;
   
   console.log('HCaptcha Debug - Site key from env:', siteKey ? 'SET' : 'NOT_SET');
 
