@@ -11,7 +11,7 @@ import {
   Platform,
   RefreshControl,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+// import { SafeAreaView } from 'react-native-safe-area-context';
 import { loadProfile } from '../lib/storage';
 import { supabase, cachedSupabase } from '../lib/cachedSupabase';
 import { usePublicFeed } from '../hooks/usePublicFeed';
@@ -209,7 +209,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
@@ -395,7 +395,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

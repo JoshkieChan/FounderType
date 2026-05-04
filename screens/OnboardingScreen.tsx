@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+// import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface OnboardingStep {
@@ -47,7 +47,7 @@ const Container = Platform.OS === 'web' ? View : SafeAreaView;
 
 export default function OnboardingScreen() {
   const [currentStep, setCurrentStep] = useState(0);
-  const navigation = useNavigation();
+  // const navigation = useNavigation(); // Remove navigation for now
 
   const handleNext = () => {
     if (currentStep < onboardingSteps.length - 1) {
@@ -58,7 +58,8 @@ export default function OnboardingScreen() {
   };
 
   const handleSkip = () => {
-    navigation.navigate('Landing' as never);
+    // navigation.navigate('Landing' as never); // Remove navigation for now
+    console.log('Onboarding completed');
   };
 
   const handleBack = () => {
