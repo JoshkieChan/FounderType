@@ -18,8 +18,8 @@ export default function HCaptchaWrapper({
     return null; // Captcha handled differently on mobile
   }
 
-  // Read from environment constants
-  const siteKey = ENV.HCAPTCHA_SITE_KEY;
+  // Use your actual hCaptcha site key
+  const siteKey = '10000000-ffff-ffff-ffff-000000000001'; // Replace with your actual site key
   
   console.log('HCaptcha Debug - Site key from env:', siteKey ? 'SET' : 'NOT_SET');
 
