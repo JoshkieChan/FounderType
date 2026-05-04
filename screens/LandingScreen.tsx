@@ -301,20 +301,22 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
           </Text>
           <TouchableOpacity
             style={styles.primaryCta}
-            onPress={() => navigation.navigate('commitment')}
+            onPress={() => navigation.navigate('questions')}
           >
             <Text style={styles.primaryCtaText}>
               {lastCycleResult === 'completed'
-                ? 'Post Your Next Commitment'
-                : 'Post Your First Commitment'}
+                ? 'Take the Diagnostic Again'
+                : 'Take the FounderType Diagnostic'}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.secondaryCta}
-            onPress={() => navigation.navigate('onboarding')}
+            onPress={() => navigation.navigate('commitment')}
           >
             <Text style={styles.secondaryCtaText}>
-              Take the diagnostic first
+              {lastCycleResult === 'completed'
+                ? 'Post Your Next Commitment'
+                : 'Skip to Commitment'}
             </Text>
           </TouchableOpacity>
         </View>
