@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as Sentry from '@sentry/react-native';
+import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { testSupabaseConnection } from './lib/supabase';
@@ -18,6 +19,18 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import OfflineIndicator from './components/OfflineIndicator';
 
 import { UserProvider } from './context/UserContext';
+
+// Import Vercel Analytics for web platform only
+let Analytics: React.ComponentType | null = null;
+if (Platform.OS === 'web') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, no-undef
+    const { Analytics: WebAnalytics } = require('@vercel/analytics/react');
+    Analytics = WebAnalytics;
+  } catch {
+    // Analytics not available on this platform
+  }
+}
 
 interface TopMatch {
   founderType: string;
@@ -118,6 +131,7 @@ export default Sentry.wrap(function App() {
               globalAnswersRef={globalAnswersRef}
             />
           </UserProvider>
+          {Analytics && <Analytics />}
         </GestureHandlerRootView>
       </SafeAreaProvider>
     </ErrorBoundary>
