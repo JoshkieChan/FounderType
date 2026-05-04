@@ -74,7 +74,8 @@
           "organization": "foundertype"
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-asset"
     ],
     "extra": {
       "eas": {
