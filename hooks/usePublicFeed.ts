@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/cachedSupabase';
+import { PaginationService } from '../lib/apiPagination';
 import { Commitment } from '../types/commitment';
 
 const PAGE_SIZE = 20;
@@ -41,27 +42,23 @@ export function usePublicFeed(
       setError(null);
       setLoading(true);
 
-      let query = supabase
-        .from('commitments')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(PAGE_SIZE);
+      // Use pagination service with caching
+      const response = await PaginationService.getCommitments(undefined, {
+        page: 1,
+        limit: PAGE_SIZE,
+        sortBy: 'created_at',
+        sortOrder: 'desc'
+      });
 
+      let data = response.data || [];
+
+      // Apply status filter if needed
       if (filter) {
-        query = query.eq('status', filter);
+        data = data.filter((c: any) => c.status === filter);
       }
 
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error loading commitments:', error);
-        setCommitments([]);
-        setHasMore(false);
-        return;
-      }
-
-      const cleaned = (data || []).filter((c) => {
-        const t = c.commitment_text.toLowerCase();
+      const cleaned = data.filter((c: any) => {
+        const t = c.commitment_text?.toLowerCase() || '';
         if (t.includes('newsletter') || t.includes('onboarding flow'))
           return false;
         if (t.includes('test')) return false;
@@ -69,7 +66,7 @@ export function usePublicFeed(
       }) as Commitment[];
 
       setCommitments(cleaned);
-      setHasMore(cleaned.length === PAGE_SIZE);
+      setHasMore(response.pagination?.hasNext || false);
       setCursor(cleaned.length ? cleaned[cleaned.length - 1].created_at : null);
     } catch (err) {
       console.error('Error:', err);
@@ -86,33 +83,32 @@ export function usePublicFeed(
   ) => {
     const filter =
       overrideStatus !== undefined ? overrideStatus : statusRef.current;
-    if (!hasMore || !cursor || isFetchingMore) return;
+    if (!hasMore || isFetchingMore) return;
 
     try {
       setIsFetchingMore(true);
       setError(null);
 
-      let query = supabase
-        .from('commitments')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .lt('created_at', cursor)
-        .limit(PAGE_SIZE);
+      // Calculate current page based on loaded items
+      const currentPage = Math.ceil(commitments.length / PAGE_SIZE) + 1;
 
+      // Use pagination service with caching
+      const response = await PaginationService.getCommitments(undefined, {
+        page: currentPage,
+        limit: PAGE_SIZE,
+        sortBy: 'created_at',
+        sortOrder: 'desc'
+      });
+
+      let data = response.data || [];
+
+      // Apply status filter if needed
       if (filter) {
-        query = query.eq('status', filter);
+        data = data.filter((c: any) => c.status === filter);
       }
 
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error loading more commitments:', error);
-        setHasMore(false);
-        return;
-      }
-
-      const cleaned = (data || []).filter((c) => {
-        const t = c.commitment_text.toLowerCase();
+      const cleaned = data.filter((c: any) => {
+        const t = c.commitment_text?.toLowerCase() || '';
         if (t.includes('newsletter') || t.includes('onboarding flow'))
           return false;
         if (t.includes('test')) return false;
@@ -120,7 +116,7 @@ export function usePublicFeed(
       }) as Commitment[];
 
       setCommitments((prev) => [...prev, ...cleaned]);
-      setHasMore(cleaned.length === PAGE_SIZE);
+      setHasMore(response.pagination?.hasNext || false);
       setCursor(
         cleaned.length ? cleaned[cleaned.length - 1].created_at : cursor
       );

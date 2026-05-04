@@ -7,7 +7,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 );
 
 // Mock Supabase
-jest.mock('../lib/supabase', () => ({
+jest.mock('./lib/cachedSupabase', () => ({
   supabase: {
     from: jest.fn(() => ({
       select: jest.fn(() => ({
@@ -34,6 +34,20 @@ jest.mock('../lib/supabase', () => ({
         eq: jest.fn(() => Promise.resolve({ data: null, error: null })),
       })),
     })),
+  },
+  cachedSupabase: {
+    getCommitments: jest.fn(() => Promise.resolve([])),
+    getUserCommitments: jest.fn(() => Promise.resolve([])),
+    getCommitmentById: jest.fn(() => Promise.resolve(null)),
+    getUserProfile: jest.fn(() => Promise.resolve(null)),
+    getDailyProgress: jest.fn(() => Promise.resolve([])),
+    insertCommitment: jest.fn(() => Promise.resolve(null)),
+    updateCommitment: jest.fn(() => Promise.resolve(null)),
+    deleteCommitment: jest.fn(() => Promise.resolve(null)),
+    insertDailyProgress: jest.fn(() => Promise.resolve(null)),
+    updateDailyProgress: jest.fn(() => Promise.resolve(null)),
+    upsertProfile: jest.fn(() => Promise.resolve(null)),
+    updateProfile: jest.fn(() => Promise.resolve(null)),
   },
 }));
 

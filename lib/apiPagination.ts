@@ -1,5 +1,7 @@
 // API pagination to reduce data transfer and improve performance
+import React from 'react';
 import { cachedAPI } from './clientCache';
+import { supabase } from './cachedSupabase';
 
 export interface PaginationParams {
   page?: number;
@@ -23,9 +25,9 @@ export class PaginationService {
   private static readonly DEFAULT_LIMIT = 20;
   private static readonly MAX_LIMIT = 100;
 
-  // Generic paginated fetch
+  // Generic paginated fetch using Supabase
   static async fetchPaginated<T>(
-    endpoint: string,
+    table: string,
     params: PaginationParams = {}
   ): Promise<PaginatedResponse<T>> {
     const {
@@ -38,13 +40,32 @@ export class PaginationService {
     // Validate limit
     const validLimit = Math.min(limit, this.MAX_LIMIT);
 
-    const url = `${endpoint}?page=${page}&limit=${validLimit}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
-    
     try {
-      const response = await cachedAPI.request(url, {}, 60000); // 1 minute cache
-      
+      // Build Supabase query
+      let query = supabase
+        .from(table)
+        .select('*', { count: 'exact' });
+
+      // Apply sorting
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+
+      // Apply pagination
+      const offset = (page - 1) * validLimit;
+      query = query.range(offset, offset + validLimit - 1);
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        console.error('Supabase pagination error:', error);
+        throw error;
+      }
+
       // Transform response to standard format
-      return this.transformResponse(response, page, validLimit);
+      return this.transformResponse(
+        { data, total: count || 0 },
+        page,
+        validLimit
+      );
     } catch (error) {
       console.error('Pagination fetch error:', error);
       throw error;
@@ -56,15 +77,30 @@ export class PaginationService {
     userId?: string,
     params: PaginationParams = {}
   ): Promise<PaginatedResponse<any>> {
-    const endpoint = userId ? `/api/users/${userId}/commitments` : '/api/commitments';
-    return this.fetchPaginated(endpoint, params);
+    let query = supabase.from('commitments').select('*', { count: 'exact' });
+    
+    if (userId) {
+      query = query.eq('user_id', userId);
+    }
+
+    const { page = 1, limit = this.DEFAULT_LIMIT, sortBy = 'created_at', sortOrder = 'desc' } = params;
+    const validLimit = Math.min(limit, this.MAX_LIMIT);
+    const offset = (page - 1) * validLimit;
+
+    query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+    query = query.range(offset, offset + validLimit - 1);
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    return this.transformResponse({ data, total: count || 0 }, page, validLimit);
   }
 
-  // Feed pagination
+  // Feed pagination (public commitments)
   static async getFeed(
     params: PaginationParams = {}
   ): Promise<PaginatedResponse<any>> {
-    return this.fetchPaginated('/api/feed', params);
+    return this.getCommitments(undefined, { ...params });
   }
 
   // User commitments pagination
@@ -72,7 +108,7 @@ export class PaginationService {
     userId: string,
     params: PaginationParams = {}
   ): Promise<PaginatedResponse<any>> {
-    return this.fetchPaginated(`/api/users/${userId}/commitments`, params);
+    return this.getCommitments(userId, params);
   }
 
   // Check-ins pagination
@@ -80,7 +116,20 @@ export class PaginationService {
     commitmentId: string,
     params: PaginationParams = {}
   ): Promise<PaginatedResponse<any>> {
-    return this.fetchPaginated(`/api/commitments/${commitmentId}/checkins`, params);
+    const { page = 1, limit = this.DEFAULT_LIMIT, sortBy = 'created_at', sortOrder = 'desc' } = params;
+    const validLimit = Math.min(limit, this.MAX_LIMIT);
+    const offset = (page - 1) * validLimit;
+
+    const { data, error, count } = await supabase
+      .from('daily_progress')
+      .select('*', { count: 'exact' })
+      .eq('commitment_id', commitmentId)
+      .order(sortBy, { ascending: sortOrder === 'asc' })
+      .range(offset, offset + validLimit - 1);
+
+    if (error) throw error;
+
+    return this.transformResponse({ data, total: count || 0 }, page, validLimit);
   }
 
   // Search with pagination
@@ -88,8 +137,20 @@ export class PaginationService {
     query: string,
     params: PaginationParams = {}
   ): Promise<PaginatedResponse<any>> {
-    const endpoint = `/api/search?q=${encodeURIComponent(query)}`;
-    return this.fetchPaginated(endpoint, params);
+    const { page = 1, limit = this.DEFAULT_LIMIT, sortBy = 'created_at', sortOrder = 'desc' } = params;
+    const validLimit = Math.min(limit, this.MAX_LIMIT);
+    const offset = (page - 1) * validLimit;
+
+    const { data, error, count } = await supabase
+      .from('commitments')
+      .select('*', { count: 'exact' })
+      .ilike('commitment_text', `%${query}%`)
+      .order(sortBy, { ascending: sortOrder === 'asc' })
+      .range(offset, offset + validLimit - 1);
+
+    if (error) throw error;
+
+    return this.transformResponse({ data, total: count || 0 }, page, validLimit);
   }
 
   // Transform API response to standard format
@@ -139,11 +200,11 @@ export class PaginationService {
 
   // Infinite scroll helper
   static async loadMore<T>(
-    endpoint: string,
+    table: string,
     currentPage: number,
     params: PaginationParams = {}
   ): Promise<PaginatedResponse<T>> {
-    return this.fetchPaginated(endpoint, {
+    return this.fetchPaginated<T>(table, {
       ...params,
       page: currentPage + 1
     });
@@ -151,12 +212,12 @@ export class PaginationService {
 
   // Preload next page for better UX
   static async preloadNext<T>(
-    endpoint: string,
+    table: string,
     currentPage: number,
     params: PaginationParams = {}
   ): Promise<void> {
     try {
-      await this.loadMore<T>(endpoint, currentPage, params);
+      await this.loadMore<T>(table, currentPage, params);
     } catch (error) {
       // Silent fail for preloading
       console.warn('Preload failed:', error);
@@ -166,7 +227,7 @@ export class PaginationService {
 
 // React hook for pagination
 export function usePagination<T>(
-  endpoint: string,
+  table: string,
   initialParams: PaginationParams = {}
 ) {
   const [data, setData] = React.useState<T[]>([]);
@@ -186,7 +247,7 @@ export function usePagination<T>(
     setError(null);
     
     try {
-      const response = await PaginationService.fetchPaginated<T>(endpoint, {
+      const response = await PaginationService.fetchPaginated<T>(table, {
         ...params,
         page
       });
@@ -198,7 +259,7 @@ export function usePagination<T>(
     } finally {
       setLoading(false);
     }
-  }, [endpoint, params]);
+  }, [table, params]);
 
   const loadNext = React.useCallback(() => {
     if (pagination.hasNext && !loading) {
@@ -235,7 +296,7 @@ export function usePagination<T>(
 
 // Infinite scroll hook
 export function useInfiniteScroll<T>(
-  endpoint: string,
+  table: string,
   initialParams: PaginationParams = {}
 ) {
   const [data, setData] = React.useState<T[]>([]);
@@ -252,7 +313,7 @@ export function useInfiniteScroll<T>(
     setError(null);
 
     try {
-      const response = await PaginationService.fetchPaginated<T>(endpoint, {
+      const response = await PaginationService.fetchPaginated<T>(table, {
         ...params,
         page: page + 1
       });
@@ -265,7 +326,7 @@ export function useInfiniteScroll<T>(
     } finally {
       setLoading(false);
     }
-  }, [endpoint, page, params, loading, hasMore]);
+  }, [table, page, params, loading, hasMore]);
 
   const refresh = React.useCallback(() => {
     setData([]);

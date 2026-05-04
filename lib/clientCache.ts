@@ -305,11 +305,11 @@ export class PerformanceMonitor {
   static trackPageLoad(): void {
     if (typeof window !== 'undefined') {
       window.addEventListener('load', () => {
-        const perfData = performance.getEntriesByType('navigation')[0];
+        const perfData = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
         const loadTime = perfData.loadEventEnd - perfData.loadEventStart;
         
         // Store in localStorage for trend analysis
-        const metrics = BrowserStorage.get('page_metrics') || [];
+        const metrics: any[] = BrowserStorage.get('page_metrics') || [];
         metrics.push({
           timestamp: Date.now(),
           loadTime,
@@ -327,7 +327,7 @@ export class PerformanceMonitor {
   }
 
   static trackAPIPerformance(url: string, duration: number): void {
-    const metrics = BrowserStorage.get('api_metrics') || [];
+    const metrics: any[] = BrowserStorage.get('api_metrics') || [];
     metrics.push({
       timestamp: Date.now(),
       url,

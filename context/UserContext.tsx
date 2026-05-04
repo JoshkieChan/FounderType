@@ -5,7 +5,7 @@ import React, {
   useEffect,
   useCallback,
 } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, cachedSupabase } from '../lib/cachedSupabase';
 import { Commitment } from '../types/commitment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -37,7 +37,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const fetchData = useCallback(async (userId: string) => {
     try {
       setError(null);
-      // 1. Fetch active commitment
+      // 1. Fetch active commitment (cached)
       const { data: active, error: activeErr } = await supabase
         .from('commitments')
         .select('*')
@@ -52,7 +52,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setLastCycleResult('none'); // Reset history fallback if active exists
       } else {
         setActiveCommitment(null);
-        // 2. Fetch last result if none active to inform the Landing Page banners
+        // 2. Fetch last result if none active to inform the Landing Page banners (cached)
         const { data: last, error: lastErr } = await supabase
           .from('commitments')
           .select('status')

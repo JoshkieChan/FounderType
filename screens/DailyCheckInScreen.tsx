@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '../lib/supabase';
+import { supabase, cachedSupabase } from '../lib/cachedSupabase';
 import { getCurrentUserId } from '../lib/storage';
 
 const CHECK_IN_KEY = 'foundertype_daily_checkin';
@@ -171,23 +171,17 @@ export default function DailyCheckInScreen({
           todayIso,
         ];
 
-        await supabase
-          .from('commitments')
-          .update({
-            check_ins: updatedCheckIns,
-            days_completed: newCompletedDays.length,
-          })
-          .eq('id', activeCommitment.id);
+        await cachedSupabase.updateCommitment(activeCommitment.id, {
+          check_ins: updatedCheckIns,
+          days_completed: newCompletedDays.length,
+        });
 
-        await supabase.from('daily_progress').upsert(
-          {
-            commitment_id: activeCommitment.id,
-            day_number: checkInData.currentDay,
-            completed: true,
-            completed_at: completedAt,
-          },
-          { onConflict: 'commitment_id,day_number' }
-        );
+        await cachedSupabase.insertDailyProgress({
+          commitment_id: activeCommitment.id,
+          day_number: checkInData.currentDay,
+          completed: true,
+          completed_at: completedAt,
+        });
 
         setActiveCommitment({
           ...activeCommitment,
@@ -436,7 +430,7 @@ export default function DailyCheckInScreen({
 
       if (isLocal) {
         // For local-only commitments, insert as a new completed record
-        const { error } = await supabase.from('commitments').insert({
+        const error = await cachedSupabase.insertCommitment({
           commitment_text: activeCommitment.commitment_text,
           daily_action: activeCommitment.daily_action,
           founder_type: activeCommitment.founder_type,
@@ -449,14 +443,11 @@ export default function DailyCheckInScreen({
         });
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('commitments')
-          .update({
-            status: 'completed',
-            completed: true,
-            completed_at: completedAt,
-          })
-          .eq('id', activeCommitment.id);
+        const error = await cachedSupabase.updateCommitment(activeCommitment.id, {
+          status: 'completed',
+          completed: true,
+          completed_at: completedAt,
+        });
         if (error) throw error;
       }
 

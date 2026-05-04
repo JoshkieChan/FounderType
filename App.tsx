@@ -10,7 +10,6 @@ import {
 } from './lib/storage';
 import { sendMissedDaysAlert } from './lib/notifications';
 import AppNavigator from './navigation/AppNavigator';
-import { supabase } from './lib/supabase';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 import { UserProvider } from './context/UserContext';

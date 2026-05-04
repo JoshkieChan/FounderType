@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import { supabase } from '../lib/supabase';
+import { supabase, cachedSupabase } from '../lib/cachedSupabase';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { saveProfile, getCurrentUserId } from '../lib/storage';
 
@@ -74,7 +74,7 @@ export default function ResultsScreen({
       const userId = await getCurrentUserId();
       if (!userId) return;
 
-      const { error } = await supabase.from('profiles').upsert({
+      const error = await cachedSupabase.upsertProfile({
         user_id: userId,
         founder_type: founderTypeData.founderType,
         profile_data: founderTypeData,
