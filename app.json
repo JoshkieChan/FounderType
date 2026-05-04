@@ -18,7 +18,11 @@
       "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "Allow camera for profile pictures",
-        "NSPhotoLibraryUsageDescription": "Allow photo library for profile pictures"
+        "NSPhotoLibraryUsageDescription": "Allow photo library for profile pictures",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
@@ -29,11 +33,22 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.foundertype.app",
-      "versionCode": 1
+      "versionCode": 1,
+      "permissions": [
+        "INTERNET",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png",
-      "bundler": "webpack"
+      "favicon": "./assets/foundertype-icon.png",
+      "bundler": "webpack",
+      "meta": {
+        "description": "Public accountability for founders who finish what they start. Post 30-day commitments, track daily progress, and build consistency with community support.",
+        "keywords": "founder, accountability, commitment, productivity, startup",
+        "author": "FounderType"
+      }
     },
     "description": "Public accountability for founders who finish what they start. Post 30-day commitments, track daily progress, and build consistency with community support.",
     "plugins": [
@@ -50,7 +65,14 @@
     "extra": {
       "eas": {
         "projectId": "foundertype-project-id"
+      },
+      "router": {
+        "origin": false
       }
-    }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/your-project-id"
+    },
+    "owner": "foundertype"
   }
 }

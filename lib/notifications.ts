@@ -1,103 +1,163 @@
 import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export async function requestPermissions() {
-  const { status } = await Notifications.requestPermissionsAsync();
-  return status === 'granted';
+export interface NotificationSettings {
+  dailyCheckIn: boolean;
+  achievements: boolean;
+  reminders: boolean;
 }
 
-export async function scheduleDailyReminder(hour: number = 9) {
-  await Notifications.cancelAllScheduledNotificationsAsync();
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'Your FounderType check-in',
-      body: "Did you complete today's action? Keep your streak going.",
-      sound: true,
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.DAILY,
-      hour,
-      minute: 0,
-    } as any,
-  });
+const DEFAULT_SETTINGS: NotificationSettings = {
+  dailyCheckIn: true,
+  achievements: true,
+  reminders: true,
+};
+
+export class NotificationService {
+  static async initialize() {
+    await Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+      }),
+    });
+
+    // Request permissions
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== 'granted') {
+      console.log('Notification permissions not granted');
+      return false;
+    }
+
+    return true;
+  }
+
+  static async getSettings(): Promise<NotificationSettings> {
+    try {
+      const stored = await AsyncStorage.getItem('notification_settings');
+      return stored ? JSON.parse(stored) : DEFAULT_SETTINGS;
+    } catch (error) {
+      console.error('Error getting notification settings:', error);
+      return DEFAULT_SETTINGS;
+    }
+  }
+
+  static async updateSettings(settings: Partial<NotificationSettings>): Promise<void> {
+    try {
+      const current = await this.getSettings();
+      const updated = { ...current, ...settings };
+      await AsyncStorage.setItem('notification_settings', JSON.stringify(updated));
+    } catch (error) {
+      console.error('Error updating notification settings:', error);
+    }
+  }
+
+  static async scheduleDailyCheckIn(hour: number = 9, minute: number = 0): Promise<void> {
+    try {
+      const settings = await this.getSettings();
+      if (!settings.dailyCheckIn) return;
+
+      // Cancel existing daily check-in notifications
+      await this.cancelNotification('daily-checkin');
+
+      // Schedule new daily notification
+      const trigger = new Date();
+      trigger.setHours(hour, minute, 0, 0);
+      
+      // If time has passed today, schedule for tomorrow
+      if (trigger <= new Date()) {
+        trigger.setDate(trigger.getDate() + 1);
+      }
+
+      await Notifications.scheduleNotificationAsync({
+        identifier: 'daily-checkin',
+        content: {
+          title: 'Daily Check-in Time!',
+          body: 'How did you do on your commitment today? Log your progress now.',
+          data: { type: 'daily-checkin' },
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          hour,
+          minute,
+        },
+      });
+    } catch (error) {
+      console.error('Error scheduling daily check-in:', error);
+    }
+  }
+
+  static async sendAchievementNotification(title: string, message: string): Promise<void> {
+    try {
+      const settings = await this.getSettings();
+      if (!settings.achievements) return;
+
+      await Notifications.scheduleNotificationAsync({
+        identifier: `achievement-${Date.now()}`,
+        content: {
+          title,
+          body: message,
+          data: { type: 'achievement' },
+        },
+        trigger: null, // Immediate notification
+      });
+    } catch (error) {
+      console.error('Error sending achievement notification:', error);
+    }
+  }
+
+  static async sendReminderNotification(title: string, message: string): Promise<void> {
+    try {
+      const settings = await this.getSettings();
+      if (!settings.reminders) return;
+
+      await Notifications.scheduleNotificationAsync({
+        identifier: `reminder-${Date.now()}`,
+        content: {
+          title,
+          body: message,
+          data: { type: 'reminder' },
+        },
+        trigger: null, // Immediate notification
+      });
+    } catch (error) {
+      console.error('Error sending reminder notification:', error);
+    }
+  }
+
+  static async cancelNotification(identifier: string): Promise<void> {
+    try {
+      await Notifications.cancelScheduledNotificationAsync(identifier);
+    } catch (error) {
+      console.error('Error canceling notification:', error);
+    }
+  }
+
+  static async cancelAllNotifications(): Promise<void> {
+    try {
+      await Notifications.cancelAllScheduledNotificationsAsync();
+    } catch (error) {
+      console.error('Error canceling all notifications:', error);
+    }
+  }
+
+  static async getScheduledNotifications(): Promise<Notifications.NotificationRequest[]> {
+    try {
+      return await Notifications.getAllScheduledNotificationsAsync();
+    } catch (error) {
+      console.error('Error getting scheduled notifications:', error);
+      return [];
+    }
+  }
 }
 
-export async function cancelReminders() {
-  await Notifications.cancelAllScheduledNotificationsAsync();
-}
-
-export async function scheduleWeeklyInsight(founderType: string) {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'Your weekly check-in',
-      body: 'How is your commitment going? Stay accountable and keep building.',
-      sound: true,
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
-      weekday: 2,
-      hour: 8,
-      minute: 0,
-    } as any,
-  });
-}
-
-export async function scheduleWeeklyMirror(
-  commitmentText: string,
-  founderType: string,
-  checkInCount: number,
-  daysSinceCommitment: number
-) {
-  // Cancel existing scheduled notifications before rescheduling
-  await Notifications.cancelAllScheduledNotificationsAsync();
-
-  const isOnTrack = checkInCount >= daysSinceCommitment * 0.6;
-  const week = Math.ceil(daysSinceCommitment / 7);
-  const daysLeft = Math.max(0, 30 - daysSinceCommitment);
-  const snippet = commitmentText.substring(0, 60);
-
-  const onTrackMessages = [
-    `Day ${daysSinceCommitment}. You're in the top 23% of ${founderType} users who reach this point. Most quit by Day 5. Keep going.`,
-    `${checkInCount} check-ins completed. You said you were different. So far, you're right.`,
-    `Week ${week} done. Your commitment: "${commitmentText.substring(0, 50)}..." Still standing.`,
-  ];
-
-  const offTrackMessages = [
-    `You made a commitment ${daysSinceCommitment} days ago. You've checked in ${checkInCount} times. At this rate you will repeat the same pattern that stopped you before. Is that acceptable to you?`,
-    `${daysSinceCommitment - checkInCount} missed days. Your commitment is still waiting. Every day you don't show up is a data point about who you actually are right now — not who you want to be.`,
-    `You said: "${snippet}..." The deadline is in ${daysLeft} days. What happened this week?`,
-  ];
-
-  const messages = isOnTrack ? onTrackMessages : offTrackMessages;
-  const message = messages[Math.floor(Math.random() * messages.length)];
-
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: isOnTrack ? 'FounderType Check-In' : 'FounderType — Be Honest',
-      body: message,
-      sound: true,
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
-      weekday: 2,
-      hour: 8,
-      minute: 0,
-    } as any,
-  });
-}
-
-export async function sendMissedDaysAlert(
-  daysMissed: number,
-  commitmentText: string
-) {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'FounderType — Be Honest',
-      body: `${daysMissed} days without checking in. "${commitmentText.substring(0, 60)}..." Your commitment is still waiting.`,
-      sound: true,
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-      seconds: 1,
-    } as any,
-  });
-}
+// Legacy function for compatibility
+export const sendMissedDaysAlert = async (daysMissed: number, commitmentText: string) => {
+  if (daysMissed > 0) {
+    await NotificationService.sendReminderNotification(
+      'Missed Check-ins!',
+      `You missed ${daysMissed} day${daysMissed > 1 ? 's' : ''} for: "${commitmentText.substring(0, 50)}..."`
+    );
+  }
+};

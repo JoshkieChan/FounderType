@@ -11,6 +11,7 @@ import {
 import { sendMissedDaysAlert } from './lib/notifications';
 import AppNavigator from './navigation/AppNavigator';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import OfflineIndicator from './components/OfflineIndicator';
 
 import { UserProvider } from './context/UserContext';
 
@@ -87,6 +88,7 @@ export default Sentry.wrap(function App() {
     <ErrorBoundary>
       <SafeAreaProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
+          <OfflineIndicator />
           <UserProvider>
             <AppNavigator
               currentProfile={currentProfile}

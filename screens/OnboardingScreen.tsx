@@ -1,81 +1,116 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Image,
+  Dimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as Sentry from '@sentry/react-native';
 
-export default function OnboardingScreen({ navigation }: { navigation: any }) {
+const { width } = Dimensions.get('window');
+
+interface OnboardingScreenProps {
+  navigation: {
+    replace: (screen: string) => void;
+  };
+}
+
+const onboardingData = [
+  {
+    title: 'Public Accountability',
+    description: 'Post your 30-day commitment and let the community hold you accountable.',
+    icon: '🎯',
+  },
+  {
+    title: 'Daily Check-ins',
+    description: 'Track your progress every day with simple check-ins and build consistency.',
+    icon: '✅',
+  },
+  {
+    title: 'Founder Types',
+    description: 'Discover your founder type and get personalized insights for your journey.',
+    icon: '🚀',
+  },
+];
+
+export default function OnboardingScreen({
+  navigation,
+}: OnboardingScreenProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const handleNext = () => {
+    if (currentIndex < onboardingData.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      navigation.replace('Landing');
+    }
+  };
+
+  const handleSkip = () => {
+    navigation.replace('Landing');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButtonContainer}
-          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-        >
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-      </View>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.content}>
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={handleSkip}
+            accessible={true}
+            accessibilityLabel="Skip onboarding"
+            accessibilityRole="button"
+          >
+            <Text style={styles.skipText}>Skip</Text>
+          </TouchableOpacity>
 
-      <View style={styles.content}>
-        <View style={styles.iconContainer}>
-          <Image
-            source={require('../assets/foundertype-icon.png')}
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: 18,
-              marginBottom: 24,
-              backgroundColor: 'transparent',
-            }}
-          />
+          <View style={styles.iconContainer}>
+            <Text style={styles.icon}>{onboardingData[currentIndex].icon}</Text>
+          </View>
+
+          <Text style={styles.title} accessible={true}>
+            {onboardingData[currentIndex].title}
+          </Text>
+          <Text style={styles.description} accessible={true}>
+            {onboardingData[currentIndex].description}
+          </Text>
+
+          <View style={styles.pagination}>
+            {onboardingData.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.dot,
+                  index === currentIndex && styles.activeDot,
+                ]}
+                accessible={false}
+              />
+            ))}
+          </View>
+
+          <TouchableOpacity
+            style={styles.nextButton}
+            onPress={handleNext}
+            accessible={true}
+            accessibilityLabel={
+              currentIndex === onboardingData.length - 1
+                ? 'Get started'
+                : 'Next'
+            }
+            accessibilityRole="button"
+          >
+            <Text style={styles.nextButtonText}>
+              {currentIndex === onboardingData.length - 1 ? 'Get Started' : 'Next'}
+            </Text>
+          </TouchableOpacity>
         </View>
-
-        <Text style={styles.headline}>The honest truth about building</Text>
-
-        <View style={styles.bodyContainer}>
-          <Text style={styles.bodyText}>
-            Most people spend years trying the wrong things. Not because they
-            lack drive
-            {/* eslint-disable-next-line react-native/no-inline-styles */}
-            <Text style={{ fontWeight: '600' }}>
-              {' '}
-              because nobody told them what actually fits them.
-            </Text>
-          </Text>
-
-          <Text style={styles.bodyText}>
-            FounderType asks you 7 honest questions. Then it tells you exactly
-            what business model fits your skills, psychology, and lifestyle{' '}
-            {/* eslint-disable-next-line react-native/no-inline-styles */}
-            <Text style={{ fontWeight: '600' }}>
-              {' '}
-              and what will make you quit.
-            </Text>
-          </Text>
-
-          <Text style={styles.bodyText}>
-            No motivation. No generic advice.{' '}
-            {/* eslint-disable-next-line react-native/no-inline-styles */}
-            <Text style={{ fontWeight: '600' }}>
-              {' '}
-              Just the truth about where you should focus.
-            </Text>
-          </Text>
-        </View>
-
-        <TouchableOpacity
-          style={styles.ctaButton}
-          onPress={() => {
-            Sentry.addBreadcrumb({
-              message: 'assessment_started',
-              level: 'info',
-            });
-            navigation.navigate('questions');
-          }}
-        >
-          <Text style={styles.ctaText}>I'm ready to be honest</Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -85,63 +120,81 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0A0A0A',
   },
-  header: {
-    height: 60,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
-  backButtonContainer: {
-    zIndex: 10,
-  },
-  backButtonText: {
-    color: '#3B82F6',
-    fontSize: 16,
+  scrollContent: {
+    flexGrow: 1,
   },
   content: {
     flex: 1,
+    paddingHorizontal: 32,
+    paddingVertical: 40,
     justifyContent: 'center',
-    maxWidth: 400,
-    alignSelf: 'center',
+    alignItems: 'center',
+    minHeight: Dimensions.get('window').height - 100,
+  },
+  skipButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    padding: 8,
+  },
+  skipText: {
+    color: '#6B7280',
+    fontSize: 16,
+    fontWeight: '500',
   },
   iconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#1A1A1A',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 40,
-    backgroundColor: 'transparent',
-  },
-  icon: {
-    width: 32,
-    height: 32,
-    backgroundColor: '#3B82F6',
-    borderRadius: 16,
-  },
-  headline: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    lineHeight: 36,
     marginBottom: 32,
   },
-  bodyContainer: {
-    marginBottom: 48,
+  icon: {
+    fontSize: 64,
   },
-  bodyText: {
-    fontSize: 17,
-    color: '#888888',
-    lineHeight: 26,
-    marginBottom: 20,
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
     textAlign: 'center',
+    marginBottom: 16,
   },
-  ctaButton: {
+  description: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 48,
+    paddingHorizontal: 16,
+  },
+  pagination: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 32,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#374151',
+  },
+  activeDot: {
     backgroundColor: '#3B82F6',
+    width: 24,
+  },
+  nextButton: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 48,
     paddingVertical: 16,
-    paddingHorizontal: 32,
     borderRadius: 12,
+    minWidth: 200,
     alignItems: 'center',
   },
-  ctaText: {
+  nextButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
 });
