@@ -17,11 +17,11 @@ export default function HCaptchaWrapper({
     return null; // Captcha handled differently on mobile
   }
 
-  // Temporary hardcoded site key to get hCaptcha working
+  // Read from environment variables (works in local dev, need to fix for Vercel Expo web)
   // TODO: Fix environment variable injection in Expo web build
-  const siteKey = '10000000-ffff-ffff-ffff-000000000001'; // hCaptcha demo site key
+  const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || process.env.EXPO_PUBLIC_HCAPTCHA_SITE_KEY;
   
-  console.log('HCaptcha Debug - Using hardcoded site key for testing');
+  console.log('HCaptcha Debug - Site key from env:', siteKey ? 'SET' : 'NOT_SET');
 
   if (!siteKey) {
     return (
