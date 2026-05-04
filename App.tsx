@@ -11,6 +11,8 @@ import {
 import { sendMissedDaysAlert } from './lib/notifications';
 import { FreeAnalytics } from './lib/freeAnalytics';
 import { NotificationService } from './lib/notifications';
+import { analytics } from './lib/vercelAnalytics';
+import { performanceMonitor } from './lib/performanceMonitoring';
 import AppNavigator from './navigation/AppNavigator';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import OfflineIndicator from './components/OfflineIndicator';
@@ -45,13 +47,22 @@ export default Sentry.wrap(function App() {
     // Initialize Sentry
     Sentry.init({
       dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-      enableInExpoDevelopment: __DEV__,
+      enableInExpoDevelopment: false,
       debug: false,
-      tracesSampleRate: 0.2,
+      tracesSampleRate: 0.1,
+      environment: __DEV__ ? 'development' : 'production',
+      attachStacktrace: true,
+      enableAutoSessionTracking: true,
     } as any);
 
     // Initialize free analytics
     FreeAnalytics.initialize();
+
+    // Initialize Vercel analytics
+    analytics.initialize();
+
+    // Initialize performance monitoring
+    performanceMonitor.initialize();
 
     // Initialize notifications
     NotificationService.initialize();

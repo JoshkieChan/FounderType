@@ -1,60 +1,29 @@
 {
-  "outputDirectory": "web-build",
-  "version": 2,
-  "routes": [
-    {
-      "src": "/favicon.ico",
-      "dest": "/assets/favicon.png"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
+  "buildCommand": "expo build:web",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "framework": null,
+  "regions": ["iad1"],
+  "functions": {
+    "src/**/*.js": {
+      "maxDuration": 10
     }
-  ],
+  },
   "headers": [
     {
-      "source": "/favicon.ico",
+      "source": "/api/(.*)",
       "headers": [
         {
-          "key": "Content-Type",
-          "value": "image/png"
-        },
-        {
           "key": "Cache-Control",
-          "value": "public, max-age=86400"
+          "value": "s-maxage=60, stale-while-revalidate=30"
         }
       ]
-    },
+    }
+  ],
+  "rewrites": [
     {
-      "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/static/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/_next/static/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

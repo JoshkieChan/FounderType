@@ -48,6 +48,19 @@
         "description": "Public accountability for founders who finish what they start. Post 30-day commitments, track daily progress, and build consistency with community support.",
         "keywords": "founder, accountability, commitment, productivity, startup",
         "author": "FounderType"
+      },
+      "analytics": {
+        "vercel": {
+          "speedInsights": {
+            "enabled": true
+          },
+          "webAnalytics": {
+            "enabled": true,
+            "attribution": true,
+            "autoTrack": true,
+            "debug": false
+          }
+        }
       }
     },
     "description": "Public accountability for founders who finish what they start. Post 30-day commitments, track daily progress, and build consistency with community support.",
@@ -57,7 +70,7 @@
         "@sentry/react-native/expo",
         {
           "url": "https://sentry.io/",
-          "project": "react-native",
+          "project": "foundertype-mobile",
           "organization": "foundertype"
         }
       ]
