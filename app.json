@@ -73,7 +73,8 @@
           "project": "foundertype-mobile",
           "organization": "foundertype"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "extra": {
       "eas": {
