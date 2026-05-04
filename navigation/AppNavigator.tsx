@@ -11,6 +11,7 @@ import DailyCheckInScreen from '../screens/DailyCheckInScreen';
 import PublicFeedScreen from '../screens/PublicFeedScreen';
 import LockoutScreen from '../screens/LockoutScreen';
 import TermsScreen from '../screens/TermsScreen';
+import EmailTestScreen from '../screens/EmailTestScreen';
 
 type Screen =
   | 'landing'
@@ -23,7 +24,8 @@ type Screen =
   | 'dailyCheckIn'
   | 'publicFeed'
   | 'lockout'
-  | 'terms';
+  | 'terms'
+  | 'emailTest';
 
 interface TopMatch {
   founderType: string;
@@ -93,6 +95,7 @@ export type RootStackParamList = {
   publicFeed: undefined;
   lockout: undefined;
   terms: undefined;
+  emailTest: undefined;
 };
 
 export default function AppNavigator({
@@ -227,6 +230,8 @@ export default function AppNavigator({
         return <LockoutScreen navigation={navigation as any} />;
       case 'terms':
         return <TermsScreen navigation={navigation as any} />;
+      case 'emailTest':
+        return <EmailTestScreen navigation={navigation as any} />;
       default:
         return <LandingScreen navigation={navigation as any} />;
     }
