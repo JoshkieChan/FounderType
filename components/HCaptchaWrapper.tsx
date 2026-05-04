@@ -17,9 +17,14 @@ export default function HCaptchaWrapper({
     return null; // Captcha handled differently on mobile
   }
 
-  const siteKey =
-    (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
-    (typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_HCAPTCHA_SITE_KEY);
+  const nextPublicSiteKey = typeof process !== 'undefined' ? process.env?.NEXT_PUBLIC_HCAPTCHA_SITE_KEY : undefined;
+  const expoPublicSiteKey = typeof process !== 'undefined' ? process.env?.EXPO_PUBLIC_HCAPTCHA_SITE_KEY : undefined;
+  
+  // Debug logging
+  console.log('HCaptcha Debug - NEXT_PUBLIC_HCAPTCHA_SITE_KEY:', nextPublicSiteKey ? 'SET' : 'NOT_SET');
+  console.log('HCaptcha Debug - EXPO_PUBLIC_HCAPTCHA_SITE_KEY:', expoPublicSiteKey ? 'SET' : 'NOT_SET');
+  
+  const siteKey = nextPublicSiteKey || expoPublicSiteKey;
 
   if (!siteKey) {
     return (
