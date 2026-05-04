@@ -15,12 +15,27 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 
 import { UserProvider } from './context/UserContext';
 
+interface TopMatch {
+  founderType: string;
+  score: number;
+  description: string;
+}
+
+interface Profile {
+  founderType: string;
+  summary?: string;
+  matches?: TopMatch[];
+  [key: string]: unknown;
+}
+
 // Global ref for synchronous access to answers
 const globalAnswersRef = { current: null as string | null };
 
 export default Sentry.wrap(function App() {
-  const [currentProfile, setCurrentProfile] = useState(null);
-  const [currentAnswers, setCurrentAnswers] = useState(null);
+  const [currentProfile, setCurrentProfile] = useState<Profile | null>(null);
+  const [currentAnswers, setCurrentAnswers] = useState<
+    Record<number, string> | null
+  >(null);
 
   useEffect(() => {
     testSupabaseConnection();

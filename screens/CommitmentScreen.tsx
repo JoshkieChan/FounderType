@@ -156,7 +156,7 @@ export default function CommitmentScreen({
       return;
     }
 
-    if (Platform.OS === 'web' && !captchaToken) {
+    if (Platform.OS === 'web' && !editMode && !captchaToken) {
       window.alert('Please complete the security check (captcha).');
       return;
     }
@@ -459,7 +459,11 @@ export default function CommitmentScreen({
               </Text>
             </TouchableOpacity>
 
-            <HCaptchaWrapper onVerify={(token) => setCaptchaToken(token)} />
+            <HCaptchaWrapper
+              onVerify={(token) => setCaptchaToken(token)}
+              onExpire={() => setCaptchaToken(null)}
+              onError={() => setCaptchaToken(null)}
+            />
 
             <View style={styles.ctaSection}>
               <TouchableOpacity
