@@ -1,115 +1,119 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Image,
-  Dimensions,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
-const { width } = Dimensions.get('window');
-
-interface OnboardingScreenProps {
-  navigation: {
-    replace: (screen: string) => void;
-  };
+interface OnboardingStep {
+  id: number;
+  title: string;
+  description: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
 }
 
-const onboardingData = [
+const onboardingSteps: OnboardingStep[] = [
   {
-    title: 'Public Accountability',
-    description:
-      'Post your 30-day commitment and let the community hold you accountable.',
-    icon: '🎯',
+    id: 1,
+    title: 'Welcome to FounderType',
+    description: 'Public accountability for founders who finish what they start. Join thousands of founders building consistency together.',
+    icon: 'rocket-outline',
+    color: '#6366f1',
   },
   {
-    title: 'Daily Check-ins',
-    description:
-      'Track your progress every day with simple check-ins and build consistency.',
-    icon: '✅',
+    id: 2,
+    title: 'Make Public Commitments',
+    description: 'Post 30-day commitments with specific goals. The power of public accountability keeps you motivated to follow through.',
+    icon: 'clipboard-outline',
+    color: '#8b5cf6',
   },
   {
-    title: 'Founder Types',
-    description:
-      'Discover your founder type and get personalized insights for your journey.',
-    icon: '🚀',
+    id: 3,
+    title: 'Track Daily Progress',
+    description: 'Check in daily to update your progress. Build streaks and maintain momentum toward your goals.',
+    icon: 'checkmark-circle-outline',
+    color: '#10b981',
+  },
+  {
+    id: 4,
+    title: 'Join the Community',
+    description: 'Support other founders, get encouragement, and build meaningful connections with people who understand your journey.',
+    icon: 'people-outline',
+    color: '#f59e0b',
   },
 ];
 
-export default function OnboardingScreen({
-  navigation,
-}: OnboardingScreenProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+export default function OnboardingScreen() {
+  const [currentStep, setCurrentStep] = useState(0);
+  const navigation = useNavigation();
 
   const handleNext = () => {
-    if (currentIndex < onboardingData.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+    if (currentStep < onboardingSteps.length - 1) {
+      setCurrentStep(currentStep + 1);
     } else {
-      navigation.replace('Landing');
+      handleSkip();
     }
   };
 
   const handleSkip = () => {
-    navigation.replace('Landing');
+    navigation.navigate('Landing' as never);
   };
+
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const step = onboardingSteps[currentStep];
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.content}>
-          <TouchableOpacity
-            style={styles.skipButton}
-            onPress={handleSkip}
-            accessible={true}
-            accessibilityLabel="Skip onboarding"
-            accessibilityRole="button"
-          >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
-
-          <View style={styles.iconContainer}>
-            <Text style={styles.icon}>{onboardingData[currentIndex].icon}</Text>
-          </View>
-
-          <Text style={styles.title} accessible={true}>
-            {onboardingData[currentIndex].title}
-          </Text>
-          <Text style={styles.description} accessible={true}>
-            {onboardingData[currentIndex].description}
-          </Text>
-
-          <View style={styles.pagination}>
-            {onboardingData.map((_, index) => (
+          
+          <View style={styles.progressIndicator}>
+            {onboardingSteps.map((_, index) => (
               <View
                 key={index}
-                style={[styles.dot, index === currentIndex && styles.activeDot]}
-                accessible={false}
+                style={[
+                  styles.progressDot,
+                  index === currentStep && styles.progressDotActive,
+                  index < currentStep && styles.progressDotCompleted,
+                ]}
               />
             ))}
           </View>
+        </View>
 
-          <TouchableOpacity
-            style={styles.nextButton}
-            onPress={handleNext}
-            accessible={true}
-            accessibilityLabel={
-              currentIndex === onboardingData.length - 1
-                ? 'Get started'
-                : 'Next'
-            }
-            accessibilityRole="button"
-          >
-            <Text style={styles.nextButtonText}>
-              {currentIndex === onboardingData.length - 1
-                ? 'Get Started'
-                : 'Next'}
+        <View style={styles.content}>
+          <View style={[styles.iconContainer, { backgroundColor: step.color + '20' }]}>
+            <Ionicons name={step.icon} size={80} color={step.color} />
+          </View>
+          
+          <Text style={styles.title}>{step.title}</Text>
+          <Text style={styles.description}>{step.description}</Text>
+        </View>
+
+        <View style={styles.footer}>
+          {currentStep > 0 && (
+            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+              <Ionicons name="chevron-back" size={24} color="#6b7280" />
+            </TouchableOpacity>
+          )}
+          
+          <TouchableOpacity onPress={handleNext} style={styles.nextButton}>
+            <Text style={styles.nextText}>
+              {currentStep === onboardingSteps.length - 1 ? "Get Started" : "Next"}
             </Text>
+            <Ionicons 
+              name={currentStep === onboardingSteps.length - 1 ? "checkmark" : "chevron-forward"} 
+              size={20} 
+              color="white" 
+            />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -120,83 +124,100 @@ export default function OnboardingScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: '#ffffff',
   },
   scrollContent: {
     flexGrow: 1,
+    justifyContent: 'space-between',
+    padding: 20,
+  },
+  header: {
+    alignItems: 'flex-end',
+    marginBottom: 40,
+  },
+  skipButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  skipText: {
+    fontSize: 16,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  progressIndicator: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+    gap: 8,
+  },
+  progressDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#e5e7eb',
+  },
+  progressDotActive: {
+    backgroundColor: '#6366f1',
+    width: 24,
+  },
+  progressDotCompleted: {
+    backgroundColor: '#6366f1',
   },
   content: {
     flex: 1,
-    paddingHorizontal: 32,
-    paddingVertical: 40,
-    justifyContent: 'center',
     alignItems: 'center',
-    minHeight: Dimensions.get('window').height - 100,
-  },
-  skipButton: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    padding: 8,
-  },
-  skipText: {
-    color: '#6B7280',
-    fontSize: 16,
-    fontWeight: '500',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
   },
   iconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#1A1A1A',
-    justifyContent: 'center',
+    width: 160,
+    height: 160,
+    borderRadius: 80,
     alignItems: 'center',
-    marginBottom: 32,
-  },
-  icon: {
-    fontSize: 64,
+    justifyContent: 'center',
+    marginBottom: 40,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#1f2937',
     textAlign: 'center',
     marginBottom: 16,
+    lineHeight: 34,
   },
   description: {
     fontSize: 16,
-    color: '#9CA3AF',
+    color: '#6b7280',
     textAlign: 'center',
     lineHeight: 24,
-    marginBottom: 48,
-    paddingHorizontal: 16,
+    paddingHorizontal: 10,
   },
-  pagination: {
+  footer: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 32,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 20,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#374151',
-  },
-  activeDot: {
-    backgroundColor: '#3B82F6',
-    width: 24,
+  backButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#f3f4f6',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   nextButton: {
-    backgroundColor: '#3B82F6',
-    paddingHorizontal: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 24,
     paddingVertical: 16,
     borderRadius: 12,
-    minWidth: 200,
-    alignItems: 'center',
+    gap: 8,
   },
-  nextButtonText: {
-    color: '#FFFFFF',
+  nextText: {
     fontSize: 16,
     fontWeight: '600',
+    color: 'white',
   },
 });

@@ -14,10 +14,11 @@ import { NotificationService } from './lib/notifications';
 import { analytics } from './lib/vercelAnalytics';
 import { performanceMonitor } from './lib/performanceMonitoring';
 import AppNavigator from './navigation/AppNavigator';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import OfflineIndicator from './components/OfflineIndicator';
+import { EnhancedErrorBoundary as ErrorBoundary } from './components/EnhancedErrorBoundary';
+import EnhancedOfflineIndicator from './components/EnhancedOfflineIndicator';
 
 import { UserProvider } from './context/UserContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 interface TopMatch {
   founderType: string;
@@ -107,18 +108,20 @@ export default Sentry.wrap(function App() {
   return (
     <ErrorBoundary>
       <SafeAreaProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <OfflineIndicator />
-          <UserProvider>
-            <AppNavigator
-              currentProfile={currentProfile}
-              setCurrentProfile={setCurrentProfile}
-              currentAnswers={currentAnswers}
-              setCurrentAnswers={setCurrentAnswers}
-              globalAnswersRef={globalAnswersRef}
-            />
-          </UserProvider>
-        </GestureHandlerRootView>
+        <ThemeProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <EnhancedOfflineIndicator />
+            <UserProvider>
+              <AppNavigator
+                currentProfile={currentProfile}
+                setCurrentProfile={setCurrentProfile}
+                currentAnswers={currentAnswers}
+                setCurrentAnswers={setCurrentAnswers}
+                globalAnswersRef={globalAnswersRef}
+              />
+            </UserProvider>
+          </GestureHandlerRootView>
+        </ThemeProvider>
       </SafeAreaProvider>
     </ErrorBoundary>
   );
