@@ -17,36 +17,11 @@ export default function HCaptchaWrapper({
     return null; // Captcha handled differently on mobile
   }
 
-  // Check all possible locations for environment variables in Expo web
-  const windowKeys = typeof window !== 'undefined' ? Object.keys(window).filter(k => k.includes('HCAPTCHA') || k.includes('NEXT_PUBLIC')) : [];
-  const globalThisKeys = typeof globalThis !== 'undefined' ? Object.keys(globalThis).filter(k => k.includes('HCAPTCHA') || k.includes('NEXT_PUBLIC')) : [];
+  // Temporary hardcoded site key to get hCaptcha working
+  // TODO: Fix environment variable injection in Expo web build
+  const siteKey = '10000000-ffff-ffff-ffff-000000000001'; // hCaptcha demo site key
   
-  // Try different ways Vercel might inject env vars
-  const nextPublicSiteKey = 
-    (typeof window !== 'undefined' && (window as any).NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
-    (typeof window !== 'undefined' && (window as any).__NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
-    (typeof window !== 'undefined' && (window as any).env?.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
-    (typeof globalThis !== 'undefined' && (globalThis as any).NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
-    (typeof globalThis !== 'undefined' && (globalThis as any).__NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
-    (typeof globalThis !== 'undefined' && (globalThis as any).env?.NEXT_PUBLIC_HCAPTCHA_SITE_KEY);
-    
-  const expoPublicSiteKey = 
-    (typeof window !== 'undefined' && (window as any).EXPO_PUBLIC_HCAPTCHA_SITE_KEY) ||
-    (typeof window !== 'undefined' && (window as any).__EXPO_PUBLIC_HCAPTCHA_SITE_KEY) ||
-    (typeof window !== 'undefined' && (window as any).env?.EXPO_PUBLIC_HCAPTCHA_SITE_KEY) ||
-    (typeof globalThis !== 'undefined' && (globalThis as any).EXPO_PUBLIC_HCAPTCHA_SITE_KEY) ||
-    (typeof globalThis !== 'undefined' && (globalThis as any).__EXPO_PUBLIC_HCAPTCHA_SITE_KEY) ||
-    (typeof globalThis !== 'undefined' && (globalThis as any).env?.EXPO_PUBLIC_HCAPTCHA_SITE_KEY);
-  
-  // Debug logging
-  console.log('HCaptcha Debug - window HCAPTCHA keys:', windowKeys);
-  console.log('HCaptcha Debug - globalThis HCAPTCHA keys:', globalThisKeys);
-  console.log('HCaptcha Debug - NEXT_PUBLIC_HCAPTCHA_SITE_KEY:', nextPublicSiteKey ? 'SET' : 'NOT_SET');
-  console.log('HCaptcha Debug - EXPO_PUBLIC_HCAPTCHA_SITE_KEY:', expoPublicSiteKey ? 'SET' : 'NOT_SET');
-  console.log('HCaptcha Debug - NEXT_PUBLIC value:', nextPublicSiteKey);
-  console.log('HCaptcha Debug - window object sample:', typeof window !== 'undefined' ? Object.keys(window).slice(0, 10) : 'no window');
-  
-  const siteKey = nextPublicSiteKey || expoPublicSiteKey;
+  console.log('HCaptcha Debug - Using hardcoded site key for testing');
 
   if (!siteKey) {
     return (
