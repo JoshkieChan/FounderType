@@ -9,8 +9,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
+// import { StackNavigationProp } from '@react-navigation/stack';
+// import { RouteProp } from '@react-navigation/native';
 import { supabase, cachedSupabase } from '../lib/cachedSupabase';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { saveProfile, getCurrentUserId } from '../lib/storage';
@@ -33,20 +33,14 @@ const webAsyncStorage =
       }
     : require('@react-native-async-storage/async-storage').default;
 
-type ResultsScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  'results'
->;
-type ResultsScreenRouteProp = RouteProp<RootStackParamList, 'results'>;
-
 export default function ResultsScreen({
   route,
   navigation,
   currentProfile,
   currentAnswers,
 }: {
-  route: ResultsScreenRouteProp;
-  navigation: ResultsScreenNavigationProp;
+  route: any;
+  navigation: any;
   currentProfile: any;
   currentAnswers: any;
 }) {
@@ -141,8 +135,10 @@ export default function ResultsScreen({
   const { founderType, headline, truth, fits, quits, nextMove } =
     founderTypeData;
 
-  return (
-    <SafeAreaView style={styles.container}>
+  const Container = Platform.OS === 'web' ? View : SafeAreaView;
+
+return (
+    <Container style={styles.container}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -194,7 +190,7 @@ export default function ResultsScreen({
           <Text style={styles.backButtonText}>← Back to Home</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </Container>
   );
 }
 
