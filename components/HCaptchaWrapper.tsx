@@ -17,14 +17,25 @@ export default function HCaptchaWrapper({
     return null; // Captcha handled differently on mobile
   }
 
-  // eslint-disable-next-line no-undef
-  const nextPublicSiteKey = typeof process !== 'undefined' ? process.env?.NEXT_PUBLIC_HCAPTCHA_SITE_KEY : undefined;
-  const expoPublicSiteKey = typeof process !== 'undefined' ? process.env?.EXPO_PUBLIC_HCAPTCHA_SITE_KEY : undefined;
+  // Try multiple ways to access environment variables in Expo web
+  const nextPublicSiteKey = 
+    (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
+    (typeof window !== 'undefined' && (window as any).__ENV?.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
+    (typeof globalThis !== 'undefined' && (globalThis as any).process?.env?.NEXT_PUBLIC_HCAPTCHA_SITE_KEY);
+    
+  const expoPublicSiteKey = 
+    (typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_HCAPTCHA_SITE_KEY) ||
+    (typeof window !== 'undefined' && (window as any).__ENV?.EXPO_PUBLIC_HCAPTCHA_SITE_KEY) ||
+    (typeof globalThis !== 'undefined' && (globalThis as any).process?.env?.EXPO_PUBLIC_HCAPTCHA_SITE_KEY);
   
   // Debug logging
+  console.log('HCaptcha Debug - process.env exists:', typeof process !== 'undefined');
+  console.log('HCaptcha Debug - window exists:', typeof window !== 'undefined');
+  console.log('HCaptcha Debug - globalThis exists:', typeof globalThis !== 'undefined');
   console.log('HCaptcha Debug - NEXT_PUBLIC_HCAPTCHA_SITE_KEY:', nextPublicSiteKey ? 'SET' : 'NOT_SET');
   console.log('HCaptcha Debug - EXPO_PUBLIC_HCAPTCHA_SITE_KEY:', expoPublicSiteKey ? 'SET' : 'NOT_SET');
   console.log('HCaptcha Debug - NEXT_PUBLIC value:', nextPublicSiteKey);
+  console.log('HCaptcha Debug - All process.env keys:', typeof process !== 'undefined' ? Object.keys(process.env || {}).filter(k => k.includes('HCAPTCHA')) : 'process undefined');
   
   const siteKey = nextPublicSiteKey || expoPublicSiteKey;
 
