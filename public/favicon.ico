@@ -1,0 +1,2 @@
+<!-- This file is needed for proper favicon handling -->
+<!-- The actual favicon is served from assets/favicon.png via vercel.json -->

@@ -9,6 +9,8 @@ import {
   getActiveCommitment,
 } from './lib/storage';
 import { sendMissedDaysAlert } from './lib/notifications';
+import { FreeAnalytics } from './lib/freeAnalytics';
+import { NotificationService } from './lib/notifications';
 import AppNavigator from './navigation/AppNavigator';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import OfflineIndicator from './components/OfflineIndicator';
@@ -47,6 +49,12 @@ export default Sentry.wrap(function App() {
       debug: false,
       tracesSampleRate: 0.2,
     } as any);
+
+    // Initialize free analytics
+    FreeAnalytics.initialize();
+
+    // Initialize notifications
+    NotificationService.initialize();
 
     // Check for missed commitment check-in days
     checkMissedCommitmentDays();
