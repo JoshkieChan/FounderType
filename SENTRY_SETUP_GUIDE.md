@@ -132,7 +132,7 @@ Sentry.setContext('commitment', { id, status });
 ### **Common DSN Issues:**
 
 - ❌ `https://123456@123456.ingest.sentry.io/123456` ✅
-- ❌ `http://sentry.io/...` ❌ (must be https)
+- ❌ `https://sentry.io/...` ❌ (must be full DSN)
 - ❌ Missing project ID ❌
 
 ## 🚀 **Free Tier Benefits:**
@@ -142,7 +142,7 @@ Sentry's free tier includes:
 - ✅ **5,000 events/month**
 - ✅ **30-day data retention**
 - ✅ **Error tracking**
-- ✅ **Performance monitoring**
+- ✅ **Sentry Performance monitoring**
 - ✅ **Release tracking**
 - ✅ **Unlimited team members**
 
@@ -169,6 +169,7 @@ enableInExpoDevelopment: false,
 ## 📱 **Testing Sentry Integration:**
 
 After configuration, you can test Sentry by:
+
 1. **Triggering an error** (try accessing undefined data)
 2. **Checking Sentry dashboard** for events
 3. **Verifying performance data** appears
