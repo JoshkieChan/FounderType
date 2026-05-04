@@ -17,25 +17,34 @@ export default function HCaptchaWrapper({
     return null; // Captcha handled differently on mobile
   }
 
-  // Try multiple ways to access environment variables in Expo web
+  // Check all possible locations for environment variables in Expo web
+  const windowKeys = typeof window !== 'undefined' ? Object.keys(window).filter(k => k.includes('HCAPTCHA') || k.includes('NEXT_PUBLIC')) : [];
+  const globalThisKeys = typeof globalThis !== 'undefined' ? Object.keys(globalThis).filter(k => k.includes('HCAPTCHA') || k.includes('NEXT_PUBLIC')) : [];
+  
+  // Try different ways Vercel might inject env vars
   const nextPublicSiteKey = 
-    (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
-    (typeof window !== 'undefined' && (window as any).__ENV?.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
-    (typeof globalThis !== 'undefined' && (globalThis as any).process?.env?.NEXT_PUBLIC_HCAPTCHA_SITE_KEY);
+    (typeof window !== 'undefined' && (window as any).NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
+    (typeof window !== 'undefined' && (window as any).__NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
+    (typeof window !== 'undefined' && (window as any).env?.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
+    (typeof globalThis !== 'undefined' && (globalThis as any).NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
+    (typeof globalThis !== 'undefined' && (globalThis as any).__NEXT_PUBLIC_HCAPTCHA_SITE_KEY) ||
+    (typeof globalThis !== 'undefined' && (globalThis as any).env?.NEXT_PUBLIC_HCAPTCHA_SITE_KEY);
     
   const expoPublicSiteKey = 
-    (typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_HCAPTCHA_SITE_KEY) ||
-    (typeof window !== 'undefined' && (window as any).__ENV?.EXPO_PUBLIC_HCAPTCHA_SITE_KEY) ||
-    (typeof globalThis !== 'undefined' && (globalThis as any).process?.env?.EXPO_PUBLIC_HCAPTCHA_SITE_KEY);
+    (typeof window !== 'undefined' && (window as any).EXPO_PUBLIC_HCAPTCHA_SITE_KEY) ||
+    (typeof window !== 'undefined' && (window as any).__EXPO_PUBLIC_HCAPTCHA_SITE_KEY) ||
+    (typeof window !== 'undefined' && (window as any).env?.EXPO_PUBLIC_HCAPTCHA_SITE_KEY) ||
+    (typeof globalThis !== 'undefined' && (globalThis as any).EXPO_PUBLIC_HCAPTCHA_SITE_KEY) ||
+    (typeof globalThis !== 'undefined' && (globalThis as any).__EXPO_PUBLIC_HCAPTCHA_SITE_KEY) ||
+    (typeof globalThis !== 'undefined' && (globalThis as any).env?.EXPO_PUBLIC_HCAPTCHA_SITE_KEY);
   
   // Debug logging
-  console.log('HCaptcha Debug - process.env exists:', typeof process !== 'undefined');
-  console.log('HCaptcha Debug - window exists:', typeof window !== 'undefined');
-  console.log('HCaptcha Debug - globalThis exists:', typeof globalThis !== 'undefined');
+  console.log('HCaptcha Debug - window HCAPTCHA keys:', windowKeys);
+  console.log('HCaptcha Debug - globalThis HCAPTCHA keys:', globalThisKeys);
   console.log('HCaptcha Debug - NEXT_PUBLIC_HCAPTCHA_SITE_KEY:', nextPublicSiteKey ? 'SET' : 'NOT_SET');
   console.log('HCaptcha Debug - EXPO_PUBLIC_HCAPTCHA_SITE_KEY:', expoPublicSiteKey ? 'SET' : 'NOT_SET');
   console.log('HCaptcha Debug - NEXT_PUBLIC value:', nextPublicSiteKey);
-  console.log('HCaptcha Debug - All process.env keys:', typeof process !== 'undefined' ? Object.keys(process.env || {}).filter(k => k.includes('HCAPTCHA')) : 'process undefined');
+  console.log('HCaptcha Debug - window object sample:', typeof window !== 'undefined' ? Object.keys(window).slice(0, 10) : 'no window');
   
   const siteKey = nextPublicSiteKey || expoPublicSiteKey;
 
