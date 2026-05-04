@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "FounderType",
-    "slug": "FounderType",
+    "slug": "foundertype",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/foundertype-icon.png",
@@ -13,7 +13,13 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.foundertype.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow camera for profile pictures",
+        "NSPhotoLibraryUsageDescription": "Allow photo library for profile pictures"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,12 +27,15 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.foundertype.app",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "webpack"
     },
+    "description": "Public accountability for founders who finish what they start. Post 30-day commitments, track daily progress, and build consistency with community support.",
     "plugins": [
       "@sentry/react-native",
       [
@@ -37,6 +46,11 @@
           "organization": "foundertype"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "foundertype-project-id"
+      }
+    }
   }
 }
