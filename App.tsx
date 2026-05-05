@@ -157,7 +157,10 @@ export default function App() {
   };
 
   return (
-    <SafeAreaProvider initialMetrics={initialSafeAreaMetrics}>
+    <SafeAreaProvider
+      initialMetrics={initialSafeAreaMetrics}
+      style={{ flex: 1 }}
+    >
       <ErrorBoundary>
         <ThemeProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
