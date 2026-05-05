@@ -17,6 +17,20 @@ export async function saveProfile(
   profile: Profile
 ) {
   try {
+    if (userId.startsWith('local-')) {
+      await AsyncStorage.setItem(
+        'foundertype_latest_profile',
+        JSON.stringify({
+          user_id: userId,
+          answers,
+          founder_type: profile.founderType || profile.founder_type,
+          profile,
+          created_at: new Date().toISOString(),
+        })
+      );
+      return null;
+    }
+
     const { data, error } = await supabase.from('profiles').insert({
       user_id: userId,
       answers,
@@ -31,7 +45,6 @@ export async function saveProfile(
       throw error;
     }
 
-    console.error('Profile saved successfully');
     return data;
   } catch (error) {
     console.error('Error saving profile:', error);

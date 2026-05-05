@@ -14,6 +14,8 @@ import { supabase, cachedSupabase } from '../lib/cachedSupabase';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { saveProfile, getCurrentUserId } from '../lib/storage';
 
+const PROFILE_CACHE_KEY = 'foundertype_latest_profile';
+
 // Web polyfill for AsyncStorage
 const webAsyncStorage =
   Platform.OS === 'web'
@@ -66,6 +68,19 @@ export default function ResultsScreen({
     try {
       const userId = await getCurrentUserId();
       if (!userId) return;
+
+      if (userId.startsWith('local-')) {
+        await webAsyncStorage.setItem(
+          PROFILE_CACHE_KEY,
+          JSON.stringify({
+            user_id: userId,
+            founder_type: founderTypeData.founderType,
+            profile_data: founderTypeData,
+            created_at: new Date().toISOString(),
+          })
+        );
+        return;
+      }
 
       const error = await cachedSupabase.upsertProfile({
         user_id: userId,

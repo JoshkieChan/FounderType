@@ -118,6 +118,15 @@ const linking = {
   },
 };
 
+const releaseWebFocus = () => {
+  if (typeof document === 'undefined') return;
+
+  const activeElement = document.activeElement;
+  if (activeElement instanceof HTMLElement) {
+    activeElement.blur();
+  }
+};
+
 export default function AppNavigator({
   currentProfile,
   setCurrentProfile,
@@ -126,7 +135,7 @@ export default function AppNavigator({
   globalAnswersRef: _globalAnswersRef,
 }: AppNavigatorProps) {
   return (
-    <NavigationContainer linking={linking}>
+    <NavigationContainer linking={linking} onStateChange={releaseWebFocus}>
       <Stack.Navigator
         initialRouteName="onboarding"
         screenOptions={{
