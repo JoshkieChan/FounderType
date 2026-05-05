@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
-import { useTheme } from '../context/ThemeContext';
 import {
   SmartSuggestions,
   Suggestion,
@@ -27,7 +26,6 @@ export const SmartSuggestionsComponent: React.FC<SmartSuggestionsProps> = ({
   onSelectSuggestion,
   maxSuggestions = 3,
 }) => {
-  const { colors } = useTheme();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -98,13 +96,13 @@ export const SmartSuggestionsComponent: React.FC<SmartSuggestionsProps> = ({
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'easy':
-        return colors.success || '#4CAF50';
+        return '#34D399';
       case 'medium':
-        return colors.warning || '#FF9800';
+        return '#FBBF24';
       case 'hard':
-        return colors.error || '#F44336';
+        return '#F87171';
       default:
-        return colors.primary;
+        return '#818CF8';
     }
   };
 
@@ -123,10 +121,8 @@ export const SmartSuggestionsComponent: React.FC<SmartSuggestionsProps> = ({
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.card }]}>
-        <Text style={[styles.title, { color: colors.text }]}>
-          Loading suggestions...
-        </Text>
+      <View style={styles.container}>
+        <Text style={styles.title}>Loading suggestions...</Text>
       </View>
     );
   }
@@ -136,10 +132,8 @@ export const SmartSuggestionsComponent: React.FC<SmartSuggestionsProps> = ({
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.card }]}>
-      <Text style={[styles.title, { color: colors.text }]}>
-        Smart Suggestions for {founderType}
-      </Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Smart Suggestions for {founderType}</Text>
 
       <View style={styles.suggestionsContainer}>
         {suggestions.map((suggestion) => (
@@ -148,7 +142,6 @@ export const SmartSuggestionsComponent: React.FC<SmartSuggestionsProps> = ({
             style={[
               styles.suggestionCard,
               {
-                backgroundColor: colors.background,
                 borderColor: getDifficultyColor(suggestion.difficulty),
               },
             ]}
@@ -156,9 +149,7 @@ export const SmartSuggestionsComponent: React.FC<SmartSuggestionsProps> = ({
             activeOpacity={0.8}
           >
             <View style={styles.suggestionHeader}>
-              <Text style={[styles.category, { color: colors.secondary }]}>
-                {suggestion.category}
-              </Text>
+              <Text style={styles.category}>{suggestion.category}</Text>
               <View
                 style={[
                   styles.difficultyBadge,
@@ -173,22 +164,18 @@ export const SmartSuggestionsComponent: React.FC<SmartSuggestionsProps> = ({
               </View>
             </View>
 
-            <Text style={[styles.suggestionText, { color: colors.text }]}>
-              {suggestion.text}
-            </Text>
+            <Text style={styles.suggestionText}>{suggestion.text}</Text>
 
             <View style={styles.suggestionFooter}>
-              <Text style={[styles.estimatedTime, { color: colors.secondary }]}>
+              <Text style={styles.estimatedTime}>
                 ~{suggestion.estimatedTime}min
               </Text>
-              <Text style={[styles.confidence, { color: colors.secondary }]}>
+              <Text style={styles.confidence}>
                 {Math.round(suggestion.confidence * 100)}% match
               </Text>
             </View>
 
-            <Text style={[styles.reasoning, { color: colors.secondary }]}>
-              {suggestion.reasoning}
-            </Text>
+            <Text style={styles.reasoning}>{suggestion.reasoning}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -202,11 +189,14 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
+    borderColor: '#4B5563',
+    backgroundColor: '#374151',
   },
   title: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 12,
+    color: '#F9FAFB',
   },
   suggestionsContainer: {
     flexDirection: 'column',
@@ -217,6 +207,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     borderWidth: 2,
+    backgroundColor: '#111827',
   },
   suggestionHeader: {
     flexDirection: 'row',
@@ -228,6 +219,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     textTransform: 'uppercase',
+    color: '#A78BFA',
   },
   difficultyBadge: {
     paddingHorizontal: 8,
@@ -244,6 +236,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 8,
     lineHeight: 20,
+    color: '#F9FAFB',
   },
   suggestionFooter: {
     flexDirection: 'row',
@@ -252,13 +245,16 @@ const styles = StyleSheet.create({
   },
   estimatedTime: {
     fontSize: 12,
+    color: '#A78BFA',
   },
   confidence: {
     fontSize: 12,
+    color: '#A78BFA',
   },
   reasoning: {
     fontSize: 11,
     fontStyle: 'italic',
     lineHeight: 16,
+    color: '#A78BFA',
   },
 });

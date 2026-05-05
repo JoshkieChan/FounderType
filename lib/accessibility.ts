@@ -105,46 +105,8 @@ export class AccessibilityManager {
     // Add ARIA live regions
     this.createLiveRegions();
 
-    // Announce dynamic content changes
-    this.setupContentAnnouncements();
-
     // Add proper ARIA labels
     this.addARIALabels();
-  }
-
-  // Setup content announcements
-  private setupContentAnnouncements(): void {
-    // Monitor for dynamic content changes
-    if (typeof MutationObserver !== 'undefined') {
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-            // Announce new content
-            mutation.addedNodes.forEach((node) => {
-              if (node.nodeType === Node.ELEMENT_NODE) {
-                const element = node as Element;
-                if (
-                  element.tagName === 'DIV' ||
-                  element.tagName === 'SECTION'
-                ) {
-                  const text = element.textContent?.trim();
-                  if (text && text.length > 0) {
-                    this.announce(`New content: ${text.substring(0, 100)}`);
-                  }
-                }
-              }
-            });
-          }
-        });
-      });
-
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
-
-      this.observers.push(observer);
-    }
   }
 
   // Setup focus management
@@ -398,11 +360,24 @@ export class AccessibilityManager {
 
   // Create ARIA live regions
   private createLiveRegions(): void {
+    const visuallyHiddenStyles = {
+      position: 'absolute',
+      width: '1px',
+      height: '1px',
+      padding: '0',
+      margin: '-1px',
+      overflow: 'hidden',
+      clip: 'rect(0, 0, 0, 0)',
+      whiteSpace: 'nowrap',
+      border: '0',
+    };
+
     // Polite live region for announcements
     const politeRegion = document.createElement('div');
     politeRegion.setAttribute('aria-live', 'polite');
     politeRegion.setAttribute('aria-atomic', 'true');
     politeRegion.className = 'sr-only live-region-polite';
+    Object.assign(politeRegion.style, visuallyHiddenStyles);
     document.body.appendChild(politeRegion);
 
     // Assertive live region for important announcements
@@ -410,6 +385,7 @@ export class AccessibilityManager {
     assertiveRegion.setAttribute('aria-live', 'assertive');
     assertiveRegion.setAttribute('aria-atomic', 'true');
     assertiveRegion.className = 'sr-only live-region-assertive';
+    Object.assign(assertiveRegion.style, visuallyHiddenStyles);
     document.body.appendChild(assertiveRegion);
   }
 
@@ -488,6 +464,17 @@ export class AccessibilityManager {
       helpText.textContent = 'This field is required';
       helpText.className = 'sr-only';
       helpText.id = `${input.id}-help`;
+      Object.assign(helpText.style, {
+        position: 'absolute',
+        width: '1px',
+        height: '1px',
+        padding: '0',
+        margin: '-1px',
+        overflow: 'hidden',
+        clip: 'rect(0, 0, 0, 0)',
+        whiteSpace: 'nowrap',
+        border: '0',
+      });
 
       input.setAttribute('aria-describedby', `${input.id}-help`);
       input.parentNode?.insertBefore(helpText, input.nextSibling);
@@ -498,6 +485,18 @@ export class AccessibilityManager {
   private addFocusIndicators(): void {
     const style = document.createElement('style');
     style.textContent = `
+      .sr-only {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+      }
+
       *:focus {
         outline: 2px solid #0066cc !important;
         outline-offset: 2px !important;
