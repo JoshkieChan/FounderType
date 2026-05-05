@@ -1,11 +1,34 @@
 import { createClient } from '@supabase/supabase-js';
 import Logger from './logger';
 
+declare global {
+  interface Window {
+    __FOUNDER_TYPE_ENV__?: {
+      EXPO_PUBLIC_SUPABASE_URL?: string;
+      EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
+      NEXT_PUBLIC_SUPABASE_URL?: string;
+      NEXT_PUBLIC_SUPABASE_ANON_KEY?: string;
+      NEXT_PUBLIC_SUPABASE_KEY?: string;
+    };
+  }
+}
+
+const runtimeEnv =
+  typeof window !== 'undefined' ? window.__FOUNDER_TYPE_ENV__ : undefined;
+
 const supabaseUrl =
-  process.env.EXPO_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  process.env.EXPO_PUBLIC_SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  runtimeEnv?.EXPO_PUBLIC_SUPABASE_URL ||
+  runtimeEnv?.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey =
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  process.env.EXPO_PUBLIC_SUPABASE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_KEY ||
+  runtimeEnv?.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+  runtimeEnv?.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  runtimeEnv?.NEXT_PUBLIC_SUPABASE_KEY;
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
