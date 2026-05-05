@@ -7,19 +7,61 @@ const supabaseAnonKey =
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase credentials not found in environment variables');
-}
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+const missingSupabaseError = {
+  message:
+    'Supabase is not configured for this deployment. Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in Vercel, then redeploy.',
+};
+
+const createMissingSupabaseQuery = (): any => {
+  const result = Promise.resolve({ data: null, error: missingSupabaseError });
+  return new Proxy(result, {
+    get(target, prop) {
+      if (prop in target) return (target as any)[prop];
+      return () => createMissingSupabaseQuery();
+    },
+  });
+};
+
+const missingSupabaseClient = {
   auth: {
-    persistSession: true,
-    autoRefreshToken: true,
+    getUser: async () => ({ data: { user: null }, error: missingSupabaseError }),
+    getSession: async () => ({
+      data: { session: null },
+      error: missingSupabaseError,
+    }),
+    signInAnonymously: async () => ({
+      data: { user: null, session: null },
+      error: missingSupabaseError,
+    }),
+    signOut: async () => ({ error: null }),
+    onAuthStateChange: () => ({
+      data: { subscription: { unsubscribe: () => {} } },
+    }),
   },
-});
+  from: () => createMissingSupabaseQuery(),
+  functions: {
+    invoke: async () => ({ data: null, error: missingSupabaseError }),
+  },
+};
+
+export const supabase = isSupabaseConfigured
+  ? createClient(supabaseUrl as string, supabaseAnonKey as string, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    })
+  : (missingSupabaseClient as unknown as ReturnType<typeof createClient>);
 
 // Test connection
 export const testSupabaseConnection = async () => {
+  if (!isSupabaseConfigured) {
+    Logger.error(missingSupabaseError.message);
+    return false;
+  }
+
   try {
     const { data, error } = await supabase
       .from('profiles')
