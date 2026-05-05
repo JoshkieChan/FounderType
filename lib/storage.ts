@@ -103,21 +103,21 @@ export async function getCurrentUserId(): Promise<string | null> {
     } = await supabase.auth.getUser();
     if (user?.id) return user.id;
 
-    const { data, error } = await supabase.auth.signInAnonymously();
-    if (error) {
-      // Check if anonymous auth is disabled
-      if (error.message?.includes('Anonymous sign-ins are not enabled')) {
-        console.warn('Anonymous auth not enabled in Supabase - using local storage fallback');
-        return `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      }
-      // Supabase not configured or other auth error - silently return null
-      return null;
+    // Use local storage fallback instead of anonymous auth
+    // to avoid Supabase 400 errors when anonymous auth is disabled
+    const localUserId = `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Store in localStorage for persistence
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('foundertype_local_user_id');
+      if (stored) return stored;
+      localStorage.setItem('foundertype_local_user_id', localUserId);
     }
-
-    return data.user?.id || null;
+    
+    return localUserId;
   } catch {
-    // Supabase not configured or network error - silently return null
-    return null;
+    // Fallback to generated ID
+    return `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 }
 

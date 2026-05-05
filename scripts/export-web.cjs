@@ -61,12 +61,27 @@ if (result.status === 0) {
   );
 
   const indexHtml = fs.readFileSync(indexFile, 'utf8');
+  let updatedHtml = indexHtml;
+  
+  // Add env.js script if not present
   if (!indexHtml.includes('/env.js')) {
-    fs.writeFileSync(
-      indexFile,
-      indexHtml.replace('<head>', '<head><script src="/env.js"></script>')
+    updatedHtml = updatedHtml.replace('<head>', '<head><script src="/env.js"></script>');
+  }
+  
+  // Add accessibility CSS fix
+  const accessibilityCss = fs.readFileSync(
+    path.join(process.cwd(), 'public', 'accessibility-fix.css'), 
+    'utf8'
+  );
+  
+  if (!updatedHtml.includes('accessibility-fix.css')) {
+    updatedHtml = updatedHtml.replace(
+      '<head>',
+      `<head><style>${accessibilityCss}</style>`
     );
   }
+  
+  fs.writeFileSync(indexFile, updatedHtml);
 }
 
 process.exit(result.status ?? 1);

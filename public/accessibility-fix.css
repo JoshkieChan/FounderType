@@ -1,0 +1,22 @@
+/* Fix for aria-hidden warnings */
+[aria-hidden="true"] * {
+  visibility: hidden !important;
+}
+
+[aria-hidden="true"] *:focus {
+  outline: none !important;
+}
+
+/* Ensure focusable elements are not hidden when they have focus */
+[aria-hidden="true"]:focus-within {
+  visibility: visible !important;
+}
+
+/* Alternative approach using inert */
+[aria-hidden="true"] {
+  pointer-events: none;
+}
+
+[aria-hidden="true"] * {
+  pointer-events: none;
+}
