@@ -20,10 +20,10 @@ import { MobilePolish } from '../lib/mobilePolish';
 const MAX_CHARS = 140;
 const MAX_DAILY_ACTION_CHARS = 60;
 
-const EXAMPLES = [
-  'I will get my first paying customer by May 30, 2026',
-  'I will launch a working prototype by May 30, 2026',
-  'I will have 10 conversations with real potential customers by May 30, 2026',
+const EXAMPLE_TEMPLATES = [
+  'I will get my first paying customer by [date]',
+  'I will launch a working prototype by [date]',
+  'I will have 10 conversations with real potential customers by [date]',
 ];
 
 function get30DaysFromNow(): Date {
@@ -45,7 +45,7 @@ function replaceDatePlaceholders(text: string): string {
 const RULES = [
   'Must be specific and verifiable by a stranger',
   'Must have completion date within 30 days',
-  "Once posted, it's public and can't be edited",
+  'Can be corrected for 24 hours, then becomes permanent',
 ];
 
 interface CommitmentRouteParams {
@@ -79,6 +79,7 @@ export default function CommitmentScreen({
   const [formError, setFormError] = useState<string | null>(null);
 
   const profile = route?.params?.profile;
+  const examples = EXAMPLE_TEMPLATES.map(replaceDatePlaceholders);
 
   // Edit mode support
   const editMode = route?.params?.editMode || false;
@@ -423,7 +424,7 @@ export default function CommitmentScreen({
 
             <View style={styles.examplesSection}>
               <Text style={styles.examplesTitle}>Examples</Text>
-              {EXAMPLES.map((example, i) => (
+              {examples.map((example, i) => (
                 <TouchableOpacity
                   key={i}
                   style={styles.example}
@@ -444,9 +445,7 @@ export default function CommitmentScreen({
             </View>
 
             <View style={styles.warningSection}>
-              <Text style={styles.warningTitle}>
-                ⚠️ Important: 24-Hour Edit Window
-              </Text>
+              <Text style={styles.warningTitle}>24-Hour Edit Window</Text>
               <Text style={styles.warningText}>
                 Once 24 hours pass, this commitment becomes permanent.
               </Text>
