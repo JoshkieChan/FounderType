@@ -48,7 +48,11 @@ export default function NotificationsScreen({
     try {
       const notifications =
         await NotificationService.getScheduledNotifications();
-      setScheduledNotifications(notifications.map((n) => n.content.title));
+      setScheduledNotifications(
+        notifications
+          .map((n) => n.content.title)
+          .filter((title): title is string => Boolean(title))
+      );
     } catch (error) {
       console.error('Error loading scheduled notifications:', error);
     }

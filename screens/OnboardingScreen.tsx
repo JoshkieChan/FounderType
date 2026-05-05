@@ -1,10 +1,19 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 interface OnboardingScreenProps {
-  navigate?: (screen: string, params?: any) => void;
+  navigation?: {
+    navigate: (screen: string, params?: any) => void;
+  };
 }
 
 interface OnboardingStep {
@@ -19,28 +28,32 @@ const onboardingSteps: OnboardingStep[] = [
   {
     id: 1,
     title: 'Welcome to FounderType',
-    description: 'Public accountability for founders who finish what they start. Join thousands of founders building consistency together.',
+    description:
+      'Public accountability for founders who finish what they start. Join thousands of founders building consistency together.',
     icon: 'rocket-outline',
     color: '#6366f1',
   },
   {
     id: 2,
     title: 'Make Public Commitments',
-    description: 'Post 30-day commitments with specific goals. The power of public accountability keeps you motivated to follow through.',
+    description:
+      'Post 30-day commitments with specific goals. The power of public accountability keeps you motivated to follow through.',
     icon: 'clipboard-outline',
     color: '#8b5cf6',
   },
   {
     id: 3,
     title: 'Track Daily Progress',
-    description: 'Check in daily to update your progress. Build streaks and maintain momentum toward your goals.',
+    description:
+      'Check in daily to update your progress. Build streaks and maintain momentum toward your goals.',
     icon: 'checkmark-circle-outline',
     color: '#10b981',
   },
   {
     id: 4,
     title: 'Join the Community',
-    description: 'Support other founders, get encouragement, and build meaningful connections with people who understand your journey.',
+    description:
+      'Support other founders, get encouragement, and build meaningful connections with people who understand your journey.',
     icon: 'people-outline',
     color: '#f59e0b',
   },
@@ -48,7 +61,9 @@ const onboardingSteps: OnboardingStep[] = [
 
 const Container = Platform.OS === 'web' ? View : SafeAreaView;
 
-export default function OnboardingScreen({ navigation }: OnboardingScreenProps) {
+export default function OnboardingScreen({
+  navigation,
+}: OnboardingScreenProps) {
   const [currentStep, setCurrentStep] = useState(0);
 
   const handleNext = () => {
@@ -82,7 +97,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
           <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
-          
+
           <View style={styles.progressIndicator}>
             {onboardingSteps.map((_, index) => (
               <View
@@ -98,10 +113,15 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
         </View>
 
         <View style={styles.content}>
-          <View style={[styles.iconContainer, { backgroundColor: step.color + '20' }]}>
+          <View
+            style={[
+              styles.iconContainer,
+              { backgroundColor: step.color + '20' },
+            ]}
+          >
             <Ionicons name={step.icon} size={80} color={step.color} />
           </View>
-          
+
           <Text style={styles.title}>{step.title}</Text>
           <Text style={styles.description}>{step.description}</Text>
         </View>
@@ -112,15 +132,21 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               <Ionicons name="chevron-back" size={24} color="#6b7280" />
             </TouchableOpacity>
           )}
-          
+
           <TouchableOpacity onPress={handleNext} style={styles.nextButton}>
             <Text style={styles.nextText}>
-              {currentStep === onboardingSteps.length - 1 ? "Get Started" : "Next"}
+              {currentStep === onboardingSteps.length - 1
+                ? 'Get Started'
+                : 'Next'}
             </Text>
-            <Ionicons 
-              name={currentStep === onboardingSteps.length - 1 ? "checkmark" : "chevron-forward"} 
-              size={20} 
-              color="white" 
+            <Ionicons
+              name={
+                currentStep === onboardingSteps.length - 1
+                  ? 'checkmark'
+                  : 'chevron-forward'
+              }
+              size={20}
+              color="white"
             />
           </TouchableOpacity>
         </View>

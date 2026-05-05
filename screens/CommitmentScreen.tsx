@@ -12,7 +12,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../lib/supabase';
 import { useUserContext } from '../context/UserContext';
+import { getCurrentUserId } from '../lib/storage';
 import HCaptchaWrapper from '../components/HCaptchaWrapper';
+import { EnhancedButton } from '../components/EnhancedButton';
+import { SmartSuggestionsComponent } from '../components/SmartSuggestions';
+import { MobilePolish } from '../lib/mobilePolish';
 
 const MAX_CHARS = 140;
 const MAX_DAILY_ACTION_CHARS = 60;
@@ -165,6 +169,24 @@ export default function CommitmentScreen({
     setLoading(true);
 
     try {
+      const userId = user?.id || (await getCurrentUserId());
+      if (!userId) {
+        throw new Error('Unable to create a secure session. Please try again.');
+      }
+
+      if (Platform.OS === 'web' && !editMode) {
+        const { data, error } = await supabase.functions.invoke(
+          'hcaptcha-verify',
+          {
+            body: { token: captchaToken },
+          }
+        );
+
+        if (error || !data?.verified) {
+          throw new Error('Security check failed. Please try again.');
+        }
+      }
+
       // Replace [date] placeholders with actual dates
       const processedCommitment = replaceDatePlaceholders(commitment);
 
@@ -186,7 +208,8 @@ export default function CommitmentScreen({
               commitment_text: processedCommitment.trim(),
               daily_action: dailyAction.trim(),
             })
-            .eq('id', commitmentId);
+            .eq('id', commitmentId)
+            .eq('user_id', userId);
 
           if (error) {
             console.error('Error updating commitment:', error);
@@ -222,7 +245,7 @@ export default function CommitmentScreen({
       const deadline = get30DaysFromNow().toISOString();
       const fallbackCommitment = {
         id: `local-${Date.now()}`,
-        user_id: user?.id || null,
+        user_id: userId,
         commitment_text: processedCommitment.trim(),
         daily_action: dailyAction.trim(),
         founder_type: founderType || 'Founder',
@@ -256,10 +279,14 @@ export default function CommitmentScreen({
       });
     } catch (err) {
       console.error('Error posting commitment:', err);
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Something went wrong. Please try again.';
       if (Platform.OS === 'web') {
-        window.alert('Something went wrong. Please try again.');
+        window.alert(message);
       } else {
-        Alert.alert('Error', 'Something went wrong. Please try again.');
+        Alert.alert('Error', message);
       }
     } finally {
       setIsSubmitting(false);
@@ -269,6 +296,10 @@ export default function CommitmentScreen({
 
   const handleExampleTap = (example: string) => {
     setCommitment(example);
+    // Trigger light haptic for example selection
+    if (Platform.OS !== 'web') {
+      MobilePolish.triggerTouchFeedback();
+    }
   };
 
   const handleViewProgress = () => {
@@ -286,8 +317,10 @@ export default function CommitmentScreen({
     year: 'numeric',
   });
 
+  const SafeContainer = Platform.OS === 'web' ? View : SafeAreaView;
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeContainer style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -340,6 +373,12 @@ export default function CommitmentScreen({
 
         {!editMode && currentSlotStatus !== 'active' && (
           <View style={styles.mainContent}>
+            {/* Smart Suggestions */}
+            <SmartSuggestionsComponent
+              founderType={profile?.founderType || 'Visionary'}
+              currentStreak={0} // Would calculate from user data
+              onSelectSuggestion={(suggestion) => setCommitment(suggestion)}
+            />
             <View style={styles.inputSection}>
               <Text style={styles.label}>Your 30-Day Commitment</Text>
               <Text style={styles.charCount}>
@@ -426,7 +465,13 @@ export default function CommitmentScreen({
 
             <TouchableOpacity
               style={styles.checkboxRow}
-              onPress={() => setAgreedPublic(!agreedPublic)}
+              onPress={() => {
+                setAgreedPublic(!agreedPublic);
+                // Trigger haptic for checkbox interaction
+                if (Platform.OS !== 'web') {
+                  MobilePolish.triggerTouchFeedback();
+                }
+              }}
             >
               <View
                 style={[
@@ -444,7 +489,13 @@ export default function CommitmentScreen({
 
             <TouchableOpacity
               style={styles.checkboxRow}
-              onPress={() => setAgreedPermanent(!agreedPermanent)}
+              onPress={() => {
+                setAgreedPermanent(!agreedPermanent);
+                // Trigger haptic for checkbox interaction
+                if (Platform.OS !== 'web') {
+                  MobilePolish.triggerTouchFeedback();
+                }
+              }}
             >
               <View
                 style={[
@@ -466,18 +517,15 @@ export default function CommitmentScreen({
             />
 
             <View style={styles.ctaSection}>
-              <TouchableOpacity
-                style={[
-                  styles.submitButton,
-                  isSubmitting && styles.disabledButton,
-                ]}
+              <EnhancedButton
+                title={isSubmitting ? 'Posting...' : 'Post My Commitment'}
                 onPress={handleSubmit}
+                variant="primary"
+                size="large"
                 disabled={isSubmitting}
-              >
-                <Text style={styles.submitButtonText}>
-                  {isSubmitting ? 'Posting...' : 'Post My Commitment'}
-                </Text>
-              </TouchableOpacity>
+                loading={isSubmitting}
+                haptic={true}
+              />
               <Text style={styles.freeLabel}>
                 One active public commitment at a time.
               </Text>
@@ -550,7 +598,7 @@ export default function CommitmentScreen({
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </SafeContainer>
   );
 }
 

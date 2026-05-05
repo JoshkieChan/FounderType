@@ -1,8 +1,9 @@
--- Grant INSERT, UPDATE, and DELETE permissions to anonymous users
--- RLS policies will still restrict these to only rows where user_id IS NULL
-GRANT INSERT, UPDATE, DELETE ON commitments TO anon;
-GRANT INSERT, UPDATE, DELETE ON daily_progress TO anon;
-GRANT INSERT, UPDATE, DELETE ON profiles TO anon;
+-- Unauthenticated visitors may read public data, but must not mutate public rows.
+-- Anonymous product usage should sign in through Supabase anonymous auth, which uses
+-- the authenticated role and receives a stable auth.uid() for RLS ownership checks.
+REVOKE INSERT, UPDATE, DELETE ON commitments FROM anon;
+REVOKE INSERT, UPDATE, DELETE ON daily_progress FROM anon;
+REVOKE INSERT, UPDATE, DELETE ON profiles FROM anon;
 
 -- Also ensure the sequences for IDs are usable by anon if they weren't using UUIDs
 -- (We use UUIDs so this is mostly for completeness)

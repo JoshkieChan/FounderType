@@ -90,15 +90,21 @@ export class FreeAnalytics {
     this.trackEvent('commitment_created', { source: 'app' }, userId);
   }
 
-  static trackCommitmentCompleted(userId?: string, days: number = 30): void {
+  static trackCommitmentCompleted(
+    userId: string | undefined,
+    days: number = 30
+  ): void {
     this.trackEvent('commitment_completed', { days }, userId);
   }
 
-  static trackCommitmentAbandoned(userId?: string, days: number = 0): void {
+  static trackCommitmentAbandoned(
+    userId: string | undefined,
+    days: number = 0
+  ): void {
     this.trackEvent('commitment_abandoned', { days }, userId);
   }
 
-  static trackDailyCheckIn(userId?: string, day: number): void {
+  static trackDailyCheckIn(userId: string | undefined, day: number): void {
     this.trackEvent('daily_checkin', { day }, userId);
   }
 

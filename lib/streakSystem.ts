@@ -23,7 +23,7 @@ export class StreakSystem {
   private static readonly STORAGE_KEY = 'streak_data';
   private static readonly ACHIEVEMENTS = {
     // Streak achievements
-    'first_week': {
+    first_week: {
       id: 'first_week',
       title: 'First Week Complete',
       description: 'Completed your first 7-day streak',
@@ -31,7 +31,7 @@ export class StreakSystem {
       emoji: '🔥',
       category: 'streak' as const,
     },
-    'two_weeks': {
+    two_weeks: {
       id: 'two_weeks',
       title: 'Two Week Warrior',
       description: 'Maintained a 14-day streak',
@@ -39,7 +39,7 @@ export class StreakSystem {
       emoji: '🔥🔥',
       category: 'streak' as const,
     },
-    'one_month': {
+    one_month: {
       id: 'one_month',
       title: 'Monthly Master',
       description: 'Achieved a 30-day streak',
@@ -47,7 +47,7 @@ export class StreakSystem {
       emoji: '🔥🔥🔥',
       category: 'streak' as const,
     },
-    'streak_legend': {
+    streak_legend: {
       id: 'streak_legend',
       title: 'Streak Legend',
       description: 'Maintained a 100-day streak',
@@ -55,9 +55,9 @@ export class StreakSystem {
       emoji: '👑',
       category: 'streak' as const,
     },
-    
+
     // Commitment achievements
-    'first_commitment': {
+    first_commitment: {
       id: 'first_commitment',
       title: 'First Step',
       description: 'Posted your first commitment',
@@ -65,7 +65,7 @@ export class StreakSystem {
       emoji: '🚩',
       category: 'commitment' as const,
     },
-    'commitment_completed': {
+    commitment_completed: {
       id: 'commitment_completed',
       title: 'Finisher',
       description: 'Completed your first 30-day commitment',
@@ -73,7 +73,7 @@ export class StreakSystem {
       emoji: '✅',
       category: 'commitment' as const,
     },
-    'multiple_commitments': {
+    multiple_commitments: {
       id: 'multiple_commitments',
       title: 'Serial Founder',
       description: 'Completed 5 commitments',
@@ -81,9 +81,9 @@ export class StreakSystem {
       emoji: '⭐',
       category: 'commitment' as const,
     },
-    
+
     // Social achievements
-    'first_support': {
+    first_support: {
       id: 'first_support',
       title: 'Supportive Founder',
       description: 'Supported another founder',
@@ -91,7 +91,7 @@ export class StreakSystem {
       emoji: '❤️',
       category: 'social' as const,
     },
-    'community_leader': {
+    community_leader: {
       id: 'community_leader',
       title: 'Community Leader',
       description: 'Supported 25 founders',
@@ -99,9 +99,9 @@ export class StreakSystem {
       emoji: '👥',
       category: 'social' as const,
     },
-    
+
     // Milestone achievements
-    'early_bird': {
+    early_bird: {
       id: 'early_bird',
       title: 'Early Bird',
       description: 'Checked in before 8 AM for a week',
@@ -109,7 +109,7 @@ export class StreakSystem {
       emoji: '🌅',
       category: 'milestone' as const,
     },
-    'night_owl': {
+    night_owl: {
       id: 'night_owl',
       title: 'Night Owl',
       description: 'Checked in after 10 PM for a week',
@@ -128,10 +128,14 @@ export class StreakSystem {
           return {
             ...data,
             lastCheckIn: data.lastCheckIn ? new Date(data.lastCheckIn) : null,
-            streakHistory: data.streakHistory.map((date: string) => new Date(date)),
+            streakHistory: data.streakHistory.map(
+              (date: string) => new Date(date)
+            ),
             achievements: data.achievements.map((achievement: any) => ({
               ...achievement,
-              unlockedAt: achievement.unlockedAt ? new Date(achievement.unlockedAt) : undefined,
+              unlockedAt: achievement.unlockedAt
+                ? new Date(achievement.unlockedAt)
+                : undefined,
             })),
           };
         }
@@ -139,7 +143,7 @@ export class StreakSystem {
     } catch (error) {
       console.error('Failed to load streak data:', error);
     }
-    
+
     return {
       currentStreak: 0,
       longestStreak: 0,
@@ -155,13 +159,16 @@ export class StreakSystem {
         const serialized = {
           ...data,
           lastCheckIn: data.lastCheckIn?.toISOString(),
-          streakHistory: data.streakHistory.map(date => date.toISOString()),
-          achievements: data.achievements.map(achievement => ({
+          streakHistory: data.streakHistory.map((date) => date.toISOString()),
+          achievements: data.achievements.map((achievement) => ({
             ...achievement,
             unlockedAt: achievement.unlockedAt?.toISOString(),
           })),
         };
-        localStorage.setItem(StreakSystem.STORAGE_KEY, JSON.stringify(serialized));
+        localStorage.setItem(
+          StreakSystem.STORAGE_KEY,
+          JSON.stringify(serialized)
+        );
       }
     } catch (error) {
       console.error('Failed to save streak data:', error);
@@ -170,19 +177,21 @@ export class StreakSystem {
 
   static calculateStreak(checkIns: string[]): number {
     if (!checkIns || checkIns.length === 0) return 0;
-    
+
     const sortedDates = checkIns
-      .map(date => new Date(date))
+      .map((date) => new Date(date))
       .sort((a, b) => a.getTime() - b.getTime());
-    
+
     let streak = 1;
     let maxStreak = 1;
-    
+
     for (let i = 1; i < sortedDates.length; i++) {
       const current = sortedDates[i];
       const previous = sortedDates[i - 1];
-      const diffDays = Math.floor((current.getTime() - previous.getTime()) / (1000 * 60 * 60 * 24));
-      
+      const diffDays = Math.floor(
+        (current.getTime() - previous.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
       if (diffDays === 1) {
         streak++;
         maxStreak = Math.max(maxStreak, streak);
@@ -190,7 +199,7 @@ export class StreakSystem {
         streak = 1;
       }
     }
-    
+
     return maxStreak;
   }
 
@@ -216,20 +225,32 @@ export class StreakSystem {
 
   static async checkAchievements(streakData: StreakData): Promise<StreakData> {
     const newAchievements: Achievement[] = [];
-    const unlockedIds = new Set(streakData.achievements.map(a => a.id));
+    const unlockedIds = new Set(streakData.achievements.map((a) => a.id));
 
     // Check streak achievements
     if (streakData.currentStreak >= 7 && !unlockedIds.has('first_week')) {
-      newAchievements.push({ ...StreakSystem.ACHIEVEMENTS.first_week, unlockedAt: new Date() });
+      newAchievements.push({
+        ...StreakSystem.ACHIEVEMENTS.first_week,
+        unlockedAt: new Date(),
+      });
     }
     if (streakData.currentStreak >= 14 && !unlockedIds.has('two_weeks')) {
-      newAchievements.push({ ...StreakSystem.ACHIEVEMENTS.two_weeks, unlockedAt: new Date() });
+      newAchievements.push({
+        ...StreakSystem.ACHIEVEMENTS.two_weeks,
+        unlockedAt: new Date(),
+      });
     }
     if (streakData.currentStreak >= 30 && !unlockedIds.has('one_month')) {
-      newAchievements.push({ ...StreakSystem.ACHIEVEMENTS.one_month, unlockedAt: new Date() });
+      newAchievements.push({
+        ...StreakSystem.ACHIEVEMENTS.one_month,
+        unlockedAt: new Date(),
+      });
     }
     if (streakData.currentStreak >= 100 && !unlockedIds.has('streak_legend')) {
-      newAchievements.push({ ...StreakSystem.ACHIEVEMENTS.streak_legend, unlockedAt: new Date() });
+      newAchievements.push({
+        ...StreakSystem.ACHIEVEMENTS.streak_legend,
+        unlockedAt: new Date(),
+      });
     }
 
     return {
@@ -240,35 +261,43 @@ export class StreakSystem {
 
   static async updateStreak(checkInDate: Date): Promise<StreakData> {
     const data = await StreakSystem.getStreakData();
-    
+
     // Update streak history
     data.streakHistory.push(checkInDate);
     data.lastCheckIn = checkInDate;
-    
+
     // Calculate current streak
-    data.currentStreak = StreakSystem.calculateStreak(data.streakHistory.map(d => d.toISOString()));
+    data.currentStreak = StreakSystem.calculateStreak(
+      data.streakHistory.map((d) => d.toISOString())
+    );
     data.longestStreak = Math.max(data.longestStreak, data.currentStreak);
-    
+
     // Check for new achievements
     const updatedData = await StreakSystem.checkAchievements(data);
-    
+
     await StreakSystem.saveStreakData(updatedData);
     return updatedData;
   }
 
   static async unlockAchievement(achievementId: string): Promise<StreakData> {
     const data = await StreakSystem.getStreakData();
-    const achievement = StreakSystem.ACHIEVEMENTS[achievementId as keyof typeof StreakSystem.ACHIEVEMENTS];
-    
-    if (!achievement || data.achievements.some(a => a.id === achievementId)) {
+    const achievement =
+      StreakSystem.ACHIEVEMENTS[
+        achievementId as keyof typeof StreakSystem.ACHIEVEMENTS
+      ];
+
+    if (!achievement || data.achievements.some((a) => a.id === achievementId)) {
       return data;
     }
-    
+
     const updatedData = {
       ...data,
-      achievements: [...data.achievements, { ...achievement, unlockedAt: new Date() }],
+      achievements: [
+        ...data.achievements,
+        { ...achievement, unlockedAt: new Date() },
+      ],
     };
-    
+
     await StreakSystem.saveStreakData(updatedData);
     return updatedData;
   }
@@ -280,8 +309,9 @@ export class StreakSystem {
     progress: number;
   } {
     const milestones = [7, 14, 21, 30, 50, 100];
-    const nextMilestone = milestones.find(m => m > streakData.currentStreak) || 100;
-    
+    const nextMilestone =
+      milestones.find((m) => m > streakData.currentStreak) || 100;
+
     return {
       current: streakData.currentStreak,
       target: nextMilestone,
@@ -290,7 +320,10 @@ export class StreakSystem {
     };
   }
 
-  static getRecentAchievements(streakData: StreakData, limit: number = 5): Achievement[] {
+  static getRecentAchievements(
+    streakData: StreakData,
+    limit: number = 5
+  ): Achievement[] {
     return streakData.achievements
       .sort((a, b) => {
         const aTime = a.unlockedAt?.getTime() || 0;
@@ -304,22 +337,29 @@ export class StreakSystem {
     return streakData.achievements.length;
   }
 
-  static getAchievementsByCategory(streakData: StreakData): Record<string, Achievement[]> {
+  static getAchievementsByCategory(
+    streakData: StreakData
+  ): Record<string, Achievement[]> {
     const categorized: Record<string, Achievement[]> = {};
-    
-    Object.values(StreakSystem.ACHIEVEMENTS).forEach(achievement => {
+
+    Object.values(StreakSystem.ACHIEVEMENTS).forEach((achievement) => {
       if (!categorized[achievement.category]) {
         categorized[achievement.category] = [];
       }
-      
-      const unlocked = streakData.achievements.find(a => a.id === achievement.id);
+
+      const unlocked = streakData.achievements.find(
+        (a) => a.id === achievement.id
+      );
       if (unlocked) {
         categorized[achievement.category].push(unlocked);
       } else {
-        categorized[achievement.category].push({ ...achievement, unlockedAt: undefined });
+        categorized[achievement.category].push({
+          ...achievement,
+          unlockedAt: undefined,
+        });
       }
     });
-    
+
     return categorized;
   }
 }

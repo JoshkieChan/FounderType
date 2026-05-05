@@ -18,7 +18,8 @@ export const COMMITMENT_TEMPLATES: CommitmentTemplate[] = [
   {
     id: 'mvp_launch',
     title: 'Launch MVP',
-    description: 'Build and launch the minimum viable product for my startup idea',
+    description:
+      'Build and launch the minimum viable product for my startup idea',
     category: 'Product Builder',
     founderTypes: ['Product Builder', 'Visionary', 'Innovator'],
     duration: 30,
@@ -134,7 +135,8 @@ export const COMMITMENT_TEMPLATES: CommitmentTemplate[] = [
   {
     id: 'habit_building',
     title: 'Build a New Habit',
-    description: 'Establish a positive new habit through consistent daily practice',
+    description:
+      'Establish a positive new habit through consistent daily practice',
     category: 'Personal Development',
     founderTypes: ['Systems Thinker', 'Executor', 'Planner'],
     duration: 30,
@@ -145,7 +147,8 @@ export const COMMITMENT_TEMPLATES: CommitmentTemplate[] = [
   {
     id: 'health_fitness',
     title: 'Health & Fitness',
-    description: 'Improve my physical health through daily exercise and nutrition',
+    description:
+      'Improve my physical health through daily exercise and nutrition',
     category: 'Personal Development',
     founderTypes: ['Athlete', 'Disciplined', 'Executor'],
     duration: 30,
@@ -169,7 +172,8 @@ export const COMMITMENT_TEMPLATES: CommitmentTemplate[] = [
   {
     id: 'process_improvement',
     title: 'Process Improvement',
-    description: 'Identify and implement one business process improvement daily',
+    description:
+      'Identify and implement one business process improvement daily',
     category: 'Business Operations',
     founderTypes: ['Systems Thinker', 'Innovator', 'Optimizer'],
     duration: 30,
@@ -227,29 +231,38 @@ export const COMMITMENT_TEMPLATES: CommitmentTemplate[] = [
 
 export class CommitmentTemplateService {
   static getTemplatesByCategory(category: string): CommitmentTemplate[] {
-    return COMMITMENT_TEMPLATES.filter(template => template.category === category);
+    return COMMITMENT_TEMPLATES.filter(
+      (template) => template.category === category
+    );
   }
 
   static getTemplatesByFounderType(founderType: string): CommitmentTemplate[] {
-    return COMMITMENT_TEMPLATES.filter(template => 
+    return COMMITMENT_TEMPLATES.filter((template) =>
       template.founderTypes.includes(founderType)
     );
   }
 
-  static getTemplatesByDifficulty(difficulty: 'easy' | 'medium' | 'hard'): CommitmentTemplate[] {
-    return COMMITMENT_TEMPLATES.filter(template => template.difficulty === difficulty);
+  static getTemplatesByDifficulty(
+    difficulty: 'easy' | 'medium' | 'hard'
+  ): CommitmentTemplate[] {
+    return COMMITMENT_TEMPLATES.filter(
+      (template) => template.difficulty === difficulty
+    );
   }
 
   static getTemplatesByTag(tag: string): CommitmentTemplate[] {
-    return COMMITMENT_TEMPLATES.filter(template => template.tags.includes(tag));
+    return COMMITMENT_TEMPLATES.filter((template) =>
+      template.tags.includes(tag)
+    );
   }
 
   static searchTemplates(query: string): CommitmentTemplate[] {
     const lowercaseQuery = query.toLowerCase();
-    return COMMITMENT_TEMPLATES.filter(template =>
-      template.title.toLowerCase().includes(lowercaseQuery) ||
-      template.description.toLowerCase().includes(lowercaseQuery) ||
-      template.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery))
+    return COMMITMENT_TEMPLATES.filter(
+      (template) =>
+        template.title.toLowerCase().includes(lowercaseQuery) ||
+        template.description.toLowerCase().includes(lowercaseQuery) ||
+        template.tags.some((tag) => tag.toLowerCase().includes(lowercaseQuery))
     );
   }
 
@@ -258,42 +271,56 @@ export class CommitmentTemplateService {
     return COMMITMENT_TEMPLATES[randomIndex];
   }
 
-  static getRecommendedTemplates(founderType: string, interests: string[] = []): CommitmentTemplate[] {
+  static getRecommendedTemplates(
+    founderType: string,
+    interests: string[] = []
+  ): CommitmentTemplate[] {
     // Start with founder type matches
     let recommended = this.getTemplatesByFounderType(founderType);
 
     // Add matches based on interests/tags
-    interests.forEach(interest => {
+    interests.forEach((interest) => {
       const matches = this.getTemplatesByTag(interest);
       recommended = [...recommended, ...matches];
     });
 
     // Remove duplicates and sort by relevance
     const uniqueTemplates = Array.from(
-      new Map(recommended.map(template => [template.id, template]))
-    ).values();
+      new Map(recommended.map((template) => [template.id, template])).values()
+    );
 
     // Sort by difficulty (easier first for new users)
     return uniqueTemplates.sort((a, b) => {
-      const difficultyOrder = { easy: 0, medium: 1, hard: 2 };
+      const difficultyOrder: Record<CommitmentTemplate['difficulty'], number> =
+        {
+          easy: 0,
+          medium: 1,
+          hard: 2,
+        };
       return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
     });
   }
 
+  static getAllTemplates(): CommitmentTemplate[] {
+    return [...COMMITMENT_TEMPLATES];
+  }
+
   static getAllCategories(): string[] {
     const categories = Array.from(
-      new Set(COMMITMENT_TEMPLATES.map(template => template.category))
+      new Set(COMMITMENT_TEMPLATES.map((template) => template.category))
     ).sort();
     return categories;
   }
 
   static getAllTags(): string[] {
-    const allTags = COMMITMENT_TEMPLATES.flatMap(template => template.tags);
+    const allTags = COMMITMENT_TEMPLATES.flatMap((template) => template.tags);
     const uniqueTags = Array.from(new Set(allTags)).sort();
     return uniqueTags;
   }
 
-  static createCustomTemplate(template: Omit<CommitmentTemplate, 'id'>): CommitmentTemplate {
+  static createCustomTemplate(
+    template: Omit<CommitmentTemplate, 'id'>
+  ): CommitmentTemplate {
     return {
       ...template,
       id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,

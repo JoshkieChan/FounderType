@@ -3,6 +3,7 @@ import HCaptcha from '@hcaptcha/react-hcaptcha';
 import type { HCaptchaProps } from '@hcaptcha/react-hcaptcha';
 import { Platform, Text, View } from 'react-native';
 import Logger from '../lib/logger';
+import { ENV } from '../constants/env';
 
 type HCaptchaWrapperProps = Pick<
   HCaptchaProps,
@@ -18,8 +19,7 @@ export default function HCaptchaWrapper({
     return null; // Captcha handled differently on mobile
   }
 
-  // Use your actual hCaptcha site key
-  const siteKey = '2c0c3648-eb10-44b0-ab5e-1580a6085e80';
+  const siteKey = ENV.HCAPTCHA_SITE_KEY;
 
   Logger.debug('HCaptcha Site key from env:', siteKey ? 'SET' : 'NOT_SET');
 

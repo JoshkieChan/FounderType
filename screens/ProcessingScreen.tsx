@@ -50,7 +50,7 @@ export default function ProcessingScreen({
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 500,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     }).start();
 
     const createPulse = (anim: Animated.Value, delay: number) => {
@@ -60,12 +60,12 @@ export default function ProcessingScreen({
           Animated.timing(anim, {
             toValue: 1,
             duration: 1800,
-            useNativeDriver: true,
+            useNativeDriver: Platform.OS !== 'web',
           }),
           Animated.timing(anim, {
             toValue: 0,
             duration: 0,
-            useNativeDriver: true,
+            useNativeDriver: Platform.OS !== 'web',
           }),
         ])
       );
@@ -199,7 +199,7 @@ export default function ProcessingScreen({
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 500,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }).start();
 
       pulse1.setValue(0);
@@ -213,12 +213,12 @@ export default function ProcessingScreen({
             Animated.timing(anim, {
               toValue: 1,
               duration: 1800,
-              useNativeDriver: true,
+              useNativeDriver: Platform.OS !== 'web',
             }),
             Animated.timing(anim, {
               toValue: 0,
               duration: 0,
-              useNativeDriver: true,
+              useNativeDriver: Platform.OS !== 'web',
             }),
           ])
         );
@@ -322,7 +322,7 @@ export default function ProcessingScreen({
 
   const Container = Platform.OS === 'web' ? View : SafeAreaView;
 
-return (
+  return (
     <Container style={styles.container}>
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <View style={styles.pulseContainer}>

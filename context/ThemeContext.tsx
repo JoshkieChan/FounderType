@@ -54,7 +54,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemTheme = useColorScheme();
   const [theme, setThemeState] = useState<Theme>('system');
 
-  const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
+  const isDark =
+    theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
   const colors = isDark ? darkColors : lightColors;
 
   useEffect(() => {
@@ -92,7 +93,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, isDark, colors, setTheme, toggleTheme }}>
+    <ThemeContext.Provider
+      value={{ theme, isDark, colors, setTheme, toggleTheme }}
+    >
       {children}
     </ThemeContext.Provider>
   );

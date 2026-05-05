@@ -6,6 +6,8 @@ import { Platform } from 'react-native';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
@@ -84,8 +86,11 @@ export class PushNotificationService {
   async saveSettings(settings: Partial<NotificationSettings>): Promise<void> {
     try {
       this.settings = { ...this.settings, ...settings };
-      await AsyncStorage.setItem('notificationSettings', JSON.stringify(this.settings));
-      
+      await AsyncStorage.setItem(
+        'notificationSettings',
+        JSON.stringify(this.settings)
+      );
+
       // Reschedule daily reminder if time changed
       if (settings.dailyReminder !== undefined || settings.reminderTime) {
         await this.scheduleDailyReminder();
@@ -108,21 +113,23 @@ export class PushNotificationService {
         return;
       }
 
-      const [hours, minutes] = this.settings.reminderTime.split(':').map(Number);
-      
+      const [hours, minutes] = this.settings.reminderTime
+        .split(':')
+        .map(Number);
+
       await Notifications.scheduleNotificationAsync({
         identifier: 'daily-reminder',
         content: {
           title: 'Daily Check-in Reminder',
-          body: 'Don\'t break your streak! Check in with your commitment progress today.',
+          body: "Don't break your streak! Check in with your commitment progress today.",
           data: {
             type: 'daily_reminder',
           },
         },
         trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour: hours,
           minute: minutes,
-          repeats: true,
         },
       });
 
@@ -132,7 +139,10 @@ export class PushNotificationService {
     }
   }
 
-  async sendAchievementNotification(achievement: string, streak?: number): Promise<void> {
+  async sendAchievementNotification(
+    achievement: string,
+    streak?: number
+  ): Promise<void> {
     if (!this.settings.achievements || !this.settings.enabled) {
       return;
     }
@@ -141,7 +151,7 @@ export class PushNotificationService {
       await Notifications.scheduleNotificationAsync({
         content: {
           title: '🎉 Achievement Unlocked!',
-          body: streak 
+          body: streak
             ? `Amazing! You've maintained a ${streak}-day streak!`
             : `Congratulations on ${achievement}!`,
           data: {
@@ -157,7 +167,10 @@ export class PushNotificationService {
     }
   }
 
-  async sendSupportAlert(supporterName: string, commitmentTitle: string): Promise<void> {
+  async sendSupportAlert(
+    supporterName: string,
+    commitmentTitle: string
+  ): Promise<void> {
     if (!this.settings.supportAlerts || !this.settings.enabled) {
       return;
     }
@@ -180,7 +193,10 @@ export class PushNotificationService {
     }
   }
 
-  async sendMissedDayAlert(commitmentTitle: string, daysMissed: number): Promise<void> {
+  async sendMissedDayAlert(
+    commitmentTitle: string,
+    daysMissed: number
+  ): Promise<void> {
     if (!this.settings.dailyReminder || !this.settings.enabled) {
       return;
     }
@@ -203,7 +219,10 @@ export class PushNotificationService {
     }
   }
 
-  async sendMilestoneNotification(milestone: string, progress: number): Promise<void> {
+  async sendMilestoneNotification(
+    milestone: string,
+    progress: number
+  ): Promise<void> {
     if (!this.settings.achievements || !this.settings.enabled) {
       return;
     }
@@ -242,7 +261,9 @@ export class PushNotificationService {
   }
 
   // Handle notification responses (when user taps notification)
-  async handleNotificationResponse(response: Notifications.NotificationResponse): Promise<void> {
+  async handleNotificationResponse(
+    response: Notifications.NotificationResponse
+  ): Promise<void> {
     const { notification } = response;
     const data = notification.request.content.data;
 

@@ -36,7 +36,10 @@ interface ProfileScreenProps {
   };
 }
 
-export default function ProfileScreen({ userId, navigation }: ProfileScreenProps) {
+export default function ProfileScreen({
+  userId,
+  navigation,
+}: ProfileScreenProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -62,7 +65,7 @@ export default function ProfileScreen({ userId, navigation }: ProfileScreenProps
         following: 89,
         isFollowing: false,
       };
-      
+
       setProfile(mockProfile);
       setIsFollowing(mockProfile.isFollowing);
     } catch (error) {
@@ -74,19 +77,24 @@ export default function ProfileScreen({ userId, navigation }: ProfileScreenProps
 
   const handleFollow = () => {
     if (!profile) return;
-    
+
     const newFollowingState = !isFollowing;
     setIsFollowing(newFollowingState);
-    
+
     // Update profile stats
     setProfile({
       ...profile,
-      followers: newFollowingState ? profile.followers + 1 : profile.followers - 1,
+      followers: newFollowingState
+        ? profile.followers + 1
+        : profile.followers - 1,
       isFollowing: newFollowingState,
     });
-    
+
     // Here you would make an API call to follow/unfollow
-    console.log(newFollowingState ? 'Following' : 'Unfollowing', profile.username);
+    console.log(
+      newFollowingState ? 'Following' : 'Unfollowing',
+      profile.username
+    );
   };
 
   const handleMessage = () => {
@@ -114,10 +122,10 @@ export default function ProfileScreen({ userId, navigation }: ProfileScreenProps
       'Content Creator': '#8b5cf6',
       'Sales Expert': '#10b981',
       'Growth Hacker': '#f59e0b',
-      'Visionary': '#ef4444',
-      'Analyst': '#3b82f6',
-      'Communicator': '#ec4899',
-      'Networker': '#14b8a6',
+      Visionary: '#ef4444',
+      Analyst: '#3b82f6',
+      Communicator: '#ec4899',
+      Networker: '#14b8a6',
     };
     return colors[type] || '#6b7280';
   };
@@ -146,14 +154,23 @@ export default function ProfileScreen({ userId, navigation }: ProfileScreenProps
 
   return (
     <Container style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header with back button */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation?.goBack()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => navigation?.goBack()}
+            style={styles.backButton}
+          >
             <Ionicons name="chevron-back" size={24} color="#1f2937" />
           </TouchableOpacity>
           <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.messageButton} onPress={handleMessage}>
+            <TouchableOpacity
+              style={styles.messageButton}
+              onPress={handleMessage}
+            >
               <Ionicons name="mail-outline" size={20} color="#6b7280" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.optionsButton}>
@@ -166,14 +183,21 @@ export default function ProfileScreen({ userId, navigation }: ProfileScreenProps
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
             <Image
-              source={{ uri: profile.avatar || 'https://via.placeholder.com/150' }}
+              source={{
+                uri: profile.avatar || 'https://via.placeholder.com/150',
+              }}
               style={styles.avatar}
             />
           </View>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{profile.name}</Text>
             <Text style={styles.username}>@{profile.username}</Text>
-            <View style={[styles.founderTypeBadge, { backgroundColor: getFounderTypeColor(profile.founderType) }]}>
+            <View
+              style={[
+                styles.founderTypeBadge,
+                { backgroundColor: getFounderTypeColor(profile.founderType) },
+              ]}
+            >
               <Text style={styles.founderTypeText}>{profile.founderType}</Text>
             </View>
           </View>
@@ -189,16 +213,18 @@ export default function ProfileScreen({ userId, navigation }: ProfileScreenProps
         {/* Stats */}
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{profile.completedCommitments}</Text>
+            <Text style={styles.statNumber}>
+              {profile.completedCommitments}
+            </Text>
             <Text style={styles.statLabel}>Completed</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>{profile.currentStreak}</Text>
-            <Text style={statLabel}>Current Streak</Text>
+            <Text style={styles.statLabel}>Current Streak</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>{profile.longestStreak}</Text>
-            <Text style={statLabel}>Longest Streak</Text>
+            <Text style={styles.statLabel}>Longest Streak</Text>
           </View>
         </View>
 
@@ -210,10 +236,12 @@ export default function ProfileScreen({ userId, navigation }: ProfileScreenProps
           </View>
           <View style={styles.socialStat}>
             <Text style={styles.socialNumber}>{profile.following}</Text>
-            <Text style={socialLabel}>Following</Text>
+            <Text style={styles.socialLabel}>Following</Text>
           </View>
           <View style={styles.socialStat}>
-            <Text style={styles.socialNumber}>{formatJoinDate(profile.joinedAt)}</Text>
+            <Text style={styles.socialNumber}>
+              {formatJoinDate(profile.joinedAt)}
+            </Text>
             <Text style={styles.socialLabel}>Joined</Text>
           </View>
         </View>
@@ -221,14 +249,25 @@ export default function ProfileScreen({ userId, navigation }: ProfileScreenProps
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <TouchableOpacity
-            style={[styles.followButton, isFollowing && styles.followButtonFollowing]}
+            style={[
+              styles.followButton,
+              isFollowing && styles.followButtonFollowing,
+            ]}
             onPress={handleFollow}
           >
-            <Text style={[styles.followButtonText, isFollowing && styles.followButtonTextFollowing]}>
+            <Text
+              style={[
+                styles.followButtonText,
+                isFollowing && styles.followButtonTextFollowing,
+              ]}
+            >
               {isFollowing ? 'Following' : 'Follow'}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.messageButtonLarge} onPress={handleMessage}>
+          <TouchableOpacity
+            style={styles.messageButtonLarge}
+            onPress={handleMessage}
+          >
             <Ionicons name="mail-outline" size={16} color="#ffffff" />
             <Text style={styles.messageButtonText}>Message</Text>
           </TouchableOpacity>
@@ -243,7 +282,9 @@ export default function ProfileScreen({ userId, navigation }: ProfileScreenProps
             </View>
             <View style={styles.activityContent}>
               <Text style={styles.activityTitle}>Completed commitment</Text>
-              <Text style={styles.activityDescription}>"Launch MVP" - 2 days ago</Text>
+              <Text style={styles.activityDescription}>
+                "Launch MVP" - 2 days ago
+              </Text>
             </View>
           </View>
           <View style={styles.activityItem}>

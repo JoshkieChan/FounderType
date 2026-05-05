@@ -1,5 +1,12 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Share, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Share,
+  Platform,
+} from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,9 +29,9 @@ interface ShareableCommitmentCardProps {
   onShare?: (success: boolean) => void;
 }
 
-export default function ShareableCommitmentCard({ 
-  commitment, 
-  onShare 
+export default function ShareableCommitmentCard({
+  commitment,
+  onShare,
 }: ShareableCommitmentCardProps) {
   const [isSharing, setIsSharing] = useState(false);
   const cardRef = useRef<View>(null);
@@ -32,7 +39,7 @@ export default function ShareableCommitmentCard({
   const generateShareableImage = async () => {
     try {
       setIsSharing(true);
-      
+
       if (Platform.OS === 'web') {
         // For web, use the web sharing API
         await shareWebContent();
@@ -44,7 +51,7 @@ export default function ShareableCommitmentCard({
         });
         await shareImage(uri);
       }
-      
+
       onShare?.(true);
     } catch (error) {
       console.error('Failed to share commitment:', error);
@@ -56,7 +63,7 @@ export default function ShareableCommitmentCard({
 
   const shareWebContent = async () => {
     const shareText = generateShareText();
-    
+
     if (navigator.share) {
       await navigator.share({
         title: `${commitment.founderName}'s Commitment`,
@@ -72,7 +79,7 @@ export default function ShareableCommitmentCard({
 
   const shareImage = async (imageUri: string) => {
     const shareText = generateShareText();
-    
+
     await Share.share({
       message: shareText,
       url: Platform.OS === 'ios' ? imageUri : `file://${imageUri}`,
@@ -82,20 +89,22 @@ export default function ShareableCommitmentCard({
 
   const generateShareText = () => {
     const progressPercent = Math.round((commitment.progress / 100) * 100);
-    return `🚀 ${commitment.founderName} is crushing their ${commitment.duration}-day commitment: "${commitment.title}"\n\n` +
+    return (
+      `🚀 ${commitment.founderName} is crushing their ${commitment.duration}-day commitment: "${commitment.title}"\n\n` +
       `📊 Progress: ${progressPercent}% complete\n` +
       `🔥 Streak: ${commitment.streak} days\n` +
       `💪 Founder Type: ${commitment.founderType}\n\n` +
       `Join FounderType and build consistency with public accountability! 🎯\n` +
-      `https://foundertype.app`;
+      `https://foundertype.app`
+    );
   };
 
   const getCategoryColor = () => {
     const colors = {
       'Health & Fitness': '#10b981',
-      'Business': '#6366f1',
-      'Learning': '#8b5cf6',
-      'Creative': '#f59e0b',
+      Business: '#6366f1',
+      Learning: '#8b5cf6',
+      Creative: '#f59e0b',
       'Personal Growth': '#ef4444',
     };
     return colors[commitment.category as keyof typeof colors] || '#6b7280';
@@ -138,14 +147,14 @@ export default function ShareableCommitmentCard({
               </Text>
             </View>
             <View style={styles.progressBar}>
-              <View 
+              <View
                 style={[
-                  styles.progressFill, 
-                  { 
+                  styles.progressFill,
+                  {
                     width: `${Math.round((commitment.progress / 100) * 100)}%`,
                     backgroundColor: getCategoryColor(),
-                  }
-                ]} 
+                  },
+                ]}
               />
             </View>
           </View>
@@ -159,7 +168,9 @@ export default function ShareableCommitmentCard({
             <View style={styles.statItem}>
               <Text style={styles.statEmoji}>✅</Text>
               <Text style={styles.statLabel}>Completed</Text>
-              <Text style={styles.statValue}>{commitment.daysCompleted} days</Text>
+              <Text style={styles.statValue}>
+                {commitment.daysCompleted} days
+              </Text>
             </View>
           </View>
 
@@ -176,15 +187,15 @@ export default function ShareableCommitmentCard({
         </View>
       </View>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.shareButton, isSharing && styles.shareButtonDisabled]}
         onPress={generateShareableImage}
         disabled={isSharing}
       >
-        <Ionicons 
-          name={isSharing ? "hourglass-outline" : "share-outline"} 
-          size={20} 
-          color="white" 
+        <Ionicons
+          name={isSharing ? 'hourglass-outline' : 'share-outline'}
+          size={20}
+          color="white"
         />
         <Text style={styles.shareButtonText}>
           {isSharing ? 'Generating...' : 'Share Progress'}

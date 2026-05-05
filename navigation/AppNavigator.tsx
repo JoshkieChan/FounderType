@@ -1,31 +1,21 @@
-import React, { useState, useRef } from 'react';
-import { View } from 'react-native';
-import LandingScreen from '../screens/LandingScreen';
-import OnboardingScreen from '../screens/OnboardingScreen';
-import QuestionsScreen from '../screens/QuestionsScreen';
-import ProcessingScreen from '../screens/ProcessingScreen';
-import ResultsScreen from '../screens/ResultsScreen';
-import CommitmentScreen from '../screens/CommitmentScreen';
-import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
-import DailyCheckInScreen from '../screens/DailyCheckInScreen';
-import PublicFeedScreen from '../screens/PublicFeedScreen';
-import LockoutScreen from '../screens/LockoutScreen';
-import TermsScreen from '../screens/TermsScreen';
-import EmailTestScreen from '../screens/EmailTestScreen';
+import React, { Suspense, lazy } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-type Screen =
-  | 'landing'
-  | 'onboarding'
-  | 'questions'
-  | 'processing'
-  | 'results'
-  | 'commitment'
-  | 'privacyPolicy'
-  | 'dailyCheckIn'
-  | 'publicFeed'
-  | 'lockout'
-  | 'terms'
-  | 'emailTest';
+const LandingScreen = lazy(() => import('../screens/LandingScreen'));
+const OnboardingScreen = lazy(() => import('../screens/OnboardingScreen'));
+const QuestionsScreen = lazy(() => import('../screens/QuestionsScreen'));
+const ProcessingScreen = lazy(() => import('../screens/ProcessingScreen'));
+const ResultsScreen = lazy(() => import('../screens/ResultsScreen'));
+const CommitmentScreen = lazy(() => import('../screens/CommitmentScreen'));
+const PrivacyPolicyScreen = lazy(
+  () => import('../screens/PrivacyPolicyScreen')
+);
+const DailyCheckInScreen = lazy(() => import('../screens/DailyCheckInScreen'));
+const PublicFeedScreen = lazy(() => import('../screens/PublicFeedScreen'));
+const LockoutScreen = lazy(() => import('../screens/LockoutScreen'));
+const TermsScreen = lazy(() => import('../screens/TermsScreen'));
 
 interface TopMatch {
   founderType: string;
@@ -50,22 +40,6 @@ interface Profile {
   [key: string]: unknown;
 }
 
-interface NavigationParams {
-  answers?: string;
-  profile?: string;
-  answersString?: string;
-  founderType?: string;
-  topMatch?: TopMatch;
-  commitment?: Commitment;
-  commitmentText?: string;
-  isPublicCommitment?: boolean;
-  editMode?: boolean;
-  commitmentId?: string;
-  initialText?: string;
-  initialDailyAction?: string;
-  initialDeadline?: string;
-}
-
 interface AppNavigatorProps {
   currentProfile: Profile | null;
   setCurrentProfile: (profile: Profile | null) => void;
@@ -74,7 +48,6 @@ interface AppNavigatorProps {
   globalAnswersRef: { current: string | null };
 }
 
-// Re-export for screens that import RootStackParamList from here
 export type RootStackParamList = {
   landing: undefined;
   onboarding: undefined;
@@ -95,7 +68,54 @@ export type RootStackParamList = {
   publicFeed: undefined;
   lockout: undefined;
   terms: undefined;
-  emailTest: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const ScreenFallback = () => (
+  <View style={styles.fallback}>
+    <ActivityIndicator size="large" color="#3B82F6" />
+  </View>
+);
+
+const withSuspense = (Screen: React.ComponentType<any>) => {
+  function SuspendedScreen(props: any) {
+    return (
+      <Suspense fallback={<ScreenFallback />}>
+        <Screen {...props} />
+      </Suspense>
+    );
+  }
+
+  return SuspendedScreen;
+};
+
+const LandingRoute = withSuspense(LandingScreen);
+const OnboardingRoute = withSuspense(OnboardingScreen);
+const CommitmentRoute = withSuspense(CommitmentScreen);
+const PrivacyPolicyRoute = withSuspense(PrivacyPolicyScreen);
+const DailyCheckInRoute = withSuspense(DailyCheckInScreen);
+const PublicFeedRoute = withSuspense(PublicFeedScreen);
+const LockoutRoute = withSuspense(LockoutScreen);
+const TermsRoute = withSuspense(TermsScreen);
+
+const linking = {
+  prefixes: ['https://foundertype.app', 'foundertype://'],
+  config: {
+    screens: {
+      landing: '',
+      onboarding: 'onboarding',
+      questions: 'questions',
+      processing: 'processing',
+      results: 'results',
+      commitment: 'commitment',
+      privacyPolicy: 'privacy',
+      dailyCheckIn: 'check-in',
+      publicFeed: 'feed',
+      lockout: 'lockout',
+      terms: 'terms',
+    },
+  },
 };
 
 export default function AppNavigator({
@@ -103,143 +123,67 @@ export default function AppNavigator({
   setCurrentProfile,
   currentAnswers,
   setCurrentAnswers,
-  globalAnswersRef,
+  globalAnswersRef: _globalAnswersRef,
 }: AppNavigatorProps) {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
-  const [params, setParams] = useState<NavigationParams>({});
-  const [directParams, setDirectParams] = useState<NavigationParams | null>(
-    null
-  );
-  const [history, setHistory] = useState<
-    { screen: Screen; params: NavigationParams }[]
-  >([]);
-
-  const navigate = (screen: Screen, newParams?: NavigationParams) => {
-    console.log(
-      'AppNavigator navigate - screen:',
-      screen,
-      'newParams:',
-      newParams
-    );
-    setHistory((prev) => [...prev, { screen: currentScreen, params }]);
-    setDirectParams(newParams || null);
-    setParams(newParams || {});
-    setCurrentScreen(screen);
-  };
-
-  const goBack = () => {
-    console.log('AppNavigator goBack called');
-    setHistory((prev) => {
-      const newHistory = [...prev];
-      const last = newHistory.pop();
-      if (last) {
-        console.log(
-          'AppNavigator goBack - returning to:',
-          last.screen,
-          'with params:',
-          last.params
-        );
-        setCurrentScreen(last.screen);
-        setParams(last.params);
-        setDirectParams(last.params);
-      } else {
-        console.log(
-          'AppNavigator goBack - history empty, returning to landing'
-        );
-        setCurrentScreen('landing');
-      }
-      return newHistory;
-    });
-  };
-
-  const navigation = { navigate, goBack };
-
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case 'landing':
-        return <LandingScreen navigation={navigation as any} />;
-      case 'onboarding':
-        return <OnboardingScreen navigation={navigation as any} />;
-      case 'questions':
-        return (
-          <QuestionsScreen
-            navigation={navigation as any}
-            setCurrentAnswers={setCurrentAnswers}
-          />
-        );
-      case 'processing':
-        return (
-          <ProcessingScreen
-            navigation={navigation as any}
-            route={
-              {
-                params: { answers: directParams?.answers || params.answers },
-              } as any
-            }
-            setCurrentProfile={setCurrentProfile}
-            setCurrentAnswers={setCurrentAnswers}
-          />
-        );
-      case 'results':
-        return (
-          <ResultsScreen
-            navigation={navigation as any}
-            route={
-              {
-                params: {
-                  profile: params.profile,
-                  answers: params.answersString,
-                },
-              } as any
-            }
-            currentProfile={currentProfile}
-            currentAnswers={currentAnswers}
-          />
-        );
-      case 'commitment':
-        return (
-          <CommitmentScreen
-            navigation={navigation as any}
-            route={
-              {
-                params: {
-                  profile: params.profile,
-                  answers: params.answersString,
-                  editMode: params.editMode,
-                  commitmentId: params.commitmentId,
-                  initialText: params.initialText,
-                  initialDailyAction: params.initialDailyAction,
-                  initialDeadline: params.initialDeadline,
-                },
-              } as any
-            }
-          />
-        );
-      case 'privacyPolicy':
-        return <PrivacyPolicyScreen navigation={navigation as any} />;
-      case 'dailyCheckIn':
-        return (
-          <DailyCheckInScreen
-            navigation={navigation as any}
-            route={{ params: { commitment: params.commitment } } as any}
-          />
-        );
-      case 'publicFeed':
-        return <PublicFeedScreen navigation={navigation as any} />;
-      case 'lockout':
-        return <LockoutScreen navigation={navigation as any} />;
-      case 'terms':
-        return <TermsScreen navigation={navigation as any} />;
-      case 'emailTest':
-        return <EmailTestScreen navigation={navigation as any} />;
-      default:
-        return <LandingScreen navigation={navigation as any} />;
-    }
-  };
-
   return (
-    <View style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
-      {renderScreen()}
-    </View>
+    <NavigationContainer linking={linking}>
+      <Stack.Navigator
+        initialRouteName="onboarding"
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: '#0A0A0A' },
+        }}
+      >
+        <Stack.Screen name="landing" component={LandingRoute} />
+        <Stack.Screen name="onboarding" component={OnboardingRoute} />
+        <Stack.Screen name="questions">
+          {(props) => (
+            <Suspense fallback={<ScreenFallback />}>
+              <QuestionsScreen
+                {...props}
+                setCurrentAnswers={setCurrentAnswers}
+              />
+            </Suspense>
+          )}
+        </Stack.Screen>
+        <Stack.Screen name="processing">
+          {(props) => (
+            <Suspense fallback={<ScreenFallback />}>
+              <ProcessingScreen
+                {...props}
+                setCurrentProfile={setCurrentProfile}
+                setCurrentAnswers={setCurrentAnswers}
+              />
+            </Suspense>
+          )}
+        </Stack.Screen>
+        <Stack.Screen name="results">
+          {(props) => (
+            <Suspense fallback={<ScreenFallback />}>
+              <ResultsScreen
+                {...props}
+                currentProfile={currentProfile}
+                currentAnswers={currentAnswers}
+              />
+            </Suspense>
+          )}
+        </Stack.Screen>
+        <Stack.Screen name="commitment" component={CommitmentRoute} />
+        <Stack.Screen name="privacyPolicy" component={PrivacyPolicyRoute} />
+        <Stack.Screen name="dailyCheckIn" component={DailyCheckInRoute} />
+        <Stack.Screen name="publicFeed" component={PublicFeedRoute} />
+        <Stack.Screen name="lockout" component={LockoutRoute} />
+        <Stack.Screen name="terms" component={TermsRoute} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  fallback: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0A0A0A',
+  },
+});

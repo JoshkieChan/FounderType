@@ -1,5 +1,11 @@
 import React, { Component, ReactNode } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -26,7 +32,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: any) {
     this.setState({ error, errorInfo });
-    
+
     // Log error to analytics
     if (typeof window !== 'undefined' && (window as any).FounderTypeAnalytics) {
       (window as any).FounderTypeAnalytics.track('error_occurred', {
@@ -54,16 +60,19 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
               <View style={styles.iconContainer}>
                 <Ionicons name="warning-outline" size={64} color="#ef4444" />
               </View>
-              
+
               <Text style={styles.title}>Something went wrong</Text>
               <Text style={styles.description}>
-                We encountered an unexpected error. Don't worry, your data is safe. 
-                Try refreshing the app or contact support if the problem persists.
+                We encountered an unexpected error. Don't worry, your data is
+                safe. Try refreshing the app or contact support if the problem
+                persists.
               </Text>
 
               {__DEV__ && this.state.error && (
                 <View style={styles.debugContainer}>
-                  <Text style={styles.debugTitle}>Error Details (Development Only)</Text>
+                  <Text style={styles.debugTitle}>
+                    Error Details (Development Only)
+                  </Text>
                   <Text style={styles.errorText}>
                     {this.state.error.toString()}
                   </Text>
@@ -76,7 +85,10 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
               )}
 
               <View style={styles.actions}>
-                <TouchableOpacity onPress={this.handleRetry} style={styles.retryButton}>
+                <TouchableOpacity
+                  onPress={this.handleRetry}
+                  style={styles.retryButton}
+                >
                   <Ionicons name="refresh" size={20} color="white" />
                   <Text style={styles.retryText}>Try Again</Text>
                 </TouchableOpacity>

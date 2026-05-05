@@ -168,16 +168,31 @@ export function useCachedAPI() {
 
 // Service Worker for offline caching
 export class ServiceWorkerCache {
-  static register(): void {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then((registration) => {
-          console.log('Service Worker registered');
-        })
-        .catch((error) => {
-          console.log('Service Worker registration failed:', error);
-        });
+  static async register(): Promise<void> {
+    if (!('serviceWorker' in navigator)) {
+      return;
+    }
+
+    if (
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1')
+    ) {
+      return;
+    }
+
+    try {
+      const serviceWorkerResponse = await fetch('/sw.js', { method: 'HEAD' });
+      const contentType =
+        serviceWorkerResponse.headers.get('content-type') || '';
+      if (!serviceWorkerResponse.ok || !contentType.includes('javascript')) {
+        return;
+      }
+
+      await navigator.serviceWorker.register('/sw.js');
+      console.log('Service Worker registered');
+    } catch (error) {
+      console.log('Service Worker registration failed:', error);
     }
   }
 

@@ -78,7 +78,7 @@ function getTimelineText(item: Commitment): string {
 }
 
 function isEditable(item: Commitment, userId: string | null): boolean {
-  // Show buttons for all active commitments within 24 hours
+  if (!userId || item.user_id !== userId) return false;
   if (item.status !== 'active') return false;
   const hoursSincePosted =
     (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60);

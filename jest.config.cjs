@@ -6,15 +6,15 @@ module.exports = {
     '**/*.(test|spec).(js|jsx|ts|tsx)',
   ],
   collectCoverageFrom: [
-    'src/**/*.{js,jsx,ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/**/__tests__/**',
-    '!src/**/node_modules/**',
+    '{components,constants,context,hooks,lib,navigation,screens,types}/**/*.{js,jsx,ts,tsx}',
+    '!**/*.d.ts',
+    '!**/__tests__/**',
+    '!**/node_modules/**',
   ],
   transformIgnorePatterns: [
     'node_modules/(?!(jest-)?react-native|@react-native|expo|@expo|@react-navigation)',
   ],
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
 };

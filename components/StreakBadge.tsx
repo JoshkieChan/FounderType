@@ -10,15 +10,15 @@ interface StreakBadgeProps {
   showProgress?: boolean;
 }
 
-export default function StreakBadge({ 
-  streak, 
-  size = 'medium', 
-  showEmoji = true, 
-  showProgress = false 
+export default function StreakBadge({
+  streak,
+  size = 'medium',
+  showEmoji = true,
+  showProgress = false,
 }: StreakBadgeProps) {
   const emoji = StreakSystem.getStreakEmoji(streak);
   const color = StreakSystem.getStreakColor(streak);
-  
+
   const getSizeStyles = () => {
     switch (size) {
       case 'small':
@@ -45,7 +45,9 @@ export default function StreakBadge({
   const sizeStyles = getSizeStyles();
 
   return (
-    <View style={[styles.container, sizeStyles.container, { borderColor: color }]}>
+    <View
+      style={[styles.container, sizeStyles.container, { borderColor: color }]}
+    >
       {showEmoji && (
         <Text style={[styles.emoji, sizeStyles.emoji]}>{emoji}</Text>
       )}

@@ -18,20 +18,22 @@ CREATE POLICY "Anyone can view commitments"
   ON commitments FOR SELECT
   USING (is_public = true);
 
--- Only owner can insert their own commitments (allowing NULL user_id for anonymous commitments)
+-- Only authenticated owners can insert their own commitments.
+-- Anonymous product usage should use Supabase anonymous auth so auth.uid() is still stable.
 CREATE POLICY "Users can insert own commitments"
   ON commitments FOR INSERT
-  WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+  WITH CHECK (auth.uid() = user_id);
 
 -- Only owner can update their own commitments
 CREATE POLICY "Users can update own commitments"
   ON commitments FOR UPDATE
-  USING (auth.uid() = user_id OR user_id IS NULL);
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
 -- Only owner can delete their own commitments
 CREATE POLICY "Users can delete own commitments"
   ON commitments FOR DELETE
-  USING (auth.uid() = user_id OR user_id IS NULL);
+  USING (auth.uid() = user_id);
 
 -- Daily progress table policies (mapping from prompt's 'check_ins' table)
 DROP POLICY IF EXISTS "Anyone can view check-ins" ON daily_progress;
@@ -51,7 +53,7 @@ CREATE POLICY "Users can insert own check-ins"
     EXISTS (
       SELECT 1 FROM commitments 
       WHERE commitments.id = commitment_id 
-      AND (commitments.user_id = auth.uid() OR commitments.user_id IS NULL)
+      AND commitments.user_id = auth.uid()
     )
   );
 
@@ -62,7 +64,14 @@ CREATE POLICY "Users can update own check-ins"
     EXISTS (
       SELECT 1 FROM commitments 
       WHERE commitments.id = commitment_id 
-      AND (commitments.user_id = auth.uid() OR commitments.user_id IS NULL)
+      AND commitments.user_id = auth.uid()
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM commitments
+      WHERE commitments.id = commitment_id
+      AND commitments.user_id = auth.uid()
     )
   );
 

@@ -61,7 +61,7 @@ class PerformanceMonitor {
           );
           this.recordMetric(
             'dom_interactive',
-            navigation.domInteractive - navigation.navigationStart
+            navigation.domInteractive - navigation.startTime
           );
         }
       }, 0);
@@ -80,8 +80,13 @@ class PerformanceMonitor {
 
       // First Input Delay
       this.observeMetric('first-input', (entries) => {
-        const entry = entries[0];
-        this.recordMetric('fid', entry.processingStart - entry.startTime);
+        const entry = entries[0] as PerformanceEntry & {
+          processingStart?: number;
+        };
+        this.recordMetric(
+          'fid',
+          (entry.processingStart || entry.startTime) - entry.startTime
+        );
       });
 
       // Cumulative Layout Shift

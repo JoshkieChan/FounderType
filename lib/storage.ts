@@ -102,7 +102,13 @@ export async function getCurrentUserId(): Promise<string | null> {
   } = await supabase.auth.getUser();
   if (user?.id) return user.id;
 
-  return null; // No anonymous auth fallback
+  const { data, error } = await supabase.auth.signInAnonymously();
+  if (error) {
+    console.error('Anonymous sign-in failed:', error);
+    return null;
+  }
+
+  return data.user?.id || null;
 }
 
 // Update commitment check-in and return updated count

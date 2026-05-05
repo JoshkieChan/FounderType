@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
-// import { StackNavigationProp } from '@react-navigation/stack';
 // import { RouteProp } from '@react-navigation/native';
 import { supabase, cachedSupabase } from '../lib/cachedSupabase';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -137,7 +136,7 @@ export default function ResultsScreen({
 
   const Container = Platform.OS === 'web' ? View : SafeAreaView;
 
-return (
+  return (
     <Container style={styles.container}>
       <ScrollView
         style={styles.container}

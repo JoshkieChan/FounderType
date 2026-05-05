@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView, Alert, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Switch,
+  ScrollView,
+  Alert,
+  Platform,
+  Linking,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -18,7 +28,7 @@ interface SettingsItem {
 
 const Container = Platform.OS === 'web' ? View : SafeAreaView;
 
-export default function SettingsScreen() {
+export default function SettingsScreen({ navigation }: { navigation?: any }) {
   const { theme, isDark, colors, setTheme, toggleTheme } = useTheme();
   const netInfo = useNetInfo();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -29,7 +39,7 @@ export default function SettingsScreen() {
   const handleNotificationToggle = async (key: string, value: boolean) => {
     try {
       await pushNotifications.saveSettings({ [key]: value });
-      
+
       switch (key) {
         case 'enabled':
           setNotificationsEnabled(value);
@@ -139,8 +149,7 @@ export default function SettingsScreen() {
         icon: 'lock-closed-outline',
         type: 'navigation',
         onPress: () => {
-          // Navigate to privacy policy
-          console.log('Navigate to privacy policy');
+          navigation?.navigate?.('privacyPolicy');
         },
       },
       {
@@ -149,8 +158,7 @@ export default function SettingsScreen() {
         icon: 'document-text-outline',
         type: 'navigation',
         onPress: () => {
-          // Navigate to terms of service
-          console.log('Navigate to terms of service');
+          navigation?.navigate?.('terms');
         },
       },
       {
@@ -159,8 +167,7 @@ export default function SettingsScreen() {
         icon: 'mail-outline',
         type: 'navigation',
         onPress: () => {
-          // Navigate to support
-          console.log('Navigate to support');
+          Linking.openURL('mailto:support@foundertype.app');
         },
       },
     ],
@@ -191,13 +198,19 @@ export default function SettingsScreen() {
         disabled={item.type === 'toggle'}
       >
         <View style={styles.itemLeft}>
-          <View style={[styles.iconContainer, { backgroundColor: colors.surface }]}>
+          <View
+            style={[styles.iconContainer, { backgroundColor: colors.surface }]}
+          >
             <Ionicons name={item.icon} size={20} color={colors.primary} />
           </View>
           <View style={styles.itemContent}>
-            <Text style={[styles.itemTitle, { color: colors.text }]}>{item.title}</Text>
+            <Text style={[styles.itemTitle, { color: colors.text }]}>
+              {item.title}
+            </Text>
             {item.subtitle && (
-              <Text style={[styles.itemSubtitle, { color: colors.textSecondary }]}>
+              <Text
+                style={[styles.itemSubtitle, { color: colors.textSecondary }]}
+              >
                 {item.subtitle}
               </Text>
             )}
@@ -214,7 +227,11 @@ export default function SettingsScreen() {
             />
           )}
           {item.type === 'navigation' && (
-            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={colors.textTertiary}
+            />
           )}
         </View>
       </TouchableOpacity>
@@ -228,29 +245,38 @@ export default function SettingsScreen() {
           {title}
         </Text>
       )}
-      <View style={[styles.sectionContainer, { backgroundColor: colors.surface }]}>
+      <View
+        style={[styles.sectionContainer, { backgroundColor: colors.surface }]}
+      >
         {items.map(renderSettingsItem)}
       </View>
     </View>
   );
 
   return (
-    <Container style={[styles.container, { backgroundColor: colors.background }]}>
+    <Container
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <View style={[styles.header, { backgroundColor: colors.card }]}>
         <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
         <View style={styles.connectionStatus}>
-          <Ionicons 
-            name={netInfo.isConnected ? 'wifi' : 'wifi-off'} 
-            size={16} 
-            color={netInfo.isConnected ? colors.success : colors.error} 
+          <Ionicons
+            name={netInfo.isConnected ? 'wifi' : 'cloud-offline-outline'}
+            size={16}
+            color={netInfo.isConnected ? colors.success : colors.error}
           />
-          <Text style={[styles.connectionText, { color: colors.textSecondary }]}>
+          <Text
+            style={[styles.connectionText, { color: colors.textSecondary }]}
+          >
             {netInfo.isConnected ? 'Online' : 'Offline'}
           </Text>
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         {renderSection(settingsSections[0], 'Appearance')}
         {renderSection(settingsSections[1], 'Notifications')}
         {renderSection(settingsSections[2], 'App Settings')}
@@ -258,7 +284,8 @@ export default function SettingsScreen() {
 
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: colors.textTertiary }]}>
-            FounderType helps founders build consistency through public accountability.
+            FounderType helps founders build consistency through public
+            accountability.
           </Text>
         </View>
       </ScrollView>

@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNetInfo } from '@react-native-community/netinfo';
@@ -9,9 +16,9 @@ interface OfflineIndicatorProps {
   position?: 'top' | 'bottom';
 }
 
-export default function EnhancedOfflineIndicator({ 
-  showBanner = true, 
-  position = 'top' 
+export default function EnhancedOfflineIndicator({
+  showBanner = true,
+  position = 'top',
 }: OfflineIndicatorProps) {
   const netInfo = useNetInfo();
   const [isOffline, setIsOffline] = useState(!netInfo.isConnected);
@@ -29,7 +36,7 @@ export default function EnhancedOfflineIndicator({
     Animated.timing(slideAnim, {
       toValue: offline ? 0 : -100,
       duration: 300,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     }).start();
   }, [netInfo.isConnected, slideAnim, lastOnlineTime]);
 
@@ -53,35 +60,48 @@ export default function EnhancedOfflineIndicator({
 
   if (!showBanner) return null;
 
-  const containerStyle = position === 'top' 
-    ? [styles.container, styles.topContainer, { transform: [{ translateY: slideAnim }] }]
-    : [styles.container, styles.bottomContainer, { transform: [{ translateY: slideAnim }] }];
+  const containerStyle =
+    position === 'top'
+      ? [
+          styles.container,
+          styles.topContainer,
+          { transform: [{ translateY: slideAnim }] },
+        ]
+      : [
+          styles.container,
+          styles.bottomContainer,
+          { transform: [{ translateY: slideAnim }] },
+        ];
 
   return (
     <Animated.View style={containerStyle}>
       <SafeAreaView edges={position === 'top' ? ['top'] : ['bottom']}>
         <View style={styles.content}>
           <View style={styles.leftContent}>
-            <Ionicons 
-              name={isOffline ? 'wifi-off' : 'wifi'} 
-              size={20} 
-              color={isOffline ? '#ef4444' : '#10b981'} 
+            <Ionicons
+              name={isOffline ? 'cloud-offline-outline' : 'wifi'}
+              size={20}
+              color={isOffline ? '#ef4444' : '#10b981'}
             />
             <View style={styles.textContainer}>
-              <Text style={[
-                styles.statusText,
-                { color: isOffline ? '#ef4444' : '#10b981' }
-              ]}>
+              <Text
+                style={[
+                  styles.statusText,
+                  { color: isOffline ? '#ef4444' : '#10b981' },
+                ]}
+              >
                 {isOffline ? 'Offline' : 'Back Online'}
               </Text>
               {isOffline && (
                 <Text style={styles.subText}>
-                  {lastOnlineTime ? `Last seen ${getOfflineDuration()}` : 'No connection'}
+                  {lastOnlineTime
+                    ? `Last seen ${getOfflineDuration()}`
+                    : 'No connection'}
                 </Text>
               )}
             </View>
           </View>
-          
+
           {isOffline && (
             <TouchableOpacity onPress={handleRetry} style={styles.retryButton}>
               <Ionicons name="refresh" size={16} color="#6366f1" />

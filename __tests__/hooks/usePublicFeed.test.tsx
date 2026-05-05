@@ -1,39 +1,36 @@
 import { renderHook, act } from '@testing-library/react-native';
 import { usePublicFeed } from '../../hooks/usePublicFeed';
+import { PaginationService } from '../../lib/apiPagination';
 
-// Mock Supabase
-jest.mock('../../lib/supabase', () => ({
-  supabase: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          order: jest.fn(() => ({
-            limit: jest.fn(() => ({
-              then: jest.fn((resolve) =>
-                resolve({
-                  data: [
-                    {
-                      id: '1',
-                      commitment_text: 'Test commitment',
-                      created_at: '2024-01-01',
-                      status: 'active',
-                      check_ins: [],
-                    },
-                  ],
-                  error: null,
-                })
-              ),
-            })),
-          })),
-        })),
-      })),
-    })),
+jest.mock('../../lib/apiPagination', () => ({
+  PaginationService: {
+    getCommitments: jest.fn(),
   },
 }));
 
 describe('usePublicFeed', () => {
+  const getCommitmentsMock = PaginationService.getCommitments as jest.Mock;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    getCommitmentsMock.mockResolvedValue({
+      data: [
+        {
+          id: '1',
+          commitment_text: 'Ship my customer interview script',
+          created_at: '2024-01-01',
+          status: 'active',
+          check_ins: [],
+        },
+      ],
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 1,
+        hasNext: false,
+        hasPrev: false,
+      },
+    });
   });
 
   it('should initialize with loading state', () => {
@@ -54,29 +51,21 @@ describe('usePublicFeed', () => {
     expect(result.current.loading).toBe(false);
     expect(result.current.commitments).toHaveLength(1);
     expect(result.current.commitments[0].commitment_text).toBe(
-      'Test commitment'
+      'Ship my customer interview script'
     );
   });
 
   it('should handle empty commitments', async () => {
-    // Mock empty response
-    jest.mock('../../lib/supabase', () => ({
-      supabase: {
-        from: jest.fn(() => ({
-          select: jest.fn(() => ({
-            eq: jest.fn(() => ({
-              order: jest.fn(() => ({
-                limit: jest.fn(() => ({
-                  then: jest.fn((resolve) =>
-                    resolve({ data: [], error: null })
-                  ),
-                })),
-              })),
-            })),
-          })),
-        })),
+    getCommitmentsMock.mockResolvedValueOnce({
+      data: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalItems: 0,
+        hasNext: false,
+        hasPrev: false,
       },
-    }));
+    });
 
     const { result } = renderHook(() => usePublicFeed());
 

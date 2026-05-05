@@ -1,5 +1,5 @@
 import React from 'react';
-import { Animated, View, StyleSheet } from 'react-native';
+import { Animated, View, StyleSheet, Platform } from 'react-native';
 
 export interface SkeletonProps {
   width?: number | string;
@@ -24,12 +24,12 @@ export default function Skeleton({
         Animated.timing(animatedValue, {
           toValue: 1,
           duration: animationDuration,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
         Animated.timing(animatedValue, {
           toValue: 0.3,
           duration: animationDuration,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
       ])
     );

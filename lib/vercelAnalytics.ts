@@ -15,10 +15,21 @@ interface PageViewEvent {
   title?: string;
 }
 
+declare global {
+  interface Window {
+    va?: (
+      action: 'pageview' | 'track',
+      eventOrProperties?: string | Record<string, unknown>,
+      properties?: Record<string, unknown>
+    ) => void;
+  }
+}
+
 class VercelAnalytics {
   private static instance: VercelAnalytics;
   private isInitialized = false;
-  private isWeb = typeof window !== 'undefined' && window.va;
+  private isWeb =
+    typeof window !== 'undefined' && typeof window.va === 'function';
 
   static getInstance(): VercelAnalytics {
     if (!VercelAnalytics.instance) {
@@ -41,10 +52,11 @@ class VercelAnalytics {
   }
 
   trackPageView(path: string, options?: Partial<PageViewEvent>): void {
-    if (!this.isWeb) return;
+    const va = typeof window !== 'undefined' ? window.va : undefined;
+    if (!this.isWeb || !va) return;
 
     try {
-      window.va('pageview', {
+      va('pageview', {
         path,
         referrer: options?.referrer || document.referrer,
         title: options?.title || document.title,
@@ -55,10 +67,11 @@ class VercelAnalytics {
   }
 
   trackEvent(event: AnalyticsEvent): void {
-    if (!this.isWeb) return;
+    const va = typeof window !== 'undefined' ? window.va : undefined;
+    if (!this.isWeb || !va) return;
 
     try {
-      window.va('track', event.action, {
+      va('track', event.action, {
         category: event.category,
         label: event.label,
         value: event.value,

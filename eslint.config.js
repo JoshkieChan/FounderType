@@ -6,6 +6,16 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-plugin-prettier';
 
 export default [
+  {
+    ignores: [
+      'node_modules/**',
+      '.expo/**',
+      'dist/**',
+      'web-build/**',
+      'coverage/**',
+      'package-lock.json',
+    ],
+  },
   js.configs.recommended,
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
@@ -21,6 +31,21 @@ export default [
       globals: {
         console: 'readonly',
         __DEV__: 'readonly',
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        localStorage: 'readonly',
+        indexedDB: 'readonly',
+        fetch: 'readonly',
+        self: 'readonly',
+        process: 'readonly',
+        Node: 'readonly',
+        MutationObserver: 'readonly',
+        IntersectionObserver: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
       },
     },
     plugins: {
@@ -32,6 +57,8 @@ export default [
     rules: {
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
+      'no-undef': 'off',
+      'no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': [
         'warn',

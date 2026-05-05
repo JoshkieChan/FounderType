@@ -74,23 +74,21 @@ export class Validator {
   }
 
   static validateCommitmentDescription(description: string): ValidationResult {
+    if (description.trim().split(/\s+/).length < 3) {
+      return { isValid: false, error: 'Please provide more detail' };
+    }
+
     return this.validate(description, {
       required: true,
       minLength: 10,
       maxLength: 500,
-      custom: (value) => {
-        if (value.trim().split(/\s+/).length < 3) {
-          return 'Please provide more detail';
-        }
-        return null;
-      },
     });
   }
 
   static sanitizeInput(input: string): string {
     return input
       .trim()
-      .replace(/[<>]/g, '') // Remove potential HTML tags
+      .replace(/<\/?[^>]+>/g, '') // Remove potential HTML tags
       .replace(/javascript:/gi, '') // Remove potential JS protocols
       .replace(/on\w+=/gi, ''); // Remove potential event handlers
   }

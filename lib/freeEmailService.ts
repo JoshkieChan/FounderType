@@ -1,5 +1,6 @@
 // Free email service integration
 // Uses Resend (100 emails/day free) for transactional emails
+import { supabase } from './supabase';
 
 export interface EmailOptions {
   to: string;
@@ -25,7 +26,6 @@ export interface EmailTemplate {
 }
 
 export class FreeEmailService {
-  private static readonly RESEND_API_URL = 'https://api.resend.com/emails';
   private static readonly DEFAULT_FROM = 'noreply@foundertype.app';
 
   // Send email using Resend API
@@ -33,33 +33,20 @@ export class FreeEmailService {
     options: EmailOptions
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const apiKey = process.env.EXPO_PUBLIC_RESEND_API_KEY;
-
-      if (!apiKey) {
-        console.warn('Resend API key not found, email not sent');
-        return { success: false, error: 'API key not configured' };
-      }
-
-      const response = await fetch(this.RESEND_API_URL, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: {
           from: options.from || this.DEFAULT_FROM,
-          to: [options.to],
+          to: options.to,
           subject: options.subject,
           html: options.html,
           text: options.text,
-        }),
+        },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (error || data?.error) {
         return {
           success: false,
-          error: errorData.message || 'Failed to send email',
+          error: data?.error || error?.message || 'Failed to send email',
         };
       }
 

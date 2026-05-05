@@ -26,7 +26,9 @@ interface Comment {
 interface CommentSystemProps {
   commitmentId: string;
   comments: Comment[];
-  onAddComment: (comment: Omit<Comment, 'id' | 'createdAt' | 'likes' | 'replies' | 'isLiked'>) => void;
+  onAddComment: (
+    comment: Omit<Comment, 'id' | 'createdAt' | 'likes' | 'replies' | 'isLiked'>
+  ) => void;
   onLikeComment: (commentId: string) => void;
   currentUserId?: string;
 }
@@ -71,7 +73,7 @@ export default function CommentSystem({
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    
+
     if (diffMins < 1) return 'just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     const diffHours = Math.floor(diffMins / 60);
@@ -81,7 +83,14 @@ export default function CommentSystem({
   };
 
   const renderComment = (comment: Comment, isReply = false, depth = 0) => (
-    <View key={comment.id} style={[styles.commentContainer, isReply && styles.replyContainer, { marginLeft: depth * 20 }]}>
+    <View
+      key={comment.id}
+      style={[
+        styles.commentContainer,
+        isReply && styles.replyContainer,
+        { marginLeft: depth * 20 },
+      ]}
+    >
       <View style={styles.commentHeader}>
         <View style={styles.authorInfo}>
           <View style={styles.avatar}>
@@ -91,11 +100,16 @@ export default function CommentSystem({
           </View>
           <View style={styles.authorDetails}>
             <Text style={styles.authorName}>{comment.author}</Text>
-            <Text style={styles.commentTime}>{formatTimeAgo(comment.createdAt)}</Text>
+            <Text style={styles.commentTime}>
+              {formatTimeAgo(comment.createdAt)}
+            </Text>
           </View>
         </View>
         <TouchableOpacity
-          style={[styles.likeButton, comment.isLiked && styles.likeButtonActive]}
+          style={[
+            styles.likeButton,
+            comment.isLiked && styles.likeButtonActive,
+          ]}
           onPress={() => handleLikeComment(comment.id)}
         >
           <Ionicons
@@ -103,13 +117,18 @@ export default function CommentSystem({
             size={16}
             color={comment.isLiked ? '#ef4444' : '#6b7280'}
           />
-          <Text style={[styles.likeCount, comment.isLiked && styles.likeCountActive]}>
+          <Text
+            style={[
+              styles.likeCount,
+              comment.isLiked && styles.likeCountActive,
+            ]}
+          >
             {comment.likes}
           </Text>
         </TouchableOpacity>
       </View>
       <Text style={styles.commentContent}>{comment.content}</Text>
-      
+
       <View style={styles.commentActions}>
         <TouchableOpacity
           style={styles.actionButton}
@@ -120,7 +139,7 @@ export default function CommentSystem({
         </TouchableOpacity>
       </View>
 
-      {comment.replies.map(reply => renderComment(reply, true, depth + 1))}
+      {comment.replies.map((reply) => renderComment(reply, true, depth + 1))}
     </View>
   );
 
@@ -132,21 +151,26 @@ export default function CommentSystem({
         <Text style={styles.headerTitle}>Comments ({comments.length})</Text>
       </View>
 
-      <ScrollView style={styles.commentsList} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.commentsList}
+        showsVerticalScrollIndicator={false}
+      >
         {comments.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="chatbubble-outline" size={48} color="#d1d5db" />
             <Text style={styles.emptyText}>No comments yet</Text>
-            <Text style={styles.emptySubtext}>Be the first to share your thoughts!</Text>
+            <Text style={styles.emptySubtext}>
+              Be the first to share your thoughts!
+            </Text>
           </View>
         ) : (
-          comments.map(comment => renderComment(comment))
+          comments.map((comment) => renderComment(comment))
         )}
       </ScrollView>
 
       {/* Reply Input */}
       {replyingTo && (
-        <View style={styles.replyContainer}>
+        <View style={styles.replyInputContainer}>
           <View style={styles.replyHeader}>
             <Text style={styles.replyText}>Replying to comment</Text>
             <TouchableOpacity onPress={() => setReplyingTo(null)}>
@@ -159,14 +183,18 @@ export default function CommentSystem({
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder={replyingTo ? "Write a reply..." : "Add a comment..."}
+          placeholder={replyingTo ? 'Write a reply...' : 'Add a comment...'}
           value={replyingTo ? replyText : newComment}
           onChangeText={replyingTo ? setReplyText : setNewComment}
           multiline
           maxLength={500}
         />
         <TouchableOpacity
-          style={[styles.submitButton, (newComment.trim() || replyText.trim()) && styles.submitButtonActive]}
+          style={[
+            styles.submitButton,
+            (newComment.trim() || replyText.trim()) &&
+              styles.submitButtonActive,
+          ]}
           onPress={handleSubmitComment}
           disabled={!newComment.trim() && !replyText.trim()}
         >
@@ -219,7 +247,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
   },
-  replyContainer: {
+  replyInputContainer: {
     backgroundColor: '#f9fafb',
     borderLeftWidth: 2,
     borderLeftColor: '#e5e7eb',

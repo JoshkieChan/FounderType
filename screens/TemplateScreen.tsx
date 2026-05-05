@@ -11,7 +11,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { CommitmentTemplateService, CommitmentTemplate } from '../lib/commitmentTemplates';
+import {
+  CommitmentTemplateService,
+  CommitmentTemplate,
+} from '../lib/commitmentTemplates';
 
 interface TemplateScreenProps {
   navigation?: {
@@ -22,10 +25,13 @@ interface TemplateScreenProps {
 
 export default function TemplateScreen({ navigation }: TemplateScreenProps) {
   const [templates, setTemplates] = useState<CommitmentTemplate[]>([]);
-  const [filteredTemplates, setFilteredTemplates] = useState<CommitmentTemplate[]>([]);
+  const [filteredTemplates, setFilteredTemplates] = useState<
+    CommitmentTemplate[]
+  >([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState<CommitmentTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<CommitmentTemplate | null>(null);
 
   const categories = ['all', ...CommitmentTemplateService.getAllCategories()];
 
@@ -38,14 +44,15 @@ export default function TemplateScreen({ navigation }: TemplateScreenProps) {
   }, [templates, selectedCategory, searchQuery]);
 
   const loadTemplates = () => {
-    setTemplates(CommitmentTemplateService.TEMPLATES);
+    setTemplates(CommitmentTemplateService.getAllTemplates());
   };
 
   const filterTemplates = () => {
     let filtered = templates;
 
     if (selectedCategory !== 'all') {
-      filtered = CommitmentTemplateService.getTemplatesByCategory(selectedCategory);
+      filtered =
+        CommitmentTemplateService.getTemplatesByCategory(selectedCategory);
     }
 
     if (searchQuery) {
@@ -84,19 +91,27 @@ export default function TemplateScreen({ navigation }: TemplateScreenProps) {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return '#10b981';
-      case 'medium': return '#f59e0b';
-      case 'hard': return '#ef4444';
-      default: return '#6b7280';
+      case 'easy':
+        return '#10b981';
+      case 'medium':
+        return '#f59e0b';
+      case 'hard':
+        return '#ef4444';
+      default:
+        return '#6b7280';
     }
   };
 
   const getDifficultyEmoji = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return '🟢';
-      case 'medium': return '🟡';
-      case 'hard': return '🔴';
-      default: return '⚪';
+      case 'easy':
+        return '🟢';
+      case 'medium':
+        return '🟡';
+      case 'hard':
+        return '🔴';
+      default:
+        return '⚪';
     }
   };
 
@@ -105,7 +120,10 @@ export default function TemplateScreen({ navigation }: TemplateScreenProps) {
   return (
     <Container style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation?.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation?.goBack()}
+          style={styles.backButton}
+        >
           <Ionicons name="chevron-back" size={24} color="#1f2937" />
         </TouchableOpacity>
         <Text style={styles.title}>Commitment Templates</Text>
@@ -114,7 +132,12 @@ export default function TemplateScreen({ navigation }: TemplateScreenProps) {
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#6b7280" style={styles.searchIcon} />
+        <Ionicons
+          name="search"
+          size={20}
+          color="#6b7280"
+          style={styles.searchIcon}
+        />
         <TextInput
           style={styles.searchInput}
           placeholder="Search templates..."
@@ -143,7 +166,8 @@ export default function TemplateScreen({ navigation }: TemplateScreenProps) {
             <Text
               style={[
                 styles.categoryButtonText,
-                selectedCategory === category && styles.categoryButtonTextActive,
+                selectedCategory === category &&
+                  styles.categoryButtonTextActive,
               ]}
             >
               {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -153,13 +177,17 @@ export default function TemplateScreen({ navigation }: TemplateScreenProps) {
       </ScrollView>
 
       {/* Templates List */}
-      <ScrollView style={styles.templatesList} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.templatesList}
+        showsVerticalScrollIndicator={false}
+      >
         {filteredTemplates.map((template) => (
           <TouchableOpacity
             key={template.id}
             style={[
               styles.templateCard,
-              selectedTemplate?.id === template.id && styles.templateCardSelected,
+              selectedTemplate?.id === template.id &&
+                styles.templateCardSelected,
             ]}
             onPress={() => handleTemplateSelect(template)}
           >
@@ -170,23 +198,38 @@ export default function TemplateScreen({ navigation }: TemplateScreenProps) {
                   <View
                     style={[
                       styles.difficultyBadge,
-                      { backgroundColor: getDifficultyColor(template.difficulty) },
+                      {
+                        backgroundColor: getDifficultyColor(
+                          template.difficulty
+                        ),
+                      },
                     ]}
                   >
                     <Text style={styles.difficultyText}>
-                      {getDifficultyEmoji(template.difficulty)} {template.difficulty}
+                      {getDifficultyEmoji(template.difficulty)}{' '}
+                      {template.difficulty}
                     </Text>
                   </View>
-                  <Text style={styles.durationText}>{template.duration} days</Text>
+                  <Text style={styles.durationText}>
+                    {template.duration} days
+                  </Text>
                 </View>
               </View>
               <Ionicons
-                name={selectedTemplate?.id === template.id ? 'checkmark-circle' : 'radio-button-off'}
+                name={
+                  selectedTemplate?.id === template.id
+                    ? 'checkmark-circle'
+                    : 'radio-button-off'
+                }
                 size={24}
-                color={selectedTemplate?.id === template.id ? '#10b981' : '#d1d5db'}
+                color={
+                  selectedTemplate?.id === template.id ? '#10b981' : '#d1d5db'
+                }
               />
             </View>
-            <Text style={styles.templateDescription}>{template.description}</Text>
+            <Text style={styles.templateDescription}>
+              {template.description}
+            </Text>
             <View style={styles.templateFooter}>
               <Text style={styles.categoryText}>{template.category}</Text>
               <View style={styles.tagContainer}>
@@ -196,7 +239,9 @@ export default function TemplateScreen({ navigation }: TemplateScreenProps) {
                   </View>
                 ))}
                 {template.tags.length > 2 && (
-                  <Text style={styles.moreTagsText}>+{template.tags.length - 2}</Text>
+                  <Text style={styles.moreTagsText}>
+                    +{template.tags.length - 2}
+                  </Text>
                 )}
               </View>
             </View>
@@ -215,7 +260,10 @@ export default function TemplateScreen({ navigation }: TemplateScreenProps) {
               {selectedTemplate.dailyAction}
             </Text>
           </View>
-          <TouchableOpacity style={styles.useTemplateButton} onPress={handleUseTemplate}>
+          <TouchableOpacity
+            style={styles.useTemplateButton}
+            onPress={handleUseTemplate}
+          >
             <Text style={styles.useTemplateButtonText}>Start Commitment</Text>
             <Ionicons name="arrow-forward" size={20} color="white" />
           </TouchableOpacity>

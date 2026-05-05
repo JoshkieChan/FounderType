@@ -41,9 +41,7 @@ class Logger {
   }
 
   static error(message: string, ...args: any[]): void {
-    if (this.currentLevel <= LogLevel.ERROR) {
-      console.error(this.formatMessage('ERROR', message), ...args);
-    }
+    console.error(this.formatMessage('ERROR', message), ...args);
   }
 
   static setLevel(level: LogLevel): void {
