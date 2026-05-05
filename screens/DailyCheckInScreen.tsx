@@ -18,10 +18,15 @@ import { Commitment } from '../types/commitment';
 import {
   AccountabilityReceipt,
   buildWeeklyAccountabilityReceipt,
+  getAccountabilityReceipts,
   getLatestAccountabilityReceipt,
+  getReceiptEmailAddress,
   isWeeklyReceiptDue,
   saveAccountabilityReceipt,
+  saveReceiptEmailAddress,
+  sendAccountabilityReceiptEmail,
 } from '../lib/accountabilityReceipts';
+import { trackFunnelEvent } from '../lib/funnelAnalytics';
 
 const CHECK_IN_KEY = 'foundertype_daily_checkin';
 
@@ -55,7 +60,15 @@ export default function DailyCheckInScreen({
   const [daysSinceStart, setDaysSinceStart] = useState(0);
   const [latestReceipt, setLatestReceipt] =
     useState<AccountabilityReceipt | null>(null);
+  const [receiptHistory, setReceiptHistory] = useState<AccountabilityReceipt[]>(
+    []
+  );
+  const [receiptEmail, setReceiptEmail] = useState('');
+  const [receiptEmailStatus, setReceiptEmailStatus] = useState<string | null>(
+    null
+  );
   const [isSavingReceipt, setIsSavingReceipt] = useState(false);
+  const [isSendingReceiptEmail, setIsSendingReceiptEmail] = useState(false);
 
   useEffect(() => {
     loadCheckInData();
@@ -86,8 +99,14 @@ export default function DailyCheckInScreen({
         );
         setDaysSinceStart(days);
       }
-      const receipt = await getLatestAccountabilityReceipt(passedCommitment.id);
+      const [receipt, receipts, storedEmail] = await Promise.all([
+        getLatestAccountabilityReceipt(passedCommitment.id),
+        getAccountabilityReceipts(passedCommitment.id),
+        getReceiptEmailAddress(),
+      ]);
       setLatestReceipt(receipt);
+      setReceiptHistory(receipts);
+      setReceiptEmail(storedEmail);
       return;
     }
 
@@ -172,6 +191,22 @@ export default function DailyCheckInScreen({
       });
       const saved = await saveAccountabilityReceipt(receipt);
       setLatestReceipt(saved);
+      const receipts = await getAccountabilityReceipts(activeCommitment.id);
+      setReceiptHistory(receipts);
+      setReceiptEmailStatus(
+        saved.synced
+          ? 'Receipt logged and synced.'
+          : 'Receipt logged locally. It will sync when available.'
+      );
+      trackFunnelEvent(
+        'accountability_receipt_logged',
+        {
+          week_number: saved.weekNumber,
+          mode: saved.agentMode,
+          synced: Boolean(saved.synced),
+        },
+        activeCommitment.user_id
+      );
     } catch (error) {
       console.error('Error logging weekly accountability receipt:', error);
       const message = 'Failed to log accountability receipt. Please try again.';
@@ -182,6 +217,50 @@ export default function DailyCheckInScreen({
       }
     } finally {
       setIsSavingReceipt(false);
+    }
+  };
+
+  const handleReceiptEmailChange = (email: string) => {
+    setReceiptEmail(email);
+    setReceiptEmailStatus(null);
+    void saveReceiptEmailAddress(email);
+  };
+
+  const handleSendReceiptEmail = async () => {
+    if (!latestReceipt) return;
+
+    setIsSendingReceiptEmail(true);
+    setReceiptEmailStatus(null);
+    try {
+      const result = await sendAccountabilityReceiptEmail(
+        latestReceipt,
+        receiptEmail
+      );
+      if (result.success) {
+        setReceiptEmailStatus('Receipt email sent.');
+        trackFunnelEvent(
+          'accountability_receipt_email_sent',
+          {
+            week_number: latestReceipt.weekNumber,
+            mode: latestReceipt.agentMode,
+          },
+          activeCommitment?.user_id
+        );
+      } else {
+        setReceiptEmailStatus(
+          result.error || 'Could not send the receipt email. Please try again.'
+        );
+        trackFunnelEvent(
+          'accountability_receipt_email_failed',
+          {
+            week_number: latestReceipt.weekNumber,
+            mode: latestReceipt.agentMode,
+          },
+          activeCommitment?.user_id
+        );
+      }
+    } finally {
+      setIsSendingReceiptEmail(false);
     }
   };
 
@@ -521,9 +600,15 @@ export default function DailyCheckInScreen({
 
         <WeeklyReceiptCard
           receipt={latestReceipt}
+          receipts={receiptHistory}
           isDue={isWeeklyReceiptDue(latestReceipt)}
           disabled={!activeCommitment || isSavingReceipt}
+          email={receiptEmail}
+          emailStatus={receiptEmailStatus}
+          isSendingEmail={isSendingReceiptEmail}
           onLogReceipt={handleLogWeeklyReceipt}
+          onEmailChange={handleReceiptEmailChange}
+          onSendEmail={handleSendReceiptEmail}
         />
 
         <View style={styles.actionContainer}>

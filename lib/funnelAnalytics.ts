@@ -5,7 +5,10 @@ type FunnelEventName =
   | 'product_hunt_diagnostic_complete'
   | 'product_hunt_commitment_screen_reached'
   | 'product_hunt_captcha_complete'
-  | 'product_hunt_commitment_posted';
+  | 'product_hunt_commitment_posted'
+  | 'accountability_receipt_logged'
+  | 'accountability_receipt_email_sent'
+  | 'accountability_receipt_email_failed';
 
 declare global {
   interface Window {

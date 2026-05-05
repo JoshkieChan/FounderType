@@ -1,12 +1,24 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { AccountabilityReceipt } from '../lib/accountabilityReceipts';
 
 interface WeeklyReceiptCardProps {
   receipt: AccountabilityReceipt | null;
+  receipts: AccountabilityReceipt[];
   isDue: boolean;
   disabled?: boolean;
+  email: string;
+  emailStatus?: string | null;
+  isSendingEmail?: boolean;
   onLogReceipt: () => void;
+  onEmailChange: (email: string) => void;
+  onSendEmail: () => void;
 }
 
 function formatReceiptDate(value: string) {
@@ -19,10 +31,18 @@ function formatReceiptDate(value: string) {
 
 export default function WeeklyReceiptCard({
   receipt,
+  receipts,
   isDue,
   disabled,
+  email,
+  emailStatus,
+  isSendingEmail,
   onLogReceipt,
+  onEmailChange,
+  onSendEmail,
 }: WeeklyReceiptCardProps) {
+  const history = receipts.slice(0, 3);
+
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
@@ -63,6 +83,51 @@ export default function WeeklyReceiptCard({
           {receipt && !isDue ? 'Update Receipt Anyway' : 'Log Weekly Receipt'}
         </Text>
       </TouchableOpacity>
+
+      {receipt && (
+        <View style={styles.emailSection}>
+          <Text style={styles.sectionTitle}>Send this receipt</Text>
+          <TextInput
+            style={styles.emailInput}
+            value={email}
+            onChangeText={onEmailChange}
+            placeholder="you@example.com"
+            placeholderTextColor="#666666"
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+          />
+          <TouchableOpacity
+            style={[
+              styles.emailButton,
+              (!email || isSendingEmail) && styles.buttonDisabled,
+            ]}
+            onPress={onSendEmail}
+            disabled={!email || isSendingEmail}
+          >
+            <Text style={styles.emailButtonText}>
+              {isSendingEmail ? 'Sending...' : 'Email Receipt'}
+            </Text>
+          </TouchableOpacity>
+          {emailStatus && <Text style={styles.emailStatus}>{emailStatus}</Text>}
+        </View>
+      )}
+
+      {history.length > 1 && (
+        <View style={styles.historySection}>
+          <Text style={styles.sectionTitle}>Recent receipts</Text>
+          {history.map((item) => (
+            <View key={item.id} style={styles.historyItem}>
+              <Text style={styles.historyTitle}>
+                Week {item.weekNumber} · {formatReceiptDate(item.createdAt)}
+              </Text>
+              <Text style={styles.historyText} numberOfLines={2}>
+                {item.prompt}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -139,5 +204,70 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
+  },
+  emailSection: {
+    borderTopWidth: 1,
+    borderTopColor: '#242424',
+    marginTop: 16,
+    paddingTop: 16,
+    gap: 10,
+  },
+  sectionTitle: {
+    color: '#888888',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
+  emailInput: {
+    backgroundColor: '#0A0A0A',
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+    borderRadius: 10,
+    color: '#FFFFFF',
+    fontSize: 15,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  emailButton: {
+    backgroundColor: '#111827',
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  emailButtonText: {
+    color: '#93C5FD',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  emailStatus: {
+    color: '#BDBDBD',
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  historySection: {
+    borderTopWidth: 1,
+    borderTopColor: '#242424',
+    marginTop: 16,
+    paddingTop: 16,
+    gap: 10,
+  },
+  historyItem: {
+    backgroundColor: '#0A0A0A',
+    borderRadius: 10,
+    padding: 12,
+  },
+  historyTitle: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  historyText: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    lineHeight: 18,
   },
 });

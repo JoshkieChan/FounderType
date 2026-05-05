@@ -6,9 +6,12 @@ import {
 import { Commitment } from '../types/commitment';
 import { supabase } from './supabase';
 import { getCurrentUserId } from './storage';
+import Logger from './logger';
 
 const RECEIPTS_KEY = 'foundertype_accountability_receipts';
+const RECEIPT_EMAIL_KEY = 'foundertype_accountability_email';
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export interface AccountabilityReceipt {
   id: string;
@@ -26,6 +29,12 @@ export interface AccountabilityReceipt {
   checkedInToday: boolean;
   daysSinceStart: number;
   synced?: boolean;
+}
+
+export interface AccountabilityMessage {
+  subject: string;
+  text: string;
+  html: string;
 }
 
 interface AccountabilityReceiptRow {
@@ -145,6 +154,70 @@ export function isWeeklyReceiptDue(receipt: AccountabilityReceipt | null) {
   return Date.now() - new Date(receipt.createdAt).getTime() >= WEEK_MS;
 }
 
+export function buildAccountabilityMessage(
+  receipt: AccountabilityReceipt
+): AccountabilityMessage {
+  const statusLine =
+    receipt.missedDays > 0
+      ? `You are ${receipt.missedDays} day${receipt.missedDays === 1 ? '' : 's'} behind the record.`
+      : 'You are current with the record.';
+  const proofLine = receipt.checkedInToday
+    ? 'Today has a check-in attached to it.'
+    : 'Today still needs visible proof.';
+  const subject = `FounderType Week ${receipt.weekNumber}: ${receipt.title}`;
+  const text = [
+    `FounderType accountability receipt`,
+    ``,
+    `Week ${receipt.weekNumber}`,
+    `FounderType: ${receipt.founderType}`,
+    `Commitment: ${receipt.commitmentText}`,
+    receipt.dailyAction ? `Daily action: ${receipt.dailyAction}` : null,
+    ``,
+    `Mirror: ${receipt.mirror}`,
+    `Prompt: ${receipt.prompt}`,
+    ``,
+    statusLine,
+    proofLine,
+    ``,
+    `This is not motivation. It is the record.`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+  const html = `
+    <div style="font-family:Inter,Arial,sans-serif;background:#0a0a0a;color:#ffffff;padding:24px;">
+      <p style="font-size:12px;letter-spacing:2px;color:#3b82f6;font-weight:700;">FOUNDER TYPE ACCOUNTABILITY RECEIPT</p>
+      <h1 style="font-size:24px;margin:0 0 12px;">Week ${receipt.weekNumber}: ${escapeHtml(receipt.title)}</h1>
+      <p style="color:#cfcfcf;line-height:1.6;"><strong>Commitment:</strong> ${escapeHtml(receipt.commitmentText)}</p>
+      ${
+        receipt.dailyAction
+          ? `<p style="color:#cfcfcf;line-height:1.6;"><strong>Daily action:</strong> ${escapeHtml(receipt.dailyAction)}</p>`
+          : ''
+      }
+      <div style="border:1px solid #1e3a5f;border-radius:12px;padding:16px;margin:20px 0;background:#101827;">
+        <p style="color:#93c5fd;font-size:12px;font-weight:700;margin:0 0 8px;">MIRROR</p>
+        <p style="line-height:1.6;margin:0 0 12px;">${escapeHtml(receipt.mirror)}</p>
+        <p style="color:#ffffff;font-weight:700;line-height:1.6;margin:0;">${escapeHtml(receipt.prompt)}</p>
+      </div>
+      <p style="color:#cfcfcf;line-height:1.6;">${escapeHtml(statusLine)} ${escapeHtml(proofLine)}</p>
+      <p style="color:#888888;font-size:13px;">This is not motivation. It is the record.</p>
+    </div>
+  `;
+
+  return { subject, text, html };
+}
+
+export function isValidReceiptEmail(email: string) {
+  return EMAIL_PATTERN.test(email) && email.length <= 254;
+}
+
+export async function getReceiptEmailAddress() {
+  return (await AsyncStorage.getItem(RECEIPT_EMAIL_KEY)) || '';
+}
+
+export async function saveReceiptEmailAddress(email: string) {
+  await AsyncStorage.setItem(RECEIPT_EMAIL_KEY, email.trim());
+}
+
 export function buildWeeklyAccountabilityReceipt({
   commitment,
   todayAlreadyCheckedIn,
@@ -197,6 +270,50 @@ export async function saveAccountabilityReceipt(
   return syncedReceipt;
 }
 
+export async function sendAccountabilityReceiptEmail(
+  receipt: AccountabilityReceipt,
+  email: string
+) {
+  const normalizedEmail = email.trim();
+  if (!isValidReceiptEmail(normalizedEmail)) {
+    return { success: false, error: 'Enter a valid email address.' };
+  }
+
+  await saveReceiptEmailAddress(normalizedEmail);
+
+  try {
+    const message = buildAccountabilityMessage(receipt);
+    const { error } = await supabase.functions.invoke('send-email', {
+      body: {
+        to: normalizedEmail,
+        subject: message.subject,
+        html: message.html,
+        text: message.text,
+      },
+    });
+
+    if (error) {
+      Logger.warn('Accountability receipt email failed', {
+        reason: 'edge_function_error',
+      });
+      return {
+        success: false,
+        error: 'Could not send the receipt email. Please try again.',
+      };
+    }
+
+    return { success: true };
+  } catch {
+    Logger.warn('Accountability receipt email failed', {
+      reason: 'unexpected_error',
+    });
+    return {
+      success: false,
+      error: 'Could not send the receipt email. Please try again.',
+    };
+  }
+}
+
 async function syncAccountabilityReceipt(receipt: AccountabilityReceipt) {
   try {
     if (receipt.commitmentId.startsWith('local-')) return receipt;
@@ -210,9 +327,17 @@ async function syncAccountabilityReceipt(receipt: AccountabilityReceipt) {
       .select('*')
       .maybeSingle();
 
-    if (error || !data) return receipt;
+    if (error || !data) {
+      Logger.warn('Accountability receipt remote sync skipped', {
+        reason: error ? 'database_error' : 'missing_response',
+      });
+      return receipt;
+    }
     return fromRow(data as AccountabilityReceiptRow);
   } catch {
+    Logger.warn('Accountability receipt remote sync skipped', {
+      reason: 'unexpected_error',
+    });
     return receipt;
   }
 }
@@ -234,4 +359,13 @@ async function mergeLocalReceipts(receipts: AccountabilityReceipt[]) {
   } catch {
     // Local cache is best-effort.
   }
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
