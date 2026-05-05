@@ -138,7 +138,8 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
         const { error } = await supabase
           .from('commitments')
           .delete()
-          .eq('id', item.id);
+          .eq('id', item.id)
+          .eq('user_id', currentUserId);
 
         if (error) {
           throw error;
@@ -240,13 +241,13 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
                 style={styles.editButton}
                 onPress={() => handleEditCommitment(item)}
               >
-                <Text style={styles.editButtonText}>✏️ Edit</Text>
+                <Text style={styles.editButtonText}>Edit</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.deleteButton}
                 onPress={() => handleDeleteCommitment(item)}
               >
-                <Text style={styles.deleteButtonText}>🗑️ Delete</Text>
+                <Text style={styles.deleteButtonText}>Delete</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -255,7 +256,7 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
         {/* Lock indicator for owner past 24 hours */}
         {locked && (
           <View style={styles.lockIndicator}>
-            <Text style={styles.lockIcon}>🔒</Text>
+            <Text style={styles.lockIcon}>Locked</Text>
             <Text style={styles.lockText}>Locked after 24 hours</Text>
           </View>
         )}
@@ -278,7 +279,6 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
     return (
       <View style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorEmoji}>⚠️</Text>
           <Text style={styles.errorTitle}>Something went wrong</Text>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity
@@ -304,16 +304,16 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
 
       {commitments.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyEmoji}>🏗️</Text>
-          <Text style={styles.emptyTitle}>No commitments yet</Text>
+          <Text style={styles.emptyTitle}>No public records yet</Text>
           <Text style={styles.emptyText}>
-            Be the first to make a commitment and inspire others!
+            Be the first to put a 30-day commitment where quitting cannot stay
+            private.
           </Text>
           <TouchableOpacity
             style={styles.startButton}
             onPress={() => navigation.navigate('questions')}
           >
-            <Text style={styles.startButtonText}>Start Building</Text>
+            <Text style={styles.startButtonText}>Start Diagnostic</Text>
           </TouchableOpacity>
         </View>
       ) : (

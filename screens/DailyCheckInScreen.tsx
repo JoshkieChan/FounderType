@@ -52,7 +52,6 @@ export default function DailyCheckInScreen({
     // Get commitment from route params
     const passedCommitment = route?.params?.commitment;
     if (passedCommitment) {
-      console.log('Received commitment in screen:', passedCommitment);
       setActiveCommitment(passedCommitment);
       setTodayAction(passedCommitment.daily_action || '');
       const today = new Date().toISOString().split('T')[0];
@@ -225,76 +224,6 @@ export default function DailyCheckInScreen({
     }
   };
 
-  const handleDeleteBroken = async () => {
-    console.log('Delete button pressed');
-
-    // Get commitment from state or route params
-    const commitment = activeCommitment || route?.params?.commitment;
-    console.log('Using commitment:', commitment);
-
-    const commitmentId = commitment?.id;
-
-    if (!commitmentId) {
-      console.error('No commitment ID found');
-      if (Platform.OS === 'web') {
-        window.alert('Cannot find commitment to delete');
-      } else {
-        Alert.alert('Error', 'Cannot find commitment to delete');
-      }
-      return;
-    }
-
-    console.log('Deleting commitment with ID:', commitmentId);
-
-    try {
-      const userId = await getCurrentUserId();
-      console.log('User ID:', userId);
-
-      // Hard delete commitment
-      const { error } = await supabase
-        .from('commitments')
-        .delete()
-        .eq('id', commitmentId);
-
-      if (error) {
-        console.error('Supabase delete error:', error);
-        throw error;
-      }
-
-      console.log('Commitment deleted from database');
-
-      // Clear ALL commitment-related storage
-      await AsyncStorage.multiRemove([
-        'foundertype_has_active_commitment',
-        'foundertype_active_commitment_text',
-        'foundertype_active_deadline',
-        'foundertype_active_commitment',
-        'foundertype_commitment',
-      ]);
-
-      console.log('Storage cleared, navigating to landing');
-
-      // Show success and redirect to home
-      if (Platform.OS === 'web') {
-        window.alert('Commitment deleted successfully');
-      } else {
-        Alert.alert('Success', 'Commitment deleted successfully');
-      }
-
-      navigation.navigate('landing');
-    } catch (err) {
-      console.error('Error deleting commitment:', err);
-      if (Platform.OS === 'web') {
-        window.alert('Failed to delete commitment: ' + (err as Error).message);
-      } else {
-        Alert.alert(
-          'Error',
-          'Failed to delete commitment: ' + (err as Error).message
-        );
-      }
-    }
-  };
-
   const handleAbandon = () => {
     const message =
       'This will be marked as ABANDONED and stay visible in the public feed forever. Everyone will see you gave up.';
@@ -315,11 +244,8 @@ export default function DailyCheckInScreen({
   };
 
   const doAbandon = async () => {
-    console.log('Abandon confirmed, starting process...');
-
     // Get commitment from state or route params
     const commitment = activeCommitment || route?.params?.commitment;
-    console.log('Using commitment for abandon:', commitment);
 
     const commitmentId = commitment?.id;
     const commitmentText = commitment?.commitment_text || '';
@@ -334,11 +260,11 @@ export default function DailyCheckInScreen({
       return;
     }
 
-    console.log('Abandoning commitment with ID:', commitmentId);
-
     try {
       const userId = await getCurrentUserId();
-      console.log('User ID:', userId);
+      if (!userId) {
+        throw new Error('Unable to verify ownership. Please try again.');
+      }
 
       const isLocal = String(commitmentId).startsWith('local-');
       const abandonedAt = new Date().toISOString();
@@ -350,6 +276,7 @@ export default function DailyCheckInScreen({
           .from('commitments')
           .insert({
             commitment_text: commitmentText,
+            user_id: userId,
             founder_type: activeCommitment?.founder_type || 'Founder',
             status: 'abandoned',
             abandoned: true,
@@ -369,7 +296,8 @@ export default function DailyCheckInScreen({
             abandoned_at: abandonedAt,
             abandoned_on_day: abandonedOnDay,
           })
-          .eq('id', commitmentId);
+          .eq('id', commitmentId)
+          .eq('user_id', userId);
         error = updateError;
       }
 
@@ -377,8 +305,6 @@ export default function DailyCheckInScreen({
         console.error('Supabase abandon error:', error);
         throw error;
       }
-
-      console.log('Commitment marked as abandoned in database');
 
       await AsyncStorage.setItem(
         'foundertype_abandoned_commitment_text',
@@ -398,8 +324,6 @@ export default function DailyCheckInScreen({
         'foundertype_commitment',
         CHECK_IN_KEY,
       ]);
-
-      console.log('Abandon complete, navigating to feed');
 
       // Show success and redirect to feed
       if (Platform.OS === 'web') {
@@ -429,8 +353,13 @@ export default function DailyCheckInScreen({
       const completedAt = new Date().toISOString();
 
       if (isLocal) {
+        const userId = await getCurrentUserId();
+        if (!userId) {
+          throw new Error('Unable to verify ownership. Please try again.');
+        }
         // For local-only commitments, insert as a new completed record
         const error = await cachedSupabase.insertCommitment({
+          user_id: userId,
           commitment_text: activeCommitment.commitment_text,
           daily_action: activeCommitment.daily_action,
           founder_type: activeCommitment.founder_type,
@@ -443,14 +372,19 @@ export default function DailyCheckInScreen({
         });
         if (error) throw error;
       } else {
-        const error = await cachedSupabase.updateCommitment(
-          activeCommitment.id,
-          {
+        const userId = await getCurrentUserId();
+        if (!userId) {
+          throw new Error('Unable to verify ownership. Please try again.');
+        }
+        const { error } = await supabase
+          .from('commitments')
+          .update({
             status: 'completed',
             completed: true,
             completed_at: completedAt,
-          }
-        );
+          })
+          .eq('id', activeCommitment.id)
+          .eq('user_id', userId);
         if (error) throw error;
       }
 
@@ -582,10 +516,7 @@ export default function DailyCheckInScreen({
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.abandonBigButton}
-                onPress={() => {
-                  console.log('Abandon big button pressed');
-                  handleAbandon();
-                }}
+                onPress={handleAbandon}
               >
                 <Text style={styles.abandonBigText}>Abandon It ✕</Text>
               </TouchableOpacity>
@@ -629,13 +560,7 @@ export default function DailyCheckInScreen({
         </View>
 
         {/* Abandon link */}
-        <TouchableOpacity
-          style={styles.abandonLink}
-          onPress={() => {
-            console.log('Abandon link pressed');
-            handleAbandon();
-          }}
-        >
+        <TouchableOpacity style={styles.abandonLink} onPress={handleAbandon}>
           <Text style={styles.abandonText}>I'm abandoning this commitment</Text>
         </TouchableOpacity>
       </ScrollView>

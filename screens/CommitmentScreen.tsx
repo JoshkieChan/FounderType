@@ -15,7 +15,6 @@ import { useUserContext } from '../context/UserContext';
 import { getCurrentUserId } from '../lib/storage';
 import HCaptchaWrapper from '../components/HCaptchaWrapper';
 import { EnhancedButton } from '../components/EnhancedButton';
-import { SmartSuggestionsComponent } from '../components/SmartSuggestions';
 import { MobilePolish } from '../lib/mobilePolish';
 
 const MAX_CHARS = 140;
@@ -77,6 +76,7 @@ export default function CommitmentScreen({
   const [agreedPublic, setAgreedPublic] = useState(false);
   const [agreedPermanent, setAgreedPermanent] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const profile = route?.params?.profile;
 
@@ -96,82 +96,60 @@ export default function CommitmentScreen({
     }
   }, [editMode, initialText, initialDailyAction]);
 
+  const showValidationError = (message: string, title = 'Required') => {
+    setFormError(message);
+    if (Platform.OS !== 'web') {
+      Alert.alert(title, message);
+    }
+  };
+
   const handleSubmit = async () => {
+    setFormError(null);
+
     if (!commitment.trim()) {
-      if (Platform.OS === 'web') {
-        window.alert('Please enter a commitment.');
-      } else {
-        Alert.alert('Required', 'Please enter a commitment.');
-      }
+      showValidationError('Write the public commitment you want on record.');
       return;
     }
 
     if (commitment.trim().length > MAX_CHARS) {
-      if (Platform.OS === 'web') {
-        window.alert(`Commitment must be ${MAX_CHARS} characters or less.`);
-      } else {
-        Alert.alert(
-          'Too Long',
-          `Commitment must be ${MAX_CHARS} characters or less.`
-        );
-      }
+      showValidationError(
+        `Commitment must be ${MAX_CHARS} characters or less.`,
+        'Too Long'
+      );
       return;
     }
 
     if (!dailyAction.trim()) {
-      if (Platform.OS === 'web') {
-        window.alert('Please enter your daily action.');
-      } else {
-        Alert.alert(
-          'Required',
-          'Please enter what you will do every day to achieve this commitment.'
-        );
-      }
+      showValidationError(
+        'Write the daily action you will repeat to make the commitment real.'
+      );
       return;
     }
 
     if (dailyAction.trim().length > MAX_DAILY_ACTION_CHARS) {
-      if (Platform.OS === 'web') {
-        window.alert(
-          `Daily action must be ${MAX_DAILY_ACTION_CHARS} characters or less.`
-        );
-      } else {
-        Alert.alert(
-          'Too Long',
-          `Daily action must be ${MAX_DAILY_ACTION_CHARS} characters or less.`
-        );
-      }
+      showValidationError(
+        `Daily action must be ${MAX_DAILY_ACTION_CHARS} characters or less.`,
+        'Too Long'
+      );
       return;
     }
 
     if (!agreedPublic) {
-      if (Platform.OS === 'web') {
-        window.alert('You must agree that this commitment will be public.');
-      } else {
-        Alert.alert(
-          'Required',
-          'You must agree that this commitment will be public and visible to all users.'
-        );
-      }
+      showValidationError(
+        'Confirm that this commitment will be public and visible in the FounderType record.'
+      );
       return;
     }
 
     if (!agreedPermanent) {
-      if (Platform.OS === 'web') {
-        window.alert(
-          'You must acknowledge that this commitment becomes permanent after 24 hours.'
-        );
-      } else {
-        Alert.alert(
-          'Required',
-          'You must acknowledge that this commitment becomes permanent after 24 hours.'
-        );
-      }
+      showValidationError(
+        'Acknowledge that this commitment becomes permanent after the 24-hour edit window.'
+      );
       return;
     }
 
     if (Platform.OS === 'web' && !editMode && !captchaToken) {
-      window.alert('Please complete the security check (captcha).');
+      showValidationError('Complete the security check before posting.');
       return;
     }
 
@@ -222,14 +200,10 @@ export default function CommitmentScreen({
 
           if (error) {
             console.error('Error updating commitment:', error);
-            if (Platform.OS === 'web') {
-              window.alert('Failed to update commitment. Please try again.');
-            } else {
-              Alert.alert(
-                'Error',
-                'Failed to update commitment. Please try again.'
-              );
-            }
+            showValidationError(
+              'Failed to update commitment. Please try again.',
+              'Error'
+            );
             return;
           }
         }
@@ -293,7 +267,7 @@ export default function CommitmentScreen({
           ? err.message
           : 'Something went wrong. Please try again.';
       if (Platform.OS === 'web') {
-        window.alert(message);
+        setFormError(message);
       } else {
         Alert.alert('Error', message);
       }
@@ -349,6 +323,12 @@ export default function CommitmentScreen({
           </Text>
         </View>
 
+        {formError && (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorBannerText}>{formError}</Text>
+          </View>
+        )}
+
         {/* GATE BANNERS */}
         {currentSlotStatus === 'active' && activeCommitment && (
           <View
@@ -381,16 +361,17 @@ export default function CommitmentScreen({
 
         {!editMode && currentSlotStatus !== 'active' && (
           <View style={styles.mainContent}>
-            {/* Smart Suggestions */}
-            <SmartSuggestionsComponent
-              founderType={
-                typeof profile === 'object' && profile?.founderType
-                  ? profile.founderType
-                  : 'Visionary'
-              }
-              currentStreak={0} // Would calculate from user data
-              onSelectSuggestion={(suggestion) => setCommitment(suggestion)}
-            />
+            <View style={styles.commitmentGuidance}>
+              <Text style={styles.guidanceKicker}>PUBLIC RECORD</Text>
+              <Text style={styles.guidanceTitle}>
+                One thing a stranger could verify in 30 days.
+              </Text>
+              <Text style={styles.guidanceText}>
+                Do not write a wish, identity, or vague goal. Write the outcome
+                you are willing to have visible if you follow through or quit.
+              </Text>
+            </View>
+
             <View style={styles.inputSection}>
               <Text style={styles.label}>Your 30-Day Commitment</Text>
               <Text style={styles.charCount}>
@@ -402,7 +383,10 @@ export default function CommitmentScreen({
                   placeholder="I will..."
                   placeholderTextColor="#666666"
                   value={commitment}
-                  onChangeText={setCommitment}
+                  onChangeText={(value) => {
+                    setCommitment(value);
+                    if (formError) setFormError(null);
+                  }}
                   multiline
                   maxLength={MAX_CHARS}
                   editable={!isSubmitting}
@@ -423,7 +407,10 @@ export default function CommitmentScreen({
                   placeholder="e.g., 'Send 3 cold emails' or 'Code for 2 hours'"
                   placeholderTextColor="#93C5FD"
                   value={dailyAction}
-                  onChangeText={setDailyAction}
+                  onChangeText={(value) => {
+                    setDailyAction(value);
+                    if (formError) setFormError(null);
+                  }}
                   maxLength={MAX_DAILY_ACTION_CHARS}
                   editable={!isSubmitting}
                 />
@@ -495,7 +482,7 @@ export default function CommitmentScreen({
               </View>
               <Text style={styles.checkboxLabel}>
                 I understand this commitment will be public and visible to all
-                users
+                FounderType users
               </Text>
             </TouchableOpacity>
 
@@ -527,6 +514,12 @@ export default function CommitmentScreen({
               onExpire={() => setCaptchaToken(null)}
               onError={() => setCaptchaToken(null)}
             />
+
+            {formError && (
+              <View style={styles.ctaErrorBanner}>
+                <Text style={styles.errorBannerText}>{formError}</Text>
+              </View>
+            )}
 
             <View style={styles.ctaSection}>
               <EnhancedButton
@@ -655,6 +648,56 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     flex: 1,
+  },
+  commitmentGuidance: {
+    backgroundColor: '#101827',
+    borderRadius: 12,
+    padding: 18,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#1E3A5F',
+  },
+  guidanceKicker: {
+    color: '#3B82F6',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 2,
+    marginBottom: 10,
+  },
+  guidanceTitle: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '800',
+    lineHeight: 26,
+    marginBottom: 8,
+  },
+  guidanceText: {
+    color: '#CCCCCC',
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  errorBanner: {
+    backgroundColor: '#1A0A0A',
+    borderColor: '#EF4444',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 20,
+  },
+  errorBannerText: {
+    color: '#FCA5A5',
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  ctaErrorBanner: {
+    backgroundColor: '#1A0A0A',
+    borderColor: '#EF4444',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 14,
+    marginTop: 8,
+    marginBottom: 16,
   },
   gateBanner: {
     borderRadius: 12,

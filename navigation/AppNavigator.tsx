@@ -103,8 +103,8 @@ const linking = {
   prefixes: ['https://foundertype.app', 'foundertype://'],
   config: {
     screens: {
-      landing: '',
-      onboarding: 'onboarding',
+      onboarding: '',
+      landing: 'home',
       questions: 'questions',
       processing: 'processing',
       results: 'results',

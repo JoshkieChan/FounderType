@@ -81,10 +81,7 @@ export default function ProcessingScreen({
 
     const generateProfile = async () => {
       try {
-        console.log('ProcessingScreen - route.params.answers:', answers);
-
         const parsedAnswers = JSON.parse(answers || '{}');
-        console.log('ProcessingScreen - parsedAnswers:', parsedAnswers);
 
         if (Object.keys(parsedAnswers).length === 0) {
           console.error('No answers provided - cannot generate profile');
@@ -122,7 +119,6 @@ export default function ProcessingScreen({
     if (answers) {
       generateProfile();
     } else {
-      console.log('ProcessingScreen - waiting for answers...');
     }
 
     return () => {
@@ -143,16 +139,9 @@ export default function ProcessingScreen({
     const checkGlobalAnswers = () => {
       const globalAnswers = globalAnswersRef.current;
       if (globalAnswers && !profileGenerated) {
-        console.log(
-          'ProcessingScreen - globalAnswers detected, generating profile'
-        );
         const generateProfile = async () => {
           try {
             const parsedAnswers = JSON.parse(globalAnswers);
-            console.log(
-              'ProcessingScreen - parsedAnswers from global:',
-              parsedAnswers
-            );
 
             if (Object.keys(parsedAnswers).length === 0) {
               console.error('No answers provided - cannot generate profile');

@@ -178,7 +178,7 @@ export default function ResultsScreen({
           style={styles.ctaButton}
           onPress={handleCommitmentPress}
         >
-          <Text style={styles.ctaButtonText}>Post My First Commitment</Text>
+          <Text style={styles.ctaButtonText}>Put My Commitment on Record</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

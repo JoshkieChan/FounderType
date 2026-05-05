@@ -27,35 +27,35 @@ interface OnboardingStep {
 const onboardingSteps: OnboardingStep[] = [
   {
     id: 1,
-    title: 'Welcome to FounderType',
+    title: 'You Keep Starting. You Keep Stopping.',
     description:
-      'Public accountability for founders who finish what they start. Join thousands of founders building consistency together.',
-    icon: 'rocket-outline',
-    color: '#6366f1',
+      "FounderType is for repeat starters who know what they should do and still don't do it. Not because you're lazy. Because your stopping pattern has never been named.",
+    icon: 'scan-outline',
+    color: '#3B82F6',
   },
   {
     id: 2,
-    title: 'Make Public Commitments',
+    title: 'First We Name The Pattern',
     description:
-      'Post 30-day commitments with specific goals. The power of public accountability keeps you motivated to follow through.',
-    icon: 'clipboard-outline',
-    color: '#8b5cf6',
+      'Seven honest questions reveal how you actually behave as a builder: your operating style, your fear pattern, and the exact loop that makes you quit.',
+    icon: 'finger-print-outline',
+    color: '#A78BFA',
   },
   {
     id: 3,
-    title: 'Track Daily Progress',
+    title: 'Then You Put Your Word On Record',
     description:
-      'Check in daily to update your progress. Build streaks and maintain momentum toward your goals.',
-    icon: 'checkmark-circle-outline',
-    color: '#10b981',
+      'Before the plan, you make one public 30-day commitment. Anonymous, but visible. Quitting stops being a private disappointment.',
+    icon: 'document-text-outline',
+    color: '#FBBF24',
   },
   {
     id: 4,
-    title: 'Join the Community',
+    title: 'Follow Through Or Face The Record',
     description:
-      'Support other founders, get encouragement, and build meaningful connections with people who understand your journey.',
-    icon: 'people-outline',
-    color: '#f59e0b',
+      'Every week, FounderType reflects your specific pattern back to you. Not motivation. A mirror. Recommit, complete it, or admit you quit.',
+    icon: 'eye-outline',
+    color: '#EF4444',
   },
 ];
 
@@ -70,7 +70,7 @@ export default function OnboardingScreen({
     if (currentStep < onboardingSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      handleSkip();
+      navigation?.navigate?.('questions');
     }
   };
 
@@ -95,7 +95,7 @@ export default function OnboardingScreen({
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-            <Text style={styles.skipText}>Skip</Text>
+            <Text style={styles.skipText}>View home</Text>
           </TouchableOpacity>
 
           <View style={styles.progressIndicator}>
@@ -116,7 +116,7 @@ export default function OnboardingScreen({
           <View
             style={[
               styles.iconContainer,
-              { backgroundColor: step.color + '20' },
+              { backgroundColor: step.color + '20', borderColor: step.color },
             ]}
           >
             <Ionicons name={step.icon} size={80} color={step.color} />
@@ -132,11 +132,12 @@ export default function OnboardingScreen({
               <Ionicons name="chevron-back" size={24} color="#6b7280" />
             </TouchableOpacity>
           )}
+          {currentStep === 0 && <View style={styles.backButtonPlaceholder} />}
 
           <TouchableOpacity onPress={handleNext} style={styles.nextButton}>
             <Text style={styles.nextText}>
               {currentStep === onboardingSteps.length - 1
-                ? 'Get Started'
+                ? 'Start Diagnostic'
                 : 'Next'}
             </Text>
             <Ionicons
@@ -158,12 +159,15 @@ export default function OnboardingScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#0A0A0A',
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'space-between',
     padding: 20,
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
   },
   header: {
     alignItems: 'flex-end',
@@ -175,7 +179,7 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontSize: 16,
-    color: '#6b7280',
+    color: '#888888',
     fontWeight: '500',
   },
   progressIndicator: {
@@ -188,14 +192,14 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: '#333333',
   },
   progressDotActive: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#3B82F6',
     width: 24,
   },
   progressDotCompleted: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#3B82F6',
   },
   content: {
     flex: 1,
@@ -210,20 +214,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 40,
+    borderWidth: 1,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1f2937',
+    fontSize: 34,
+    fontWeight: '800',
+    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 16,
-    lineHeight: 34,
+    lineHeight: 40,
   },
   description: {
-    fontSize: 16,
-    color: '#6b7280',
+    fontSize: 17,
+    color: '#CCCCCC',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 26,
     paddingHorizontal: 10,
   },
   footer: {
@@ -236,14 +241,18 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#1A1A1A',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  backButtonPlaceholder: {
+    width: 48,
+    height: 48,
   },
   nextButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#6366f1',
+    backgroundColor: '#3B82F6',
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderRadius: 12,

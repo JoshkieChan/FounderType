@@ -82,10 +82,8 @@ export default function QuestionsScreen({
         level: 'info',
       });
       await clearProgress();
-      console.log('QuestionsScreen - newAnswers:', newAnswers);
       setCurrentAnswers(newAnswers);
       const answersString = JSON.stringify(newAnswers);
-      console.log('QuestionsScreen - answersString:', answersString);
       // Store in global ref for synchronous access
       globalAnswersRef.current = answersString;
       navigation.navigate('processing', { answers: answersString });
