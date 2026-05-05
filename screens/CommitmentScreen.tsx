@@ -53,14 +53,13 @@ export default function CommitmentScreen({
   navigation,
   route,
 }: {
-  navigation: any;
-  route: any;
+  navigation: { navigate: (screen: string, params?: Record<string, unknown>) => void; goBack: () => void };
+  route: { params?: Record<string, unknown> };
 }) {
   const { activeCommitment, currentSlotStatus, user, refreshActiveCommitment } =
     useUserContext();
 
   const [commitment, setCommitment] = useState('');
-  const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dailyAction, setDailyAction] = useState('');
   const [agreedPublic, setAgreedPublic] = useState(false);
@@ -68,7 +67,6 @@ export default function CommitmentScreen({
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const profile = route?.params?.profile;
-  const answers = route?.params?.answers;
 
   // Edit mode support
   const editMode = route?.params?.editMode || false;
@@ -237,7 +235,7 @@ export default function CommitmentScreen({
           const parsed =
             typeof profile === 'string' ? JSON.parse(profile) : profile;
           founderType = parsed?.founderType || null;
-        } catch (e) {
+        } catch {
           /* ignore */
         }
       }

@@ -31,7 +31,7 @@ export async function saveProfile(
       throw error;
     }
 
-    console.log('Profile saved successfully');
+    console.error('Profile saved successfully');
     return data;
   } catch (error) {
     console.error('Error saving profile:', error);
@@ -110,7 +110,7 @@ export async function getCurrentUserId(): Promise<string | null> {
     }
 
     return data.user?.id || null;
-  } catch (error) {
+  } catch {
     // Supabase not configured or network error - silently return null
     return null;
   }

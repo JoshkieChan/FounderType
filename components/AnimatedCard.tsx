@@ -5,7 +5,7 @@ import { MobilePolish } from '../lib/mobilePolish';
 
 interface AnimatedCardProps {
   children: React.ReactNode;
-  style?: any;
+  style?: React.ViewStyle | React.ViewStyle[];
   animationType?: 'slideIn' | 'fadeIn' | 'scaleIn' | 'bounceIn';
   delay?: number;
   duration?: number;

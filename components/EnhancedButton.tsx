@@ -28,15 +28,12 @@ export const EnhancedButton: React.FC<EnhancedButtonProps> = ({
   disabled = false,
   loading = false,
   haptic = true,
-  animationType = 'scale',
+  _animationType = 'scale',
 }) => {
   const { colors } = useTheme();
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
-  const [isPressed, setIsPressed] = React.useState(false);
 
   const handlePressIn = () => {
-    setIsPressed(true);
-
     // Trigger haptic feedback
     if (haptic && Platform.OS !== 'web') {
       MobilePolish.triggerTouchFeedback();
@@ -52,8 +49,6 @@ export const EnhancedButton: React.FC<EnhancedButtonProps> = ({
   };
 
   const handlePressOut = () => {
-    setIsPressed(false);
-
     // Animate button release
     Animated.spring(scaleAnim, {
       toValue: 1,
