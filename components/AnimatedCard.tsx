@@ -1,11 +1,11 @@
 import React from 'react';
-import { StyleSheet, Animated, Platform } from 'react-native';
+import { StyleSheet, Animated, Platform, ViewStyle } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { MobilePolish } from '../lib/mobilePolish';
 
 interface AnimatedCardProps {
   children: React.ReactNode;
-  style?: React.ViewStyle | React.ViewStyle[];
+  style?: ViewStyle | ViewStyle[];
   animationType?: 'slideIn' | 'fadeIn' | 'scaleIn' | 'bounceIn';
   delay?: number;
   duration?: number;

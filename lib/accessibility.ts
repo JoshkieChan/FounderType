@@ -245,11 +245,16 @@ export class AccessibilityManager {
     // Monitor for aria-hidden changes and manage focus
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'aria-hidden') {
+        if (
+          mutation.type === 'attributes' &&
+          mutation.attributeName === 'aria-hidden'
+        ) {
           const element = mutation.target as HTMLElement;
           if (element.getAttribute('aria-hidden') === 'true') {
             // If element is being hidden and contains focus, move focus
-            const focusedElement = element.querySelector(':focus') as HTMLElement;
+            const focusedElement = element.querySelector(
+              ':focus'
+            ) as HTMLElement;
             if (focusedElement) {
               // Find the next focusable element
               const nextFocusable = this.findNextFocusableElement(element);
@@ -279,22 +284,22 @@ export class AccessibilityManager {
     const focusableElements = container.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     ) as NodeListOf<HTMLElement>;
-    
+
     // Get all focusable elements in the document
     const allFocusable = document.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     ) as NodeListOf<HTMLElement>;
-    
+
     // Find the container's index in the overall list
-    const containerIndex = Array.from(allFocusable).findIndex(
-      el => container.contains(el)
+    const containerIndex = Array.from(allFocusable).findIndex((el) =>
+      container.contains(el)
     );
-    
+
     // Return the next focusable element after the container
     if (containerIndex >= 0 && containerIndex < allFocusable.length - 1) {
       return allFocusable[containerIndex + 1];
     }
-    
+
     return null;
   }
 

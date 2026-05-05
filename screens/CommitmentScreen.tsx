@@ -49,12 +49,24 @@ const RULES = [
   "Once posted, it's public and can't be edited",
 ];
 
+interface CommitmentRouteParams {
+  profile?: string | { founderType?: string };
+  editMode?: boolean;
+  commitmentId?: string;
+  initialText?: string;
+  initialDailyAction?: string;
+  initialDeadline?: string;
+}
+
 export default function CommitmentScreen({
   navigation,
   route,
 }: {
-  navigation: { navigate: (screen: string, params?: Record<string, unknown>) => void; goBack: () => void };
-  route: { params?: Record<string, unknown> };
+  navigation: {
+    navigate: (screen: string, params?: Record<string, unknown>) => void;
+    goBack: () => void;
+  };
+  route: { params?: CommitmentRouteParams };
 }) {
   const { activeCommitment, currentSlotStatus, user, refreshActiveCommitment } =
     useUserContext();
@@ -164,7 +176,6 @@ export default function CommitmentScreen({
     }
 
     setIsSubmitting(true);
-    setLoading(true);
 
     try {
       const userId = user?.id || (await getCurrentUserId());
@@ -288,7 +299,6 @@ export default function CommitmentScreen({
       }
     } finally {
       setIsSubmitting(false);
-      setLoading(false);
     }
   };
 
@@ -373,7 +383,11 @@ export default function CommitmentScreen({
           <View style={styles.mainContent}>
             {/* Smart Suggestions */}
             <SmartSuggestionsComponent
-              founderType={profile?.founderType || 'Visionary'}
+              founderType={
+                typeof profile === 'object' && profile?.founderType
+                  ? profile.founderType
+                  : 'Visionary'
+              }
               currentStreak={0} // Would calculate from user data
               onSelectSuggestion={(suggestion) => setCommitment(suggestion)}
             />

@@ -49,7 +49,10 @@ const createMissingSupabaseQuery = (): any => {
 
 const missingSupabaseClient = {
   auth: {
-    getUser: async () => ({ data: { user: null }, error: missingSupabaseError }),
+    getUser: async () => ({
+      data: { user: null },
+      error: missingSupabaseError,
+    }),
     getSession: async () => ({
       data: { session: null },
       error: missingSupabaseError,
