@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Dimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './navigation/AppNavigator';
@@ -24,8 +25,14 @@ interface Profile {
 // Global ref for synchronous access to answers
 const globalAnswersRef = { current: null as string | null };
 
+const windowDimensions = Dimensions.get('window');
 const initialSafeAreaMetrics = {
-  frame: { x: 0, y: 0, width: 0, height: 0 },
+  frame: {
+    x: 0,
+    y: 0,
+    width: windowDimensions.width,
+    height: windowDimensions.height,
+  },
   insets: { top: 0, right: 0, bottom: 0, left: 0 },
 };
 
