@@ -65,7 +65,6 @@
     },
     "description": "Public accountability for founders who finish what they start. Post 30-day commitments, track daily progress, and build consistency with community support.",
     "plugins": [
-      "@sentry/react-native",
       [
         "@sentry/react-native/expo",
         {

@@ -16,6 +16,7 @@ import { UserAnswers } from '../types';
 import { useHaptics } from '../hooks/useHaptics';
 import { useProgressPersistence } from '../hooks/useProgressPersistence';
 import { globalAnswersRef } from '../lib/globalAnswers';
+import { trackFunnelEvent } from '../lib/funnelAnalytics';
 
 export default function QuestionsScreen({
   navigation,
@@ -84,6 +85,9 @@ export default function QuestionsScreen({
       await clearProgress();
       setCurrentAnswers(newAnswers);
       const answersString = JSON.stringify(newAnswers);
+      trackFunnelEvent('product_hunt_diagnostic_complete', {
+        answer_count: Object.keys(newAnswers).length,
+      });
       // Store in global ref for synchronous access
       globalAnswersRef.current = answersString;
       navigation.navigate('processing', { answers: answersString });

@@ -16,6 +16,7 @@ import { getCurrentUserId } from '../lib/storage';
 import HCaptchaWrapper from '../components/HCaptchaWrapper';
 import { EnhancedButton } from '../components/EnhancedButton';
 import { MobilePolish } from '../lib/mobilePolish';
+import { trackFunnelEvent } from '../lib/funnelAnalytics';
 
 const MAX_CHARS = 140;
 const MAX_DAILY_ACTION_CHARS = 60;
@@ -96,6 +97,12 @@ export default function CommitmentScreen({
       setAgreedPermanent(true);
     }
   }, [editMode, initialText, initialDailyAction]);
+
+  useEffect(() => {
+    trackFunnelEvent('product_hunt_commitment_screen_reached', {
+      edit_mode: editMode,
+    });
+  }, [editMode]);
 
   const showValidationError = (message: string, title = 'Required') => {
     setFormError(message);
@@ -210,6 +217,14 @@ export default function CommitmentScreen({
         }
 
         await refreshActiveCommitment();
+        trackFunnelEvent(
+          'product_hunt_commitment_posted',
+          {
+            edit_mode: true,
+            synced: !commitmentId?.startsWith('local-'),
+          },
+          userId
+        );
         navigation.navigate('dailyCheckIn', { commitment: updatedCommitment });
         return;
       }
@@ -258,6 +273,14 @@ export default function CommitmentScreen({
       }
 
       await refreshActiveCommitment();
+      trackFunnelEvent(
+        'product_hunt_commitment_posted',
+        {
+          edit_mode: false,
+          synced: Boolean(savedCommitment),
+        },
+        userId
+      );
       navigation.navigate('dailyCheckIn', {
         commitment: savedCommitment || fallbackCommitment,
       });
@@ -461,6 +484,19 @@ export default function CommitmentScreen({
               </Text>
             </View>
 
+            <View style={styles.quitSection}>
+              <Text style={styles.quitTitle}>What happens if I quit?</Text>
+              <Text style={styles.quitText}>
+                Nothing dramatic. No shame spiral. FounderType simply marks the
+                commitment as abandoned so the pattern cannot hide as another
+                private reset.
+              </Text>
+              <Text style={styles.quitText}>
+                That record is the point: follow through, recommit honestly, or
+                see the loop clearly enough to stop pretending it was random.
+              </Text>
+            </View>
+
             <TouchableOpacity
               style={styles.checkboxRow}
               onPress={() => {
@@ -509,7 +545,10 @@ export default function CommitmentScreen({
             </TouchableOpacity>
 
             <HCaptchaWrapper
-              onVerify={(token) => setCaptchaToken(token)}
+              onVerify={(token) => {
+                setCaptchaToken(token);
+                trackFunnelEvent('product_hunt_captcha_complete');
+              }}
               onExpire={() => setCaptchaToken(null)}
               onError={() => setCaptchaToken(null)}
             />
@@ -809,6 +848,26 @@ const styles = StyleSheet.create({
     color: '#CCCCCC',
     fontSize: 14,
     lineHeight: 20,
+    marginBottom: 8,
+  },
+  quitSection: {
+    backgroundColor: '#101010',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+  },
+  quitTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 10,
+  },
+  quitText: {
+    color: '#BDBDBD',
+    fontSize: 14,
+    lineHeight: 21,
     marginBottom: 8,
   },
   checkboxRow: {

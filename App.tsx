@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Dimensions } from 'react-native';
+import { Dimensions, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './navigation/AppNavigator';
@@ -47,6 +47,19 @@ export default function App() {
     void initializeAppServices();
   }, []);
 
+  const scheduleIdleWork = (work: () => void) => {
+    if (
+      typeof window !== 'undefined' &&
+      'requestIdleCallback' in window &&
+      typeof window.requestIdleCallback === 'function'
+    ) {
+      window.requestIdleCallback(work, { timeout: 2500 });
+      return;
+    }
+
+    setTimeout(work, 750);
+  };
+
   const initializeAppServices = async () => {
     try {
       const [
@@ -54,23 +67,11 @@ export default function App() {
         { testSupabaseConnection },
         { FreeAnalytics },
         { analytics },
-        { performanceMonitor },
-        { PerformanceOptimizer },
-        { EmailSystem },
-        { AccessibilityManager },
-        { OfflineManager },
-        notifications,
       ] = await Promise.all([
         import('@sentry/react-native'),
         import('./lib/supabase'),
         import('./lib/freeAnalytics'),
         import('./lib/vercelAnalytics'),
-        import('./lib/performanceMonitoring'),
-        import('./lib/performanceOptimization'),
-        import('./lib/emailSystem'),
-        import('./lib/accessibility'),
-        import('./lib/offlineMode'),
-        import('./lib/notifications'),
       ]);
 
       testSupabaseConnection();
@@ -89,6 +90,28 @@ export default function App() {
 
       analytics.initialize();
 
+      scheduleIdleWork(() => {
+        void initializeDeferredServices();
+      });
+    } catch (error) {
+      console.error('Error initializing app services:', error);
+    }
+  };
+
+  const initializeDeferredServices = async () => {
+    try {
+      const [
+        { performanceMonitor },
+        { PerformanceOptimizer },
+        { EmailSystem },
+        { AccessibilityManager },
+      ] = await Promise.all([
+        import('./lib/performanceMonitoring'),
+        import('./lib/performanceOptimization'),
+        import('./lib/emailSystem'),
+        import('./lib/accessibility'),
+      ]);
+
       performanceMonitor.initialize();
 
       const performanceOptimizer = PerformanceOptimizer.getInstance();
@@ -104,13 +127,19 @@ export default function App() {
 
       AccessibilityManager.getInstance();
 
-      OfflineManager.getInstance();
+      if (Platform.OS !== 'web') {
+        const [notifications] = await Promise.all([
+          import('./lib/notifications'),
+          import('./lib/offlineMode').then(({ OfflineManager }) =>
+            OfflineManager.getInstance()
+          ),
+        ]);
 
-      notifications.NotificationService.initialize();
-
-      await checkMissedCommitmentDays(notifications.sendMissedDaysAlert);
+        notifications.NotificationService.initialize();
+        await checkMissedCommitmentDays(notifications.sendMissedDaysAlert);
+      }
     } catch (error) {
-      console.error('Error initializing app services:', error);
+      console.error('Error initializing deferred app services:', error);
     }
   };
 

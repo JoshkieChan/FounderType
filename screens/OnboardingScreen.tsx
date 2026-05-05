@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { trackFunnelEvent } from '../lib/funnelAnalytics';
 
 interface OnboardingScreenProps {
   navigation?: {
@@ -65,6 +66,10 @@ export default function OnboardingScreen({
   navigation,
 }: OnboardingScreenProps) {
   const [currentStep, setCurrentStep] = useState(0);
+
+  useEffect(() => {
+    trackFunnelEvent('product_hunt_onboarding_start');
+  }, []);
 
   const handleNext = () => {
     if (currentStep < onboardingSteps.length - 1) {

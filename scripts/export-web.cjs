@@ -32,6 +32,8 @@ env.EXPO_PUBLIC_SUPABASE_ANON_KEY =
   '';
 env.EXPO_PUBLIC_HCAPTCHA_SITE_KEY =
   env.EXPO_PUBLIC_HCAPTCHA_SITE_KEY || env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '';
+env.SENTRY_ORG = env.SENTRY_ORG || env.SENTRY_ORGANIZATION || 'foundertype';
+env.SENTRY_PROJECT = env.SENTRY_PROJECT || 'foundertype-mobile';
 
 const expoBin = path.join(
   process.cwd(),

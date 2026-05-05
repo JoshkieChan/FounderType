@@ -114,10 +114,22 @@ export async function getCurrentUserId(): Promise<string | null> {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (user?.id) return user.id;
+    if (user?.id) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('foundertype_supabase_user_id', user.id);
+      }
+      return user.id;
+    }
 
-    // Use local storage fallback instead of anonymous auth
-    // to avoid Supabase 400 errors when anonymous auth is disabled
+    const { data, error } = await supabase.auth.signInAnonymously();
+    if (!error && data.user?.id) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('foundertype_supabase_user_id', data.user.id);
+      }
+      return data.user.id;
+    }
+
+    // Use local storage fallback only when Supabase anonymous auth is disabled.
     const localUserId = `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     // Store in localStorage for persistence
