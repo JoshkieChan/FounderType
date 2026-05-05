@@ -152,6 +152,9 @@ export class AccessibilityManager {
     // Manage focus for dynamic content
     this.manageFocusForDynamicContent();
 
+    // Prevent React Native Web route transitions from hiding focused views.
+    this.blurPressableFocusAfterActivation();
+
     // Add skip links
     this.addSkipLinks();
 
@@ -190,6 +193,41 @@ export class AccessibilityManager {
         }, 100);
       };
     }
+  }
+
+  private blurPressableFocusAfterActivation(): void {
+    const blurIfPressable = () => {
+      const activeElement = document.activeElement as HTMLElement | null;
+      if (!activeElement || activeElement === document.body) return;
+
+      const isEditable =
+        activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement ||
+        activeElement instanceof HTMLSelectElement ||
+        activeElement.isContentEditable;
+
+      if (isEditable) return;
+
+      const isPressable =
+        activeElement.tagName === 'BUTTON' ||
+        activeElement.tagName === 'A' ||
+        activeElement.getAttribute('role') === 'button' ||
+        activeElement.getAttribute('tabindex') === '0';
+
+      if (isPressable) {
+        activeElement.blur();
+      }
+    };
+
+    document.addEventListener('click', () => {
+      window.requestAnimationFrame(blurIfPressable);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        window.requestAnimationFrame(blurIfPressable);
+      }
+    });
   }
 
   // Add skip links

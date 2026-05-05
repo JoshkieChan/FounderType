@@ -327,7 +327,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
           {loading ? (
             <ActivityIndicator
               size="large"
-              color="#111111"
+              color="#3B82F6"
               style={{ marginVertical: 40 }}
             />
           ) : commitments.length === 0 ? (
@@ -403,10 +403,15 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0A0A0A' },
-  scrollContent: { paddingBottom: 40 },
+  scrollContent: {
+    paddingBottom: 40,
+    alignItems: 'center',
+  },
 
   // HERO
   hero: {
+    width: '100%',
+    maxWidth: 720,
     paddingHorizontal: 24,
     paddingTop: 40,
     paddingBottom: 40,
@@ -457,6 +462,8 @@ const styles = StyleSheet.create({
 
   // FEED
   feedSection: {
+    width: '100%',
+    maxWidth: 1120,
     paddingHorizontal: 24,
     paddingVertical: 40,
   },
@@ -538,6 +545,8 @@ const styles = StyleSheet.create({
 
   // HOW IT WORKS
   howItWorks: {
+    width: '100%',
+    maxWidth: 1120,
     paddingHorizontal: 24,
     paddingVertical: 40,
     backgroundColor: '#0A0A0A',
@@ -606,6 +615,8 @@ const styles = StyleSheet.create({
 
   // FOOTER
   footer: {
+    width: '100%',
+    maxWidth: 720,
     paddingVertical: 24,
     alignItems: 'center',
     gap: 12,
@@ -618,7 +629,9 @@ const styles = StyleSheet.create({
 
   // RETURNING USER BANNERS
   statusBanner: {
-    marginHorizontal: 24,
+    width: '100%',
+    maxWidth: 672,
+    alignSelf: 'center',
     marginTop: 10,
     marginBottom: 8,
     borderRadius: 12,

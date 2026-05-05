@@ -186,6 +186,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#0A0A0A',
   },
   header: {
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -222,6 +225,9 @@ const styles = StyleSheet.create({
     width: 60,
   },
   content: {
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
     flex: 1,
     paddingHorizontal: 24,
     paddingBottom: 40,

@@ -21,12 +21,14 @@ export default function EnhancedOfflineIndicator({
   position = 'top',
 }: OfflineIndicatorProps) {
   const netInfo = useNetInfo();
-  const [isOffline, setIsOffline] = useState(!netInfo.isConnected);
-  const [slideAnim] = useState(new Animated.Value(isOffline ? 0 : -100));
+  const [isOffline, setIsOffline] = useState(false);
+  const [slideAnim] = useState(new Animated.Value(-100));
   const [lastOnlineTime, setLastOnlineTime] = useState<Date | null>(null);
 
   useEffect(() => {
-    const offline = !netInfo.isConnected;
+    if (netInfo.isConnected === null) return;
+
+    const offline = netInfo.isConnected === false;
     setIsOffline(offline);
 
     if (!offline && !lastOnlineTime) {
@@ -58,7 +60,7 @@ export default function EnhancedOfflineIndicator({
     return `${hours}h ago`;
   };
 
-  if (!showBanner) return null;
+  if (!showBanner || !isOffline) return null;
 
   const containerStyle =
     position === 'top'
