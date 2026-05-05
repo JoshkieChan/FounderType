@@ -24,6 +24,11 @@ interface Profile {
 // Global ref for synchronous access to answers
 const globalAnswersRef = { current: null as string | null };
 
+const initialSafeAreaMetrics = {
+  frame: { x: 0, y: 0, width: 0, height: 0 },
+  insets: { top: 0, right: 0, bottom: 0, left: 0 },
+};
+
 export default function App() {
   const [currentProfile, setCurrentProfile] = useState<Profile | null>(null);
   const [currentAnswers, setCurrentAnswers] = useState<Record<
@@ -145,7 +150,7 @@ export default function App() {
   };
 
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider initialMetrics={initialSafeAreaMetrics}>
       <ErrorBoundary>
         <ThemeProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
