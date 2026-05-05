@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
@@ -127,55 +128,63 @@ export default function QuestionsScreen({
     }
   };
 
+  const content = (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
+        <View style={styles.progressDots}>
+          {FOUNDER_TYPE_QUESTIONS.map((_: any, index: number) => (
+            <View
+              key={index}
+              style={[
+                styles.dot,
+                index === currentQuestion && styles.activeDot,
+                index < currentQuestion && styles.completedDot,
+              ]}
+            />
+          ))}
+        </View>
+        <View style={styles.placeholder} />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.questionNumber}>
+          Question {currentQuestion + 1} of {FOUNDER_TYPE_QUESTIONS.length}
+        </Text>
+        <Text style={styles.questionText}>
+          {FOUNDER_TYPE_QUESTIONS[currentQuestion].text}
+        </Text>
+
+        <View style={styles.optionsContainer}>
+          {FOUNDER_TYPE_QUESTIONS[currentQuestion].options.map(
+            (option: string, index: number) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.optionButton}
+                onPress={() => handleAnswer(option)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.optionText}>{option}</Text>
+              </TouchableOpacity>
+            )
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+
+  if (Platform.OS === 'web') {
+    return content;
+  }
+
   return (
     <PanGestureHandler
       onGestureEvent={onGestureEvent}
       onHandlerStateChange={onHandlerStateChange}
     >
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-            <Text style={styles.backText}>Back</Text>
-          </TouchableOpacity>
-          <View style={styles.progressDots}>
-            {FOUNDER_TYPE_QUESTIONS.map((_: any, index: number) => (
-              <View
-                key={index}
-                style={[
-                  styles.dot,
-                  index === currentQuestion && styles.activeDot,
-                  index < currentQuestion && styles.completedDot,
-                ]}
-              />
-            ))}
-          </View>
-          <View style={styles.placeholder} />
-        </View>
-
-        <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.questionNumber}>
-            Question {currentQuestion + 1} of {FOUNDER_TYPE_QUESTIONS.length}
-          </Text>
-          <Text style={styles.questionText}>
-            {FOUNDER_TYPE_QUESTIONS[currentQuestion].text}
-          </Text>
-
-          <View style={styles.optionsContainer}>
-            {FOUNDER_TYPE_QUESTIONS[currentQuestion].options.map(
-              (option: string, index: number) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.optionButton}
-                  onPress={() => handleAnswer(option)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.optionText}>{option}</Text>
-                </TouchableOpacity>
-              )
-            )}
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+      {content}
     </PanGestureHandler>
   );
 }

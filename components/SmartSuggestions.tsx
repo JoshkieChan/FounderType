@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   Platform,
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
@@ -139,66 +138,60 @@ export const SmartSuggestionsComponent: React.FC<SmartSuggestionsProps> = ({
   return (
     <View style={[styles.container, { backgroundColor: colors.card }]}>
       <Text style={[styles.title, { color: colors.text }]}>
-        💡 Smart Suggestions for {founderType}
+        Smart Suggestions for {founderType}
       </Text>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={styles.suggestionsContainer}>
-          {suggestions.map((suggestion, index) => (
-            <TouchableOpacity
-              key={suggestion.id}
-              style={[
-                styles.suggestionCard,
-                {
-                  backgroundColor: colors.background,
-                  borderColor: getDifficultyColor(suggestion.difficulty),
-                },
-              ]}
-              onPress={() => handleSuggestionPress(suggestion)}
-              activeOpacity={0.8}
-            >
-              <View style={styles.suggestionHeader}>
-                <Text style={[styles.category, { color: colors.secondary }]}>
-                  {suggestion.category}
-                </Text>
-                <View
-                  style={[
-                    styles.difficultyBadge,
-                    {
-                      backgroundColor: getDifficultyColor(
-                        suggestion.difficulty
-                      ),
-                    },
-                  ]}
-                >
-                  <Text style={styles.difficultyText}>
-                    {getDifficultyLabel(suggestion.difficulty)}
-                  </Text>
-                </View>
-              </View>
-
-              <Text style={[styles.suggestionText, { color: colors.text }]}>
-                {suggestion.text}
+      <View style={styles.suggestionsContainer}>
+        {suggestions.map((suggestion) => (
+          <TouchableOpacity
+            key={suggestion.id}
+            style={[
+              styles.suggestionCard,
+              {
+                backgroundColor: colors.background,
+                borderColor: getDifficultyColor(suggestion.difficulty),
+              },
+            ]}
+            onPress={() => handleSuggestionPress(suggestion)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.suggestionHeader}>
+              <Text style={[styles.category, { color: colors.secondary }]}>
+                {suggestion.category}
               </Text>
-
-              <View style={styles.suggestionFooter}>
-                <Text
-                  style={[styles.estimatedTime, { color: colors.secondary }]}
-                >
-                  ~{suggestion.estimatedTime}min
-                </Text>
-                <Text style={[styles.confidence, { color: colors.secondary }]}>
-                  {Math.round(suggestion.confidence * 100)}% match
+              <View
+                style={[
+                  styles.difficultyBadge,
+                  {
+                    backgroundColor: getDifficultyColor(suggestion.difficulty),
+                  },
+                ]}
+              >
+                <Text style={styles.difficultyText}>
+                  {getDifficultyLabel(suggestion.difficulty)}
                 </Text>
               </View>
+            </View>
 
-              <Text style={[styles.reasoning, { color: colors.secondary }]}>
-                {suggestion.reasoning}
+            <Text style={[styles.suggestionText, { color: colors.text }]}>
+              {suggestion.text}
+            </Text>
+
+            <View style={styles.suggestionFooter}>
+              <Text style={[styles.estimatedTime, { color: colors.secondary }]}>
+                ~{suggestion.estimatedTime}min
               </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
+              <Text style={[styles.confidence, { color: colors.secondary }]}>
+                {Math.round(suggestion.confidence * 100)}% match
+              </Text>
+            </View>
+
+            <Text style={[styles.reasoning, { color: colors.secondary }]}>
+              {suggestion.reasoning}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   );
 };
@@ -216,15 +209,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   suggestionsContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: 12,
   },
   suggestionCard: {
-    width: 280,
+    width: '100%',
     padding: 16,
     borderRadius: 8,
     borderWidth: 2,
-    marginRight: 12,
   },
   suggestionHeader: {
     flexDirection: 'row',
