@@ -3,6 +3,7 @@ import {
   buildWeeklyAccountabilityReceipt,
   isValidReceiptEmail,
   isWeeklyReceiptDue,
+  maybeSendOptInReceiptEmail,
 } from '../../lib/accountabilityReceipts';
 import { Commitment } from '../../types/commitment';
 
@@ -80,5 +81,18 @@ describe('accountability receipts', () => {
   it('validates receipt email addresses', () => {
     expect(isValidReceiptEmail('josh@example.com')).toBe(true);
     expect(isValidReceiptEmail('not-an-email')).toBe(false);
+  });
+
+  it('skips automatic receipt emails when opt-in is disabled', async () => {
+    const receipt = buildWeeklyAccountabilityReceipt({
+      commitment,
+      todayAlreadyCheckedIn: false,
+      daysSinceStart: 8,
+      isDeadlinePassed: false,
+    });
+
+    await expect(
+      maybeSendOptInReceiptEmail(receipt, 'josh@example.com', false)
+    ).resolves.toEqual({ skipped: true });
   });
 });

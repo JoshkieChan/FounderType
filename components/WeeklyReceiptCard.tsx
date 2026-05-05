@@ -14,10 +14,12 @@ interface WeeklyReceiptCardProps {
   isDue: boolean;
   disabled?: boolean;
   email: string;
+  emailOptIn: boolean;
   emailStatus?: string | null;
   isSendingEmail?: boolean;
   onLogReceipt: () => void;
   onEmailChange: (email: string) => void;
+  onEmailOptInChange: (enabled: boolean) => void;
   onSendEmail: () => void;
 }
 
@@ -35,10 +37,12 @@ export default function WeeklyReceiptCard({
   isDue,
   disabled,
   email,
+  emailOptIn,
   emailStatus,
   isSendingEmail,
   onLogReceipt,
   onEmailChange,
+  onEmailOptInChange,
   onSendEmail,
 }: WeeklyReceiptCardProps) {
   const history = receipts.slice(0, 3);
@@ -97,6 +101,17 @@ export default function WeeklyReceiptCard({
             autoCorrect={false}
             keyboardType="email-address"
           />
+          <TouchableOpacity
+            style={styles.optInRow}
+            onPress={() => onEmailOptInChange(!emailOptIn)}
+          >
+            <View style={[styles.checkbox, emailOptIn && styles.checkboxOn]}>
+              {emailOptIn && <Text style={styles.checkmark}>✓</Text>}
+            </View>
+            <Text style={styles.optInText}>
+              Email future weekly receipts automatically
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.emailButton,
@@ -236,6 +251,33 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
+  },
+  optInRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxOn: {
+    backgroundColor: '#3B82F6',
+  },
+  checkmark: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  optInText: {
+    color: '#D1D5DB',
+    fontSize: 13,
+    flex: 1,
   },
   emailButtonText: {
     color: '#93C5FD',

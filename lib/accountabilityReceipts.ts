@@ -10,6 +10,7 @@ import Logger from './logger';
 
 const RECEIPTS_KEY = 'foundertype_accountability_receipts';
 const RECEIPT_EMAIL_KEY = 'foundertype_accountability_email';
+const RECEIPT_EMAIL_OPT_IN_KEY = 'foundertype_accountability_email_opt_in';
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -218,6 +219,17 @@ export async function saveReceiptEmailAddress(email: string) {
   await AsyncStorage.setItem(RECEIPT_EMAIL_KEY, email.trim());
 }
 
+export async function getReceiptEmailOptIn() {
+  return (await AsyncStorage.getItem(RECEIPT_EMAIL_OPT_IN_KEY)) === 'true';
+}
+
+export async function saveReceiptEmailOptIn(enabled: boolean) {
+  await AsyncStorage.setItem(
+    RECEIPT_EMAIL_OPT_IN_KEY,
+    enabled ? 'true' : 'false'
+  );
+}
+
 export function buildWeeklyAccountabilityReceipt({
   commitment,
   todayAlreadyCheckedIn,
@@ -312,6 +324,16 @@ export async function sendAccountabilityReceiptEmail(
       error: 'Could not send the receipt email. Please try again.',
     };
   }
+}
+
+export async function maybeSendOptInReceiptEmail(
+  receipt: AccountabilityReceipt,
+  email: string,
+  optedIn: boolean
+) {
+  if (!optedIn) return { skipped: true as const };
+  const result = await sendAccountabilityReceiptEmail(receipt, email);
+  return { skipped: false as const, ...result };
 }
 
 async function syncAccountabilityReceipt(receipt: AccountabilityReceipt) {
