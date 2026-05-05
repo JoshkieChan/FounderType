@@ -92,7 +92,6 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
       ...styles.card,
       backgroundColor: colors.card,
       borderColor: colors.border,
-      shadowColor: colors.shadow || '#000',
     };
 
     const transform = [];
@@ -123,13 +122,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
     borderWidth: 1,
+    ...Platform.select({
+      web: {
+        boxShadow: '0px 2px 3.84px rgba(0, 0, 0, 0.1)',
+      },
+      default: {
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        elevation: 5,
+      },
+    }),
   },
 });

@@ -1,5 +1,5 @@
 {
-  "buildCommand": "expo export:web",
+  "buildCommand": "node scripts/export-web.cjs",
   "outputDirectory": "web-build",
   "installCommand": "npm install",
   "framework": null,

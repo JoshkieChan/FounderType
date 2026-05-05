@@ -96,19 +96,24 @@ export async function getLastAssessmentDate(
 
 // Get current authenticated user ID
 export async function getCurrentUserId(): Promise<string | null> {
-  // Check if already signed in
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (user?.id) return user.id;
+  try {
+    // Check if already signed in
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user?.id) return user.id;
 
-  const { data, error } = await supabase.auth.signInAnonymously();
-  if (error) {
-    console.error('Anonymous sign-in failed:', error);
+    const { data, error } = await supabase.auth.signInAnonymously();
+    if (error) {
+      // Supabase not configured or auth error - silently return null
+      return null;
+    }
+
+    return data.user?.id || null;
+  } catch (error) {
+    // Supabase not configured or network error - silently return null
     return null;
   }
-
-  return data.user?.id || null;
 }
 
 // Update commitment check-in and return updated count
