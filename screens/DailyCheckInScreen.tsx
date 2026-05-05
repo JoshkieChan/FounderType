@@ -13,7 +13,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, cachedSupabase } from '../lib/cachedSupabase';
 import { getCurrentUserId } from '../lib/storage';
 import AccountabilityAgentCard from '../components/AccountabilityAgentCard';
+import WeeklyReceiptCard from '../components/WeeklyReceiptCard';
 import { Commitment } from '../types/commitment';
+import {
+  AccountabilityReceipt,
+  buildWeeklyAccountabilityReceipt,
+  getLatestAccountabilityReceipt,
+  isWeeklyReceiptDue,
+  saveAccountabilityReceipt,
+} from '../lib/accountabilityReceipts';
 
 const CHECK_IN_KEY = 'foundertype_daily_checkin';
 
@@ -45,6 +53,9 @@ export default function DailyCheckInScreen({
   const [todayAlreadyCheckedIn, setTodayAlreadyCheckedIn] = useState(false);
   const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
   const [daysSinceStart, setDaysSinceStart] = useState(0);
+  const [latestReceipt, setLatestReceipt] =
+    useState<AccountabilityReceipt | null>(null);
+  const [isSavingReceipt, setIsSavingReceipt] = useState(false);
 
   useEffect(() => {
     loadCheckInData();
@@ -75,6 +86,8 @@ export default function DailyCheckInScreen({
         );
         setDaysSinceStart(days);
       }
+      const receipt = await getLatestAccountabilityReceipt(passedCommitment.id);
+      setLatestReceipt(receipt);
       return;
     }
 
@@ -143,6 +156,32 @@ export default function DailyCheckInScreen({
       setCheckInData(newData);
     } catch (error) {
       console.error('Error saving check-in data:', error);
+    }
+  };
+
+  const handleLogWeeklyReceipt = async () => {
+    if (!activeCommitment) return;
+
+    setIsSavingReceipt(true);
+    try {
+      const receipt = buildWeeklyAccountabilityReceipt({
+        commitment: activeCommitment,
+        todayAlreadyCheckedIn,
+        daysSinceStart,
+        isDeadlinePassed,
+      });
+      const saved = await saveAccountabilityReceipt(receipt);
+      setLatestReceipt(saved);
+    } catch (error) {
+      console.error('Error logging weekly accountability receipt:', error);
+      const message = 'Failed to log accountability receipt. Please try again.';
+      if (Platform.OS === 'web') {
+        window.alert(message);
+      } else {
+        Alert.alert('Receipt Error', message);
+      }
+    } finally {
+      setIsSavingReceipt(false);
     }
   };
 
@@ -478,6 +517,13 @@ export default function DailyCheckInScreen({
           todayAlreadyCheckedIn={todayAlreadyCheckedIn}
           daysSinceStart={daysSinceStart}
           isDeadlinePassed={isDeadlinePassed}
+        />
+
+        <WeeklyReceiptCard
+          receipt={latestReceipt}
+          isDue={isWeeklyReceiptDue(latestReceipt)}
+          disabled={!activeCommitment || isSavingReceipt}
+          onLogReceipt={handleLogWeeklyReceipt}
         />
 
         <View style={styles.actionContainer}>
