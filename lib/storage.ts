@@ -105,7 +105,12 @@ export async function getCurrentUserId(): Promise<string | null> {
 
     const { data, error } = await supabase.auth.signInAnonymously();
     if (error) {
-      // Supabase not configured or auth error - silently return null
+      // Check if anonymous auth is disabled
+      if (error.message?.includes('Anonymous sign-ins are not enabled')) {
+        console.warn('Anonymous auth not enabled in Supabase - using local storage fallback');
+        return `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      }
+      // Supabase not configured or other auth error - silently return null
       return null;
     }
 
