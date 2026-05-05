@@ -12,6 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, cachedSupabase } from '../lib/cachedSupabase';
 import { getCurrentUserId } from '../lib/storage';
+import AccountabilityAgentCard from '../components/AccountabilityAgentCard';
+import { Commitment } from '../types/commitment';
 
 const CHECK_IN_KEY = 'foundertype_daily_checkin';
 
@@ -37,7 +39,9 @@ export default function DailyCheckInScreen({
   });
   const [todayAction, setTodayAction] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [activeCommitment, setActiveCommitment] = useState<any>(null);
+  const [activeCommitment, setActiveCommitment] = useState<Commitment | null>(
+    null
+  );
   const [todayAlreadyCheckedIn, setTodayAlreadyCheckedIn] = useState(false);
   const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
   const [daysSinceStart, setDaysSinceStart] = useState(0);
@@ -52,7 +56,7 @@ export default function DailyCheckInScreen({
     // Get commitment from route params
     const passedCommitment = route?.params?.commitment;
     if (passedCommitment) {
-      setActiveCommitment(passedCommitment);
+      setActiveCommitment(passedCommitment as Commitment);
       setTodayAction(passedCommitment.daily_action || '');
       const today = new Date().toISOString().split('T')[0];
       setTodayAlreadyCheckedIn(
@@ -468,6 +472,13 @@ export default function DailyCheckInScreen({
             )}
           </View>
         )}
+
+        <AccountabilityAgentCard
+          commitment={activeCommitment}
+          todayAlreadyCheckedIn={todayAlreadyCheckedIn}
+          daysSinceStart={daysSinceStart}
+          isDeadlinePassed={isDeadlinePassed}
+        />
 
         <View style={styles.actionContainer}>
           <Text style={styles.actionLabel}>Today's Action</Text>
