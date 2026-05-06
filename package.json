@@ -9,6 +9,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build": "node scripts/export-web.cjs",
+    "serve:web": "node scripts/serve-web.cjs",
+    "smoke:web": "node scripts/smoke-web.cjs",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "format": "prettier --write .",
