@@ -284,7 +284,8 @@ export async function saveAccountabilityReceipt(
 
 export async function sendAccountabilityReceiptEmail(
   receipt: AccountabilityReceipt,
-  email: string
+  email: string,
+  captchaToken?: string | null
 ) {
   const normalizedEmail = email.trim();
   if (!isValidReceiptEmail(normalizedEmail)) {
@@ -294,7 +295,7 @@ export async function sendAccountabilityReceiptEmail(
   await saveReceiptEmailAddress(normalizedEmail);
 
   try {
-    const userId = await getCurrentUserId();
+    const userId = await getCurrentUserId(captchaToken);
     if (!userId || userId.startsWith('local-')) {
       return {
         success: false,

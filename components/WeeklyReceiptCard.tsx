@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import { AccountabilityReceipt } from '../lib/accountabilityReceipts';
+import HCaptchaWrapper from './HCaptchaWrapper';
 
 interface WeeklyReceiptCardProps {
   receipt: AccountabilityReceipt | null;
@@ -17,9 +18,12 @@ interface WeeklyReceiptCardProps {
   emailOptIn: boolean;
   emailStatus?: string | null;
   isSendingEmail?: boolean;
+  emailCaptchaToken?: string | null;
   onLogReceipt: () => void;
   onEmailChange: (email: string) => void;
   onEmailOptInChange: (enabled: boolean) => void;
+  onEmailCaptchaVerify: (token: string) => void;
+  onEmailCaptchaReset: () => void;
   onSendEmail: () => void;
 }
 
@@ -40,9 +44,12 @@ export default function WeeklyReceiptCard({
   emailOptIn,
   emailStatus,
   isSendingEmail,
+  emailCaptchaToken,
   onLogReceipt,
   onEmailChange,
   onEmailOptInChange,
+  onEmailCaptchaVerify,
+  onEmailCaptchaReset,
   onSendEmail,
 }: WeeklyReceiptCardProps) {
   const history = receipts.slice(0, 3);
@@ -112,13 +119,19 @@ export default function WeeklyReceiptCard({
               Email future weekly receipts automatically
             </Text>
           </TouchableOpacity>
+          <HCaptchaWrapper
+            onVerify={onEmailCaptchaVerify}
+            onExpire={onEmailCaptchaReset}
+            onError={onEmailCaptchaReset}
+          />
           <TouchableOpacity
             style={[
               styles.emailButton,
-              (!email || isSendingEmail) && styles.buttonDisabled,
+              (!email || !emailCaptchaToken || isSendingEmail) &&
+                styles.buttonDisabled,
             ]}
             onPress={onSendEmail}
-            disabled={!email || isSendingEmail}
+            disabled={!email || !emailCaptchaToken || isSendingEmail}
           >
             <Text style={styles.emailButtonText}>
               {isSendingEmail ? 'Sending...' : 'Email Receipt'}

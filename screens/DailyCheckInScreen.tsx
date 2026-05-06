@@ -71,6 +71,9 @@ export default function DailyCheckInScreen({
   const [receiptEmailStatus, setReceiptEmailStatus] = useState<string | null>(
     null
   );
+  const [receiptEmailCaptchaToken, setReceiptEmailCaptchaToken] = useState<
+    string | null
+  >(null);
   const [isSavingReceipt, setIsSavingReceipt] = useState(false);
   const [isSendingReceiptEmail, setIsSendingReceiptEmail] = useState(false);
 
@@ -264,6 +267,7 @@ export default function DailyCheckInScreen({
   const handleReceiptEmailChange = (email: string) => {
     setReceiptEmail(email);
     setReceiptEmailStatus(null);
+    setReceiptEmailCaptchaToken(null);
     void saveReceiptEmailAddress(email);
   };
 
@@ -285,10 +289,12 @@ export default function DailyCheckInScreen({
     try {
       const result = await sendAccountabilityReceiptEmail(
         latestReceipt,
-        receiptEmail
+        receiptEmail,
+        receiptEmailCaptchaToken
       );
       if (result.success) {
         setReceiptEmailStatus('Receipt email sent.');
+        setReceiptEmailCaptchaToken(null);
         trackFunnelEvent(
           'accountability_receipt_email_sent',
           {
@@ -301,6 +307,7 @@ export default function DailyCheckInScreen({
         setReceiptEmailStatus(
           result.error || 'Could not send the receipt email. Please try again.'
         );
+        setReceiptEmailCaptchaToken(null);
         trackFunnelEvent(
           'accountability_receipt_email_failed',
           {
@@ -660,9 +667,12 @@ export default function DailyCheckInScreen({
           emailOptIn={receiptEmailOptIn}
           emailStatus={receiptEmailStatus}
           isSendingEmail={isSendingReceiptEmail}
+          emailCaptchaToken={receiptEmailCaptchaToken}
           onLogReceipt={handleLogWeeklyReceipt}
           onEmailChange={handleReceiptEmailChange}
           onEmailOptInChange={handleReceiptEmailOptInChange}
+          onEmailCaptchaVerify={setReceiptEmailCaptchaToken}
+          onEmailCaptchaReset={() => setReceiptEmailCaptchaToken(null)}
           onSendEmail={handleSendReceiptEmail}
         />
 
