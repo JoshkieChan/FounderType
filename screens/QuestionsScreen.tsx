@@ -17,6 +17,7 @@ import { useHaptics } from '../hooks/useHaptics';
 import { useProgressPersistence } from '../hooks/useProgressPersistence';
 import { globalAnswersRef } from '../lib/globalAnswers';
 import { trackFunnelEvent } from '../lib/funnelAnalytics';
+import { useWebShellWidth } from '../hooks/useWebShellWidth';
 
 export default function QuestionsScreen({
   navigation,
@@ -27,6 +28,8 @@ export default function QuestionsScreen({
 }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<UserAnswers>({});
+  const shellWidth = useWebShellWidth(48, 712);
+  const shellStyle = shellWidth ? { width: shellWidth } : null;
   const { selection, light } = useHaptics();
   const { saveProgress, loadProgress, clearProgress, hasIncompleteSession } =
     useProgressPersistence();
@@ -132,7 +135,7 @@ export default function QuestionsScreen({
 
   const content = (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, shellStyle]}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
@@ -151,7 +154,7 @@ export default function QuestionsScreen({
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, shellStyle]}>
         <Text style={styles.questionNumber}>
           Question {currentQuestion + 1} of {FOUNDER_TYPE_QUESTIONS.length}
         </Text>
@@ -252,14 +255,17 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   questionText: {
+    width: '100%',
     color: '#FFFFFF',
-    fontSize: 28,
+    fontSize: Platform.OS === 'web' ? 25 : 28,
     fontWeight: '700',
-    lineHeight: 36,
+    lineHeight: Platform.OS === 'web' ? 32 : 36,
     marginBottom: 40,
+    flexShrink: 1,
   },
   optionsContainer: {
     gap: 16,
+    width: '100%',
   },
   optionButton: {
     backgroundColor: '#1A1A1A',
@@ -273,5 +279,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 22,
+    flexShrink: 1,
   },
 });

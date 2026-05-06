@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { trackFunnelEvent } from '../lib/funnelAnalytics';
+import { useWebShellWidth } from '../hooks/useWebShellWidth';
 
 interface OnboardingScreenProps {
   navigation?: {
@@ -66,6 +67,7 @@ export default function OnboardingScreen({
   navigation,
 }: OnboardingScreenProps) {
   const [currentStep, setCurrentStep] = useState(0);
+  const shellWidth = useWebShellWidth(40, 720);
 
   useEffect(() => {
     trackFunnelEvent('product_hunt_onboarding_start');
@@ -97,7 +99,12 @@ export default function OnboardingScreen({
 
   return (
     <Container style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          shellWidth ? { width: shellWidth } : null,
+        ]}
+      >
         <View style={styles.header}>
           <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
             <Text style={styles.skipText}>View home</Text>
@@ -211,6 +218,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
+    width: '100%',
   },
   iconContainer: {
     width: 160,
@@ -222,25 +230,30 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   title: {
-    fontSize: 34,
+    width: '100%',
+    fontSize: Platform.OS === 'web' ? 30 : 34,
     fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 16,
     lineHeight: 40,
+    flexShrink: 1,
   },
   description: {
-    fontSize: 17,
+    width: '100%',
+    fontSize: Platform.OS === 'web' ? 16 : 17,
     color: '#CCCCCC',
     textAlign: 'center',
     lineHeight: 26,
     paddingHorizontal: 10,
+    flexShrink: 1,
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: Platform.OS === 'web' ? 'center' : 'space-between',
     alignItems: 'center',
     paddingTop: 20,
+    gap: 16,
   },
   backButton: {
     width: 48,
@@ -251,7 +264,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   backButtonPlaceholder: {
-    width: 48,
+    width: Platform.OS === 'web' ? 0 : 48,
     height: 48,
   },
   nextButton: {
@@ -262,10 +275,14 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
+    maxWidth: '100%',
+    minWidth: Platform.OS === 'web' ? 160 : undefined,
+    justifyContent: 'center',
   },
   nextText: {
     fontSize: 16,
     fontWeight: '600',
     color: 'white',
+    flexShrink: 1,
   },
 });
