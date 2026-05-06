@@ -84,8 +84,6 @@ export default function OnboardingScreen({
   const handleSkip = () => {
     if (navigation?.navigate) {
       navigation.navigate('landing');
-    } else {
-      console.log('Onboarding completed');
     }
   };
 

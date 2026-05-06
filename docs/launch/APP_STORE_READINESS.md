@@ -10,6 +10,9 @@ This project is configured for Expo/EAS native release without changing the exis
 - Production builds use remote versioning and auto-increment through EAS.
 - Unused camera/photo/storage permissions are intentionally not requested.
 - Non-exempt encryption is declared as false because the app only uses standard HTTPS/TLS.
+- Metadata draft is in `store.config.json`.
+- Privacy label draft is in `docs/launch/APP_PRIVACY_LABELS.md`.
+- Review notes draft is in `docs/launch/APP_REVIEW_NOTES.md`.
 
 ## Required Manual Setup Before First Store Submission
 
@@ -39,6 +42,8 @@ This project is configured for Expo/EAS native release without changing the exis
    npx eas-cli@latest submit -p ios --profile production
    npx eas-cli@latest submit -p android --profile production
    ```
+
+5. Fill App Store Connect review contact fields with real owner/support details. Do not use placeholder reviewer contact information.
 
 ## Build Commands
 

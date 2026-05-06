@@ -79,9 +79,9 @@ export default function TermsScreen({ navigation }: TermsScreenProps) {
 
         <Text style={styles.sectionTitle}>Termination</Text>
         <Text style={styles.paragraph}>
-          You can delete your account anytime by emailing
-          privacy@foundertype.app. We can terminate accounts that violate these
-          terms without notice.
+          You can request account-associated data deletion anytime by emailing
+          updates@signaldatasource.com. We can terminate accounts that violate
+          these terms without notice.
         </Text>
 
         <Text style={styles.sectionTitle}>Changes to Terms</Text>
@@ -92,7 +92,7 @@ export default function TermsScreen({ navigation }: TermsScreenProps) {
 
         <Text style={styles.sectionTitle}>Contact</Text>
         <Text style={styles.paragraph}>
-          Questions? Email us at support@foundertype.app
+          Questions? Email us at updates@signaldatasource.com
         </Text>
 
         <View style={styles.footer}>

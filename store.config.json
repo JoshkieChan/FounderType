@@ -1,0 +1,43 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "copyright": "2026 FounderType",
+    "categories": ["PRODUCTIVITY", "BUSINESS"],
+    "info": {
+      "en-US": {
+        "title": "FounderType",
+        "subtitle": "Finish What You Start",
+        "description": "FounderType is a behavioral commitment system for people who keep starting things and stopping.\n\nIt identifies your specific founder pattern, puts one 30-day commitment on public record, and keeps the record honest through daily check-ins and accountability receipts.\n\nFounderType is not a course, quiz, coaching app, or motivation feed. It is built for repeat starters who know what they should do and still keep walking away.\n\nHOW IT WORKS\n\n- Take a seven-question diagnostic\n- Get a FounderType profile that names your stopping pattern\n- Put one specific 30-day commitment on public record\n- Check in daily with visible proof\n- Receive accountability receipts that show whether you followed through or drifted\n\nThe friction is intentional. If you are not willing to put a commitment on record, FounderType is probably not for you.\n\nFounderType helps you face the loop honestly, finish one real commitment, and stop treating quitting like a private event nobody can see.",
+        "keywords": [
+          "founder,accountability,commitment,habits,startup,builder,goals,focus,productivity"
+        ],
+        "releaseNotes": "Initial FounderType release with diagnostic, public 30-day commitments, daily check-ins, public feed, and accountability receipts.",
+        "promoText": "Identify why you keep stopping, put your next commitment on record, and keep the record honest for 30 days.",
+        "privacyPolicyUrl": "https://project-zoaht.vercel.app/privacy",
+        "supportUrl": "https://project-zoaht.vercel.app",
+        "marketingUrl": "https://project-zoaht.vercel.app"
+      }
+    },
+    "advisory": {
+      "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+      "gamblingSimulated": "NONE",
+      "medicalOrTreatmentInformation": "NONE",
+      "profanityOrCrudeHumor": "NONE",
+      "sexualContentGraphicAndNudity": "NONE",
+      "sexualContentOrNudity": "NONE",
+      "horrorOrFearThemes": "NONE",
+      "matureOrSuggestiveThemes": "NONE",
+      "violenceCartoonOrFantasy": "NONE",
+      "violenceRealistic": "NONE",
+      "violenceRealisticProlongedGraphicOrSadistic": "NONE",
+      "contests": "NONE",
+      "gambling": false,
+      "unrestrictedWebAccess": false,
+      "seventeenPlus": false
+    },
+    "release": {
+      "automaticRelease": false,
+      "phasedRelease": true
+    }
+  }
+}

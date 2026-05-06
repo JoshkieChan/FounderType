@@ -252,7 +252,7 @@ export default function DailyCheckInScreen({
       console.error('Error logging weekly accountability receipt:', error);
       const message = 'Failed to log accountability receipt. Please try again.';
       if (Platform.OS === 'web') {
-        window.alert(message);
+        setReceiptEmailStatus(message);
       } else {
         Alert.alert('Receipt Error', message);
       }
@@ -376,7 +376,7 @@ export default function DailyCheckInScreen({
     if (nextDay > 30) {
       // Day 30 reached — show completion prompt instead of auto-completing
       if (Platform.OS === 'web') {
-        window.alert(
+        setReceiptEmailStatus(
           'Day 30 reached. Time to mark your commitment complete or abandon it.'
         );
       } else {
@@ -388,7 +388,7 @@ export default function DailyCheckInScreen({
       return;
     } else {
       if (Platform.OS === 'web') {
-        window.alert(
+        setReceiptEmailStatus(
           'Day ' + checkInData.currentDay + ' done. Come back tomorrow.'
         );
       } else {
@@ -426,7 +426,7 @@ export default function DailyCheckInScreen({
     if (!commitmentId) {
       console.error('No commitment ID found for abandon');
       if (Platform.OS === 'web') {
-        window.alert('Cannot find commitment to abandon');
+        setReceiptEmailStatus('Cannot find commitment to abandon.');
       } else {
         Alert.alert('Error', 'Cannot find commitment to abandon');
       }
@@ -500,7 +500,7 @@ export default function DailyCheckInScreen({
 
       // Show success and redirect to feed
       if (Platform.OS === 'web') {
-        window.alert('Commitment marked as ABANDONED permanently');
+        setReceiptEmailStatus('Commitment marked as ABANDONED permanently.');
       } else {
         Alert.alert('Abandoned', 'Commitment marked as ABANDONED permanently');
       }
@@ -509,7 +509,9 @@ export default function DailyCheckInScreen({
     } catch (err) {
       console.error('Error abandoning commitment:', err);
       if (Platform.OS === 'web') {
-        window.alert('Failed to abandon commitment: ' + (err as Error).message);
+        setReceiptEmailStatus(
+          'Failed to abandon commitment: ' + (err as Error).message
+        );
       } else {
         Alert.alert(
           'Error',
@@ -577,7 +579,7 @@ export default function DailyCheckInScreen({
       console.error('Error marking complete:', err);
       const msg = (err as Error).message || 'Unknown error';
       if (Platform.OS === 'web') {
-        window.alert('Failed to sync with public feed: ' + msg);
+        setReceiptEmailStatus('Failed to sync with public feed: ' + msg);
       } else {
         Alert.alert('Sync Error', 'Failed to sync with public feed: ' + msg);
       }

@@ -48,6 +48,18 @@ export default function PrivacyPolicyScreen({
           <Text style={styles.bulletPoint}>
             - Public commitment text, daily action, and check-in progress
           </Text>
+          <Text style={styles.bulletPoint}>
+            - Anonymous account identifiers used to keep your commitments tied
+            to your device/session
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - Optional email address if you choose to receive accountability
+            receipts
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - Basic technical diagnostics, security checks, and performance
+            events used to keep the app reliable
+          </Text>
         </View>
 
         <View style={styles.section}>
@@ -59,12 +71,10 @@ export default function PrivacyPolicyScreen({
             - Your name or personal identity
           </Text>
           <Text style={styles.bulletPoint}>
-            - Email address or contact information
+            - Email address unless you explicitly opt in to receipt delivery
           </Text>
           <Text style={styles.bulletPoint}>- Location data</Text>
-          <Text style={styles.bulletPoint}>
-            - Device identifiers beyond what's necessary
-          </Text>
+          <Text style={styles.bulletPoint}>- Precise location data</Text>
           <Text style={styles.bulletPoint}>
             - Social media profiles or accounts
           </Text>
@@ -84,6 +94,13 @@ export default function PrivacyPolicyScreen({
           <Text style={styles.bulletPoint}>
             - Tracking daily check-ins and abandoned/completed status
           </Text>
+          <Text style={styles.bulletPoint}>
+            - Sending accountability receipt emails only when you opt in
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - Preventing automated abuse and diagnosing crashes or reliability
+            issues
+          </Text>
         </View>
 
         <View style={styles.section}>
@@ -93,6 +110,23 @@ export default function PrivacyPolicyScreen({
           </Text>
           <Text style={styles.bulletPoint}>
             - <Text style={styles.bold}>Supabase</Text> - Secure data storage
+            and anonymous authentication
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - <Text style={styles.bold}>hCaptcha</Text> - Abuse prevention on
+            public commitment submission
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - <Text style={styles.bold}>Resend</Text> - Optional accountability
+            receipt email delivery
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - <Text style={styles.bold}>Sentry</Text> - Crash and error
+            diagnostics
+          </Text>
+          <Text style={styles.bulletPoint}>
+            - <Text style={styles.bold}>Vercel</Text> - Web hosting,
+            performance, and aggregate analytics
           </Text>
         </View>
 
@@ -100,10 +134,10 @@ export default function PrivacyPolicyScreen({
           <Text style={styles.sectionTitle}>Data Security</Text>
           <Text style={styles.sectionText}>We protect your data with:</Text>
           <Text style={styles.bulletPoint}>
-            - End-to-end encryption for sensitive data
+            - Encrypted network transport using HTTPS/TLS
           </Text>
           <Text style={styles.bulletPoint}>
-            - Secure cloud storage via Supabase
+            - Row-level security and owner-scoped access controls in Supabase
           </Text>
           <Text style={styles.bulletPoint}>
             - Limited data access to essential personnel only
@@ -129,8 +163,8 @@ export default function PrivacyPolicyScreen({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Data Deletion</Text>
           <Text style={styles.sectionText}>
-            You can request complete deletion of your account and all associated
-            data at any time.
+            You can request deletion of your account-associated data at any
+            time.
           </Text>
 
           <Text style={styles.bold}>What gets deleted:</Text>
@@ -151,7 +185,8 @@ export default function PrivacyPolicyScreen({
             How to request deletion:
           </Text>
           <Text style={styles.bulletPoint}>
-            1. Email us at privacy@foundertype.app with subject "Delete My Data"
+            1. Email us at updates@signaldatasource.com with subject "Delete My
+            Data"
           </Text>
           <Text style={styles.bulletPoint}>
             2. Include your account identifier or commitment text for
@@ -176,7 +211,7 @@ export default function PrivacyPolicyScreen({
             If you have questions about this privacy policy or how we handle
             your data, please contact us at:
           </Text>
-          <Text style={styles.contactEmail}>privacy@foundertype.app</Text>
+          <Text style={styles.contactEmail}>updates@signaldatasource.com</Text>
         </View>
 
         <View style={styles.section}>

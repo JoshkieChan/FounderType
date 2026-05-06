@@ -113,6 +113,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
   } = usePublicFeed('active');
 
   const [hasSavedProfile, setHasSavedProfile] = useState(false);
+  const [feedNotice, setFeedNotice] = useState<string | null>(null);
 
   const { width } = useWindowDimensions();
   const isWide = width > 768;
@@ -160,7 +161,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
       } catch (error) {
         console.error('Error deleting commitment:', error);
         if (Platform.OS === 'web') {
-          window.alert('Failed to delete commitment. Please try again.');
+          setFeedNotice('Failed to delete commitment. Please try again.');
         } else {
           Alert.alert(
             'Error',
@@ -288,6 +289,12 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
             >
               <Text style={styles.statusCtaText}>Post Next Commitment →</Text>
             </TouchableOpacity>
+          </View>
+        )}
+
+        {feedNotice && (
+          <View style={styles.noticeBox}>
+            <Text style={styles.noticeText}>{feedNotice}</Text>
           </View>
         )}
 
@@ -433,6 +440,23 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 32,
     maxWidth: 480,
+  },
+  noticeBox: {
+    width: '100%',
+    maxWidth: 720,
+    marginTop: 16,
+    marginHorizontal: 24,
+    padding: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#7F1D1D',
+    backgroundColor: '#180909',
+  },
+  noticeText: {
+    color: '#FCA5A5',
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
   },
   primaryCta: {
     backgroundColor: '#3B82F6',

@@ -51,7 +51,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setActiveCommitment(active as Commitment);
         setLastCycleResult('none'); // Reset history fallback if active exists
 
-        // Check if this is user's first commitment and trigger celebration
+        // Keep a lightweight first-commitment check for future receipt logic.
         const { data: previousCommitments } = await supabase
           .from('commitments')
           .select('id')
@@ -59,10 +59,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           .neq('id', active.id);
 
         if (!previousCommitments || previousCommitments.length === 0) {
-          console.log(
-            '🎉 First commitment detected! Email celebration would be sent here.'
-          );
-          // In production: emailSystem.sendFirstCommitmentEmail(userEmail, firstName, active.commitment_text, founderType, profileLink);
+          return;
         }
       } else {
         setActiveCommitment(null);
@@ -79,20 +76,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (lastErr) throw lastErr;
         setLastCycleResult((last?.status as any) || 'none');
 
-        // Check for re-engagement opportunity
-        if (last?.created_at) {
-          const daysSinceLastCommitment = Math.floor(
-            (Date.now() - new Date(last.created_at).getTime()) /
-              (1000 * 60 * 60 * 24)
-          );
-
-          if (daysSinceLastCommitment >= 7) {
-            console.log(
-              '📧 Re-engagement opportunity detected! Email would be sent here.'
-            );
-            // In production: emailSystem.sendReEngagementEmail(userEmail, firstName, daysSinceLastCommitment, founderType, lastCommitment, bestStreak, restartLink);
-          }
-        }
+        // Re-engagement is handled by the accountability receipt flow.
       }
     } catch (err) {
       console.error('UserProvider fetchData error:', err);
