@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { Dimensions, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './navigation/AppNavigator';
 import { EnhancedErrorBoundary as ErrorBoundary } from './components/EnhancedErrorBoundary';
-import EnhancedOfflineIndicator from './components/EnhancedOfflineIndicator';
 
 import { UserProvider } from './context/UserContext';
 import { ThemeProvider } from './context/ThemeContext';
+
+const NativeOfflineIndicator = lazy(
+  () => import('./components/EnhancedOfflineIndicator')
+);
 
 interface TopMatch {
   founderType: string;
@@ -193,7 +196,11 @@ export default function App() {
       <ErrorBoundary>
         <ThemeProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
-            <EnhancedOfflineIndicator />
+            {Platform.OS !== 'web' && (
+              <Suspense fallback={null}>
+                <NativeOfflineIndicator />
+              </Suspense>
+            )}
             <UserProvider>
               <AppNavigator
                 currentProfile={currentProfile}

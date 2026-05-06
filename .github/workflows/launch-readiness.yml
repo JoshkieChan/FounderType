@@ -1,0 +1,48 @@
+name: Launch Readiness
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit --pretty false
+
+      - name: Test
+        run: npm test -- --runInBand
+
+      - name: Build web
+        run: npm run build
+
+      - name: Smoke local web build
+        run: |
+          npm run serve:web &
+          SERVER_PID=$!
+          trap "kill $SERVER_PID" EXIT
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:4177/ >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          SMOKE_BASE_URL=http://127.0.0.1:4177 npm run smoke:web
+
+      - name: Audit high severity dependencies
+        run: npm audit --audit-level=high

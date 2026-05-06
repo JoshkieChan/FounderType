@@ -2,7 +2,6 @@
 // Haptic feedback, native animations, and mobile-specific optimizations
 
 import { Animated, Easing, Platform } from 'react-native';
-import * as Haptics from 'expo-haptics';
 
 type HapticType =
   | 'light'
@@ -26,6 +25,7 @@ export class MobilePolish {
     if (Platform.OS === 'web') return;
 
     try {
+      const Haptics = await import('expo-haptics');
       switch (type) {
         case 'light':
           await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
