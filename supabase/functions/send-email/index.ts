@@ -11,6 +11,35 @@ const corsHeaders = {
 const MAX_EMAILS_PER_DAY = 5;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function getSupabasePublicKey() {
+  const legacyAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+  if (legacyAnonKey) return legacyAnonKey;
+
+  const publishableKeys = Deno.env.get('SUPABASE_PUBLISHABLE_KEYS');
+  if (!publishableKeys) return null;
+
+  try {
+    const parsed = JSON.parse(publishableKeys);
+    const values = collectStringValues(parsed);
+    return (
+      values.find((value) => value.startsWith('sb_publishable_')) ||
+      values[0] ||
+      null
+    );
+  } catch {
+    return publishableKeys;
+  }
+}
+
+function collectStringValues(value) {
+  if (typeof value === 'string') return [value];
+  if (Array.isArray(value)) return value.flatMap(collectStringValues);
+  if (value && typeof value === 'object') {
+    return Object.values(value).flatMap(collectStringValues);
+  }
+  return [];
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -22,24 +51,18 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabasePublicKey = getSupabasePublicKey();
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     const fromEmail =
       Deno.env.get('RESEND_FROM_EMAIL') || 'noreply@foundertype.app';
     const fromName = Deno.env.get('RESEND_FROM_NAME') || 'FounderType';
 
-    if (
-      !supabaseUrl ||
-      !supabaseAnonKey ||
-      !supabaseServiceRoleKey ||
-      !resendApiKey
-    ) {
+    if (!supabaseUrl || !supabasePublicKey || !resendApiKey) {
       return json({ error: 'Email service not configured' }, 500);
     }
 
     const authHeader = req.headers.get('Authorization') || '';
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+    const userClient = createClient(supabaseUrl, supabasePublicKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
@@ -66,11 +89,10 @@ serve(async (req) => {
       return json({ error: 'Invalid email body' }, 400);
     }
 
-    const serviceClient = createClient(supabaseUrl, supabaseServiceRoleKey);
     const since = new Date();
     since.setUTCHours(0, 0, 0, 0);
 
-    const { count, error: countError } = await serviceClient
+    const { count, error: countError } = await userClient
       .from('email_send_log')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
@@ -105,11 +127,15 @@ serve(async (req) => {
       return json({ error: 'Email provider rejected the request' }, 502);
     }
 
-    await serviceClient.from('email_send_log').insert({
+    const { error: logError } = await userClient.from('email_send_log').insert({
       user_id: user.id,
       recipient: to,
       subject,
     });
+
+    if (logError) {
+      console.error('Email log insert failed:', logError.message);
+    }
 
     return json({ success: true });
   } catch (error) {

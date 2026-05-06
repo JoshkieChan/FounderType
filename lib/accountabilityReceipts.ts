@@ -294,8 +294,19 @@ export async function sendAccountabilityReceiptEmail(
   await saveReceiptEmailAddress(normalizedEmail);
 
   try {
+    const userId = await getCurrentUserId();
+    if (!userId || userId.startsWith('local-')) {
+      return {
+        success: false,
+        error: 'Refresh the page, then try sending the receipt again.',
+      };
+    }
+
     const message = buildAccountabilityMessage(receipt);
-    const { error } = await supabase.functions.invoke('send-email', {
+    const { data, error } = await supabase.functions.invoke<{
+      success?: boolean;
+      error?: string;
+    }>('send-email', {
       body: {
         to: normalizedEmail,
         subject: message.subject,
@@ -310,7 +321,17 @@ export async function sendAccountabilityReceiptEmail(
       });
       return {
         success: false,
-        error: 'Could not send the receipt email. Please try again.',
+        error: getReceiptEmailErrorMessage(error.message),
+      };
+    }
+
+    if (data?.error) {
+      Logger.warn('Accountability receipt email failed', {
+        reason: 'edge_function_response_error',
+      });
+      return {
+        success: false,
+        error: getReceiptEmailErrorMessage(data.error),
       };
     }
 
@@ -334,6 +355,28 @@ export async function maybeSendOptInReceiptEmail(
   if (!optedIn) return { skipped: true as const };
   const result = await sendAccountabilityReceiptEmail(receipt, email);
   return { skipped: false as const, ...result };
+}
+
+function getReceiptEmailErrorMessage(error: string) {
+  if (error.includes('Authentication required')) {
+    return 'Refresh the page, then try sending the receipt again.';
+  }
+  if (error.includes('Daily email limit reached')) {
+    return 'You have reached the receipt email limit for today.';
+  }
+  if (error.includes('Invalid recipient email')) {
+    return 'Enter a valid email address.';
+  }
+  if (error.includes('Email service not configured')) {
+    return 'Receipt email is not configured correctly yet.';
+  }
+  if (error.includes('Email provider rejected')) {
+    return 'The email provider rejected this receipt. Try another address.';
+  }
+  if (error.includes('Unable to verify email limit')) {
+    return 'Could not verify the email limit. Please try again.';
+  }
+  return 'Could not send the receipt email. Please try again.';
 }
 
 async function syncAccountabilityReceipt(receipt: AccountabilityReceipt) {
