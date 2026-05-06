@@ -106,25 +106,39 @@ serve(async (req) => {
       return json({ error: 'Daily email limit reached' }, 429);
     }
 
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: `${fromName} <${fromEmail}>`,
-        to: [to],
-        subject,
-        html,
-        text,
-      }),
-    });
+    let response;
+    try {
+      response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: `${fromName} <${fromEmail}>`,
+          to: [to],
+          subject,
+          html,
+          text,
+        }),
+      });
+    } catch (fetchError) {
+      console.error('Fetch to Resend failed:', fetchError);
+      return json({ error: 'Failed to connect to email provider' }, 502);
+    }
 
     if (!response.ok) {
-      const errorBody = await response.text();
-      console.error('Resend send failed:', errorBody);
-      return json({ error: 'Email provider rejected the request' }, 502);
+      let errorBody;
+      try {
+        errorBody = await response.text();
+      } catch {
+        errorBody = 'Unable to read error response';
+      }
+      console.error('Resend send failed:', response.status, errorBody);
+      return json({ 
+        error: 'Email provider rejected the request',
+        details: `Status: ${response.status}, Body: ${errorBody}`
+      }, 502);
     }
 
     const { error: logError } = await userClient.from('email_send_log').insert({

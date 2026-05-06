@@ -123,7 +123,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
   }, []);
 
   // Cap the embedded feed to a small preview subset
-  const commitments = allCommitments.slice(0, isWide ? 9 : 6);
+  const commitments = allCommitments.slice(0, isWide ? 6 : 3);
 
   const onRefresh = async () => {
     await Promise.all([loadCommitments(), refreshActiveCommitment()]);
@@ -343,7 +343,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
             </Text>
           ) : (
             <View style={styles.feedGrid}>
-              {commitments.slice(0, isWide ? 9 : 6).map((item, i) => (
+              {commitments.slice(0, isWide ? 6 : 3).map((item, i) => (
                 <FeedCard key={item.id || i} item={item} index={i} />
               ))}
             </View>

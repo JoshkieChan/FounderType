@@ -103,13 +103,30 @@ export default function App() {
 
   const initializeDeferredServices = async () => {
     try {
-      const [{ performanceMonitor }, { AccessibilityManager }] =
-        await Promise.all([
-          import('./lib/performanceMonitoring'),
-          import('./lib/accessibility'),
-        ]);
+      const [
+        { performanceMonitor },
+        { PerformanceOptimizer },
+        { EmailSystem },
+        { AccessibilityManager },
+      ] = await Promise.all([
+        import('./lib/performanceMonitoring'),
+        import('./lib/performanceOptimization'),
+        import('./lib/emailSystem'),
+        import('./lib/accessibility'),
+      ]);
 
       performanceMonitor.initialize();
+
+      const performanceOptimizer = PerformanceOptimizer.getInstance();
+      performanceOptimizer.startPerformanceMonitoring();
+
+      const emailSystem = EmailSystem.getInstance();
+      emailSystem.configure({
+        provider: 'resend',
+        apiKey: '',
+        fromEmail: 'noreply@foundertype.app',
+        fromName: 'FounderType',
+      });
 
       AccessibilityManager.getInstance();
 
