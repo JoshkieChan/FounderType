@@ -164,22 +164,9 @@ export default function CommitmentScreen({
     setIsSubmitting(true);
 
     try {
-      const userId = user?.id || (await getCurrentUserId());
+      const userId = user?.id || (await getCurrentUserId(captchaToken));
       if (!userId) {
         throw new Error('Unable to create a secure session. Please try again.');
-      }
-
-      if (Platform.OS === 'web' && !editMode) {
-        const { data, error } = await supabase.functions.invoke(
-          'hcaptcha-verify',
-          {
-            body: { token: captchaToken },
-          }
-        );
-
-        if (error || !data?.verified) {
-          throw new Error('Security check failed. Please try again.');
-        }
       }
 
       // Replace [date] placeholders with actual dates

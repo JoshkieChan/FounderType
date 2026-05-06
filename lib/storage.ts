@@ -108,7 +108,9 @@ export async function getLastAssessmentDate(
 }
 
 // Get current authenticated user ID
-export async function getCurrentUserId(): Promise<string | null> {
+export async function getCurrentUserId(
+  captchaToken?: string | null
+): Promise<string | null> {
   try {
     // Check if already signed in
     const {
@@ -121,13 +123,23 @@ export async function getCurrentUserId(): Promise<string | null> {
       return user.id;
     }
 
-    const { data, error } = await supabase.auth.signInAnonymously();
+    const { data, error } = await supabase.auth.signInAnonymously(
+      captchaToken
+        ? {
+            options: {
+              captchaToken,
+            },
+          }
+        : undefined
+    );
     if (!error && data.user?.id) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('foundertype_supabase_user_id', data.user.id);
       }
       return data.user.id;
     }
+
+    if (captchaToken) return null;
 
     // Use local storage fallback only when Supabase anonymous auth is disabled.
     const localUserId = `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
