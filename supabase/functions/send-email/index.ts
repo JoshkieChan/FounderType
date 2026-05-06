@@ -51,18 +51,24 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabasePublicKey = getSupabasePublicKey();
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     const fromEmail =
       Deno.env.get('RESEND_FROM_EMAIL') || 'noreply@foundertype.app';
     const fromName = Deno.env.get('RESEND_FROM_NAME') || 'FounderType';
 
-    if (!supabaseUrl || !supabasePublicKey || !resendApiKey) {
+    if (
+      !supabaseUrl ||
+      !supabaseAnonKey ||
+      !supabaseServiceRoleKey ||
+      !resendApiKey
+    ) {
       return json({ error: 'Email service not configured' }, 500);
     }
 
     const authHeader = req.headers.get('Authorization') || '';
-    const userClient = createClient(supabaseUrl, supabasePublicKey, {
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
@@ -89,10 +95,11 @@ serve(async (req) => {
       return json({ error: 'Invalid email body' }, 400);
     }
 
+    const serviceClient = createClient(supabaseUrl, supabaseServiceRoleKey);
     const since = new Date();
     since.setUTCHours(0, 0, 0, 0);
 
-    const { count, error: countError } = await userClient
+    const { count, error: countError } = await serviceClient
       .from('email_send_log')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
@@ -141,15 +148,11 @@ serve(async (req) => {
       }, 502);
     }
 
-    const { error: logError } = await userClient.from('email_send_log').insert({
+    await serviceClient.from('email_send_log').insert({
       user_id: user.id,
       recipient: to,
       subject,
     });
-
-    if (logError) {
-      console.error('Email log insert failed:', logError.message);
-    }
 
     return json({ success: true });
   } catch (error) {
