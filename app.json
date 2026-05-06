@@ -5,20 +5,19 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/foundertype-icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "scheme": "foundertype",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#050505"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.foundertype.app",
       "buildNumber": "1",
       "infoPlist": {
-        "NSCameraUsageDescription": "Allow camera for profile pictures",
-        "NSPhotoLibraryUsageDescription": "Allow photo library for profile pictures",
         "ITSAppUsesNonExemptEncryption": false
       },
       "config": {
@@ -28,25 +27,20 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#050505"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.foundertype.app",
       "versionCode": 1,
-      "permissions": [
-        "INTERNET",
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
-      ]
+      "permissions": ["INTERNET"]
     },
     "web": {
       "favicon": "./assets/foundertype-icon.png",
       "bundler": "webpack",
       "meta": {
-        "description": "Public accountability for founders who finish what they start. Post 30-day commitments, track daily progress, and build consistency with community support.",
-        "keywords": "founder, accountability, commitment, productivity, startup",
+        "description": "FounderType identifies why you keep stopping, puts your next commitment on record publicly, and keeps the record honest for 30 days.",
+        "keywords": "founder, accountability, commitment, behavioral change, startup",
         "author": "FounderType"
       },
       "analytics": {
@@ -63,7 +57,7 @@
         }
       }
     },
-    "description": "Public accountability for founders who finish what they start. Post 30-day commitments, track daily progress, and build consistency with community support.",
+    "description": "FounderType identifies why you keep stopping, puts your next commitment on record publicly, and keeps the record honest for 30 days.",
     "plugins": [
       [
         "@sentry/react-native/expo",
@@ -77,16 +71,9 @@
       "expo-asset"
     ],
     "extra": {
-      "eas": {
-        "projectId": "foundertype-project-id"
-      },
       "router": {
         "origin": false
       }
-    },
-    "updates": {
-      "url": "https://u.expo.dev/your-project-id"
-    },
-    "owner": "foundertype"
+    }
   }
 }

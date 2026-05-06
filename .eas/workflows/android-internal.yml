@@ -1,0 +1,32 @@
+name: Android Internal Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        type: choice
+        description: EAS build profile
+        default: production
+        options:
+          - production
+          - preview
+      submit:
+        type: boolean
+        description: Submit the production build using the EAS submit profile
+        default: false
+
+jobs:
+  build-android:
+    type: build
+    params:
+      platform: android
+      profile: ${{ inputs.profile }}
+
+  submit-android:
+    type: submit
+    if: ${{ inputs.submit }}
+    needs:
+      - build-android
+    params:
+      build_id: ${{ needs.build-android.outputs.build_id }}
+      profile: production

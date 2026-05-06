@@ -1,0 +1,16 @@
+name: EAS Hosting Web Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      production:
+        type: boolean
+        description: Deploy to EAS Hosting production
+        default: false
+
+jobs:
+  deploy-web:
+    type: deploy
+    params:
+      prod: ${{ inputs.production }}
+      source_maps: true

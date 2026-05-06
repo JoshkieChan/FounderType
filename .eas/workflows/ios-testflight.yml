@@ -1,0 +1,32 @@
+name: iOS TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        type: choice
+        description: EAS build profile
+        default: production
+        options:
+          - production
+          - preview
+      changelog:
+        type: string
+        description: TestFlight "What to Test" notes
+        default: FounderType accountability and Product Hunt launch readiness build.
+
+jobs:
+  build-ios:
+    type: build
+    params:
+      platform: ios
+      profile: ${{ inputs.profile }}
+
+  submit-testflight:
+    type: testflight
+    needs:
+      - build-ios
+    params:
+      build_id: ${{ needs.build-ios.outputs.build_id }}
+      profile: production
+      changelog: ${{ inputs.changelog }}

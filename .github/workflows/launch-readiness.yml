@@ -25,6 +25,12 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit --pretty false
 
+      - name: Expo dependency check
+        run: npm run expo:check
+
+      - name: Expo Doctor
+        run: npm run expo:doctor
+
       - name: Test
         run: npm test -- --runInBand
 
