@@ -15,6 +15,7 @@ import { supabase } from '../lib/supabase';
 import { getCurrentUserId } from '../lib/storage';
 import { usePublicFeed } from '../hooks/usePublicFeed';
 import { Commitment } from '../types/commitment';
+import { useUserContext } from '../context/UserContext';
 import Logger from '../lib/logger';
 
 function getDaysRemaining(deadline: string): number {
@@ -100,6 +101,7 @@ function getHoursRemaining(item: Commitment): number {
 }
 
 export default function PublicFeedScreen({ navigation }: { navigation: any }) {
+  const { refreshActiveCommitment } = useUserContext();
   const { commitments, loading, refreshing, error, loadCommitments, loadMore } =
     usePublicFeed(null);
 
@@ -139,8 +141,13 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
         }
 
         await loadCommitments();
+        await refreshActiveCommitment();
       } catch (err) {
         Logger.error('Delete failed:', err);
+        const message =
+          'Your record was not deleted. Check your connection and retry.';
+        if (Platform.OS === 'web') window.alert(message);
+        else Alert.alert('Delete failed', message);
       }
     };
 
@@ -223,19 +230,23 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
           )}
         </View>
 
-        {/* Edit/Delete buttons for owner within 24 hours */}
-        {editable && (
+        {/* Owners retain deletion access after content edits lock. */}
+        {item.user_id === currentUserId && (
           <View style={styles.editActions}>
-            <Text style={styles.editableText}>
-              Editable for {hoursRemaining} hours
-            </Text>
+            {editable && (
+              <Text style={styles.editableText}>
+                Editable for {hoursRemaining} hours
+              </Text>
+            )}
             <View style={styles.editButtons}>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => handleEditCommitment(item)}
-              >
-                <Text style={styles.editButtonText}>Edit</Text>
-              </TouchableOpacity>
+              {editable && (
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={() => handleEditCommitment(item)}
+                >
+                  <Text style={styles.editButtonText}>Edit</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={styles.deleteButton}
                 onPress={() => handleDeleteCommitment(item)}

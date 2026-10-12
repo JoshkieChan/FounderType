@@ -114,3 +114,20 @@ test('failed check-in remains unrecorded', async ({ page }) => {
   );
   await expect(page.getByTestId('daily-check-in')).toBeEnabled();
 });
+
+test('owner can delete a public record after its edit window closes', async ({
+  page,
+}) => {
+  const fixture = await installFixtures(page);
+  await fillCommitment(page);
+  await expect(page).toHaveURL(/check-in/);
+  fixture.ageCommitment(2);
+  await page.goto('/feed');
+  await expect(
+    page.getByText('Locked after 24 hours', { exact: true })
+  ).toBeVisible();
+  await expect(page.getByText('Edit', { exact: true })).toHaveCount(0);
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByText('Delete', { exact: true }).click();
+  await expect(page.getByText('No public records yet')).toBeVisible();
+});

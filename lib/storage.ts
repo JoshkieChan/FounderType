@@ -138,9 +138,11 @@ export async function getCurrentUserId(
 
 // A single database transaction persists progress and returns the authoritative row.
 export async function recordCheckIn(commitmentId: string): Promise<Commitment> {
-  const { data, error } = await supabase.rpc('record_check_in', {
-    target_id: commitmentId,
-  });
+  const { data, error } = await supabase
+    .rpc('record_check_in', {
+      target_id: commitmentId,
+    })
+    .single();
   if (error || !data)
     throw new Error(
       'Could not save your check-in. Please retry when connected.'

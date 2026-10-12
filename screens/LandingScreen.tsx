@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 // import { SafeAreaView } from 'react-native-safe-area-context';
 import { loadProfile } from '../lib/storage';
+import { getProgress } from '../lib/progress';
 import { supabase } from '../lib/supabase';
 import { usePublicFeed } from '../hooks/usePublicFeed';
 import { Commitment } from '../types/commitment';
@@ -239,7 +240,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
               "{activeCommitment.commitment_text}"
             </Text>
             <Text style={[styles.statusMeta, { color: '#93C5FD' }]}>
-              Day {activeCommitment.check_ins.length + 1} of 30
+              Day {getProgress(activeCommitment).currentDay} of 30
             </Text>
             <View style={styles.statusActions}>
               <TouchableOpacity

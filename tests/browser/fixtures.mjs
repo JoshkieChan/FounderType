@@ -61,6 +61,10 @@ export async function installFixtures(
     if (url.pathname === '/auth/v1/user') return send(user);
     if (url.pathname === '/auth/v1/token') return send(session);
     if (url.pathname === '/rest/v1/commitments') {
+      if (method === 'DELETE') {
+        commitment = null;
+        return send(null);
+      }
       if (method === 'POST') {
         if (failCreate)
           return send({ message: 'Synthetic offline failure' }, 503);
@@ -92,7 +96,11 @@ export async function installFixtures(
         return send({ message: 'Synthetic offline failure' }, 503);
       commitment.check_ins = [new Date().toISOString().slice(0, 10)];
       commitment.days_completed = 1;
-      return send(commitment);
+      return send(
+        request.headers().accept?.includes('vnd.pgrst.object')
+          ? commitment
+          : [commitment]
+      );
     }
     if (url.pathname === '/rest/v1/accountability_receipts') {
       if (method === 'POST') {
@@ -105,5 +113,12 @@ export async function installFixtures(
     if (url.pathname === '/rest/v1/profiles') return send([], 200, 0);
     return send({ message: 'Unexpected fixture request' }, 400);
   });
-  return { requests };
+  return {
+    requests,
+    ageCommitment(days) {
+      commitment.created_at = new Date(
+        Date.now() - days * 86400000
+      ).toISOString();
+    },
+  };
 }
