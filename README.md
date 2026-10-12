@@ -40,7 +40,7 @@ npm run web
 
 With no environment file, onboarding, diagnostic, results and the commitment form can be explored without a backend. Posting, check-ins and feed data require a configured Supabase project. Failed writes remain errors; they do not produce pretend public records.
 
-Copy the placeholders in [.env.example](.env.example) into an ignored local environment file only when configuring services. Replace the public Supabase URL/key and hCaptcha site key with actual public configuration. Never put a service-role key, Resend key, CAPTCHA secret or Sentry upload token in an EXPO*PUBLIC* variable. Public variables are embedded at build time and require a rebuild when changed. Server-only values belong in Supabase Function secrets or the source-map upload environment.
+Copy the placeholders in [.env.example](.env.example) into an ignored local environment file only when configuring services. Replace the public Supabase URL/key and hCaptcha site key with actual public configuration. Never put a service-role key, Resend key, CAPTCHA secret or Sentry upload token in an `EXPO_PUBLIC_*` variable. Public variables are embedded at build time and require a rebuild when changed. Server-only values belong in Supabase Function secrets or the source-map upload environment.
 
 Native development uses npm run android or npm run ios (iOS requires macOS). First-time native commitment creation is currently blocked by the missing native CAPTCHA integration; use the web flow. Native build configuration does not imply a store release.
 

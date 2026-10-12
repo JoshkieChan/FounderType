@@ -209,7 +209,7 @@ export const FOUNDER_TYPE_RESULTS = {
       'Long-term content plays',
     ],
     nextMove:
-      'Post a 7-day sprint commitment. Make it public so you actually finish one thing.',
+      'Post a 30-day commitment with a first milestone you can finish in seven days.',
   },
 
   'The 30-Day Executor': {
@@ -296,7 +296,7 @@ export const FOUNDER_TYPE_RESULTS = {
     ],
     quits: ['Everything—because you never start'],
     nextMove:
-      'Post a 7-day build sprint with ZERO customer interviews allowed. Ship something broken, then iterate.',
+      'Post a 30-day build commitment. Ship a small first version in seven days, then test and iterate.',
   },
 
   'The Scattered Starter': {
