@@ -46,7 +46,7 @@ function replaceDatePlaceholders(text: string): string {
 const RULES = [
   'Must be specific and verifiable by a stranger',
   'Must have completion date within 30 days',
-  'Can be corrected for 24 hours, then becomes permanent',
+  'Content can be corrected for 24 hours; owners can delete it',
 ];
 
 interface CommitmentRouteParams {
@@ -87,7 +87,6 @@ export default function CommitmentScreen({
   const commitmentId = route?.params?.commitmentId;
   const initialText = route?.params?.initialText;
   const initialDailyAction = route?.params?.initialDailyAction;
-  const initialDeadline = route?.params?.initialDeadline;
 
   useEffect(() => {
     if (editMode && initialText) {
@@ -99,7 +98,7 @@ export default function CommitmentScreen({
   }, [editMode, initialText, initialDailyAction]);
 
   useEffect(() => {
-    trackFunnelEvent('product_hunt_commitment_screen_reached', {
+    trackFunnelEvent('commitment_screen_reached', {
       edit_mode: editMode,
     });
   }, [editMode]);
@@ -151,12 +150,12 @@ export default function CommitmentScreen({
 
     if (!agreedPermanent) {
       showValidationError(
-        'Acknowledge that this commitment becomes permanent after the 24-hour edit window.'
+        'Acknowledge that this commitment locks for editing after 24 hours.'
       );
       return;
     }
 
-    if (Platform.OS === 'web' && !editMode && !captchaToken) {
+    if (!editMode && !captchaToken) {
       showValidationError('Complete the security check before posting.');
       return;
     }
@@ -165,7 +164,7 @@ export default function CommitmentScreen({
 
     try {
       const userId = user?.id || (await getCurrentUserId(captchaToken));
-      if (!userId) {
+      if (!userId || userId.startsWith('local-')) {
         throw new Error('Unable to create a secure session. Please try again.');
       }
 
@@ -174,38 +173,32 @@ export default function CommitmentScreen({
 
       // Edit mode - update existing commitment
       if (editMode) {
-        const updatedCommitment = {
-          id: commitmentId,
-          commitment_text: processedCommitment.trim(),
-          daily_action: dailyAction.trim(),
-          deadline: initialDeadline,
-          status: 'active',
-          check_ins: [],
-        };
+        if (!commitmentId || String(commitmentId).startsWith('local-')) {
+          throw new Error('A saved commitment is required for editing.');
+        }
+        const { data: updatedCommitment, error } = await supabase
+          .from('commitments')
+          .update({
+            commitment_text: processedCommitment.trim(),
+            daily_action: dailyAction.trim(),
+          })
+          .eq('id', commitmentId)
+          .eq('user_id', userId)
+          .select()
+          .single();
 
-        if (commitmentId && !String(commitmentId).startsWith('local-')) {
-          const { error } = await supabase
-            .from('commitments')
-            .update({
-              commitment_text: processedCommitment.trim(),
-              daily_action: dailyAction.trim(),
-            })
-            .eq('id', commitmentId)
-            .eq('user_id', userId);
-
-          if (error) {
-            console.error('Error updating commitment:', error);
-            showValidationError(
-              'Failed to update commitment. Please try again.',
-              'Error'
-            );
-            return;
-          }
+        if (error || !updatedCommitment) {
+          console.error('Error updating commitment:', error);
+          showValidationError(
+            'Failed to update commitment. Please try again.',
+            'Error'
+          );
+          return;
         }
 
         await refreshActiveCommitment();
         trackFunnelEvent(
-          'product_hunt_commitment_posted',
+          'commitment_posted',
           {
             edit_mode: true,
             synced: !commitmentId?.startsWith('local-'),
@@ -228,40 +221,27 @@ export default function CommitmentScreen({
         }
       }
 
-      const deadline = get30DaysFromNow().toISOString();
-      const fallbackCommitment = {
-        id: `local-${Date.now()}`,
+      const newCommitment = {
         user_id: userId,
         commitment_text: processedCommitment.trim(),
         daily_action: dailyAction.trim(),
         founder_type: founderType || 'Founder',
-        status: 'active',
-        deadline,
-        created_at: new Date().toISOString(),
-        check_ins: [],
       };
 
-      // Save to Supabase (all commitments are public by default)
-      let savedCommitment;
-      try {
-        const { data, error } = await supabase
-          .from('commitments')
-          .insert({ ...fallbackCommitment, id: undefined }) // Let Supabase generate UUID
-          .select()
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error saving commitment to Supabase:', error);
-        } else {
-          savedCommitment = data;
-        }
-      } catch (e) {
-        console.error('Failed to sync with Supabase:', e);
+      const { data: savedCommitment, error: saveError } = await supabase
+        .from('commitments')
+        .insert(newCommitment)
+        .select()
+        .single();
+      if (saveError || !savedCommitment) {
+        throw new Error(
+          'Your commitment was not posted. Check your connection and active commitment, then retry.'
+        );
       }
 
       await refreshActiveCommitment();
       trackFunnelEvent(
-        'product_hunt_commitment_posted',
+        'commitment_posted',
         {
           edit_mode: false,
           synced: Boolean(savedCommitment),
@@ -269,7 +249,7 @@ export default function CommitmentScreen({
         userId
       );
       navigation.navigate('dailyCheckIn', {
-        commitment: savedCommitment || fallbackCommitment,
+        commitment: savedCommitment,
       });
     } catch (err) {
       console.error('Error posting commitment:', err);
@@ -283,6 +263,7 @@ export default function CommitmentScreen({
         Alert.alert('Error', message);
       }
     } finally {
+      setCaptchaToken(null);
       setIsSubmitting(false);
     }
   };
@@ -370,7 +351,7 @@ export default function CommitmentScreen({
           </View>
         )}
 
-        {!editMode && currentSlotStatus !== 'active' && (
+        {(editMode || currentSlotStatus !== 'active') && (
           <View style={styles.mainContent}>
             <View style={styles.commitmentGuidance}>
               <Text style={styles.guidanceKicker}>PUBLIC RECORD</Text>
@@ -416,6 +397,7 @@ export default function CommitmentScreen({
                 <TextInput
                   style={styles.textInput}
                   placeholder="e.g., 'Send 3 cold emails' or 'Code for 2 hours'"
+                  testID="daily-action"
                   placeholderTextColor="#93C5FD"
                   value={dailyAction}
                   onChangeText={(value) => {
@@ -457,17 +439,18 @@ export default function CommitmentScreen({
             <View style={styles.warningSection}>
               <Text style={styles.warningTitle}>24-Hour Edit Window</Text>
               <Text style={styles.warningText}>
-                Once 24 hours pass, this commitment becomes permanent.
+                Once 24 hours pass, this commitment locks for editing.
               </Text>
               <Text style={styles.warningText}>
-                You can edit or delete it in the first 24 hours to fix mistakes.
+                You can edit the text and daily action in the first 24 hours.
               </Text>
               <Text style={styles.warningText}>
-                After that, it's locked until your deadline on {formattedDate}.
+                Your deadline is {formattedDate}. You can still mark the
+                outcome.
               </Text>
               <Text style={styles.warningText}>
-                If you don't complete it by then, it will be marked as ABANDONED
-                and stay in the public feed forever.
+                Owners can delete their records. Public records are not
+                guaranteed permanent.
               </Text>
             </View>
 
@@ -485,6 +468,7 @@ export default function CommitmentScreen({
             </View>
 
             <TouchableOpacity
+              testID="agree-public"
               style={styles.checkboxRow}
               onPress={() => {
                 setAgreedPublic(!agreedPublic);
@@ -509,6 +493,7 @@ export default function CommitmentScreen({
             </TouchableOpacity>
 
             <TouchableOpacity
+              testID="agree-edit-window"
               style={styles.checkboxRow}
               onPress={() => {
                 setAgreedPermanent(!agreedPermanent);
@@ -527,14 +512,14 @@ export default function CommitmentScreen({
                 {agreedPermanent && <Text style={styles.checkmark}>✓</Text>}
               </View>
               <Text style={styles.checkboxLabel}>
-                I understand this commitment becomes permanent after 24 hours
+                I understand this commitment locks for editing after 24 hours
               </Text>
             </TouchableOpacity>
 
             <HCaptchaWrapper
               onVerify={(token) => {
                 setCaptchaToken(token);
-                trackFunnelEvent('product_hunt_captcha_complete');
+                trackFunnelEvent('captcha_complete');
               }}
               onExpire={() => setCaptchaToken(null)}
               onError={() => setCaptchaToken(null)}

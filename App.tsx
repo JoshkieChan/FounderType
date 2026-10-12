@@ -65,29 +65,23 @@ export default function App() {
 
   const initializeAppServices = async () => {
     try {
-      const [
-        Sentry,
-        { testSupabaseConnection },
-        { FreeAnalytics },
-        { analytics },
-      ] = await Promise.all([
+      const [Sentry, { FreeAnalytics }, { analytics }] = await Promise.all([
         import('@sentry/react-native'),
-        import('./lib/supabase'),
         import('./lib/freeAnalytics'),
         import('./lib/vercelAnalytics'),
       ]);
 
-      testSupabaseConnection();
-
-      Sentry.init({
-        dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-        enableInExpoDevelopment: false,
-        debug: false,
-        tracesSampleRate: 0.1,
-        environment: __DEV__ ? 'development' : 'production',
-        attachStacktrace: true,
-        enableAutoSessionTracking: true,
-      } as any);
+      if (process.env.EXPO_PUBLIC_SENTRY_DSN)
+        Sentry.init({
+          dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+          enableInExpoDevelopment: false,
+          debug: false,
+          tracesSampleRate: 0.1,
+          environment: __DEV__ ? 'development' : 'production',
+          attachStacktrace: true,
+          sendDefaultPii: false,
+          enableAutoSessionTracking: true,
+        } as any);
 
       FreeAnalytics.initialize();
 
@@ -103,43 +97,11 @@ export default function App() {
 
   const initializeDeferredServices = async () => {
     try {
-      const [
-        { performanceMonitor },
-        { PerformanceOptimizer },
-        { EmailSystem },
-        { AccessibilityManager },
-      ] = await Promise.all([
-        import('./lib/performanceMonitoring'),
-        import('./lib/performanceOptimization'),
-        import('./lib/emailSystem'),
-        import('./lib/accessibility'),
-      ]);
-
-      performanceMonitor.initialize();
-
-      const performanceOptimizer = PerformanceOptimizer.getInstance();
-      performanceOptimizer.startPerformanceMonitoring();
-
-      const emailSystem = EmailSystem.getInstance();
-      emailSystem.configure({
-        provider: 'resend',
-        apiKey: '',
-        fromEmail: 'noreply@foundertype.app',
-        fromName: 'FounderType',
-      });
-
-      AccessibilityManager.getInstance();
-
       if (Platform.OS !== 'web') {
-        const [notifications] = await Promise.all([
-          import('./lib/notifications'),
-          import('./lib/offlineMode').then(({ OfflineManager }) =>
-            OfflineManager.getInstance()
-          ),
-        ]);
-
-        notifications.NotificationService.initialize();
-        await checkMissedCommitmentDays(notifications.sendMissedDaysAlert);
+        const notifications = await import('./lib/notifications');
+        const permitted = await notifications.NotificationService.initialize();
+        if (permitted)
+          await checkMissedCommitmentDays(notifications.sendMissedDaysAlert);
       }
     } catch (error) {
       console.error('Error initializing deferred app services:', error);
@@ -163,7 +125,7 @@ export default function App() {
 
       // Try cached first, then fetch from Supabase
       let commitment = await getCachedActiveCommitment();
-      if (!commitment) {
+      if (!commitment || commitment.user_id !== userId) {
         commitment = await getActiveCommitment(userId);
       }
       if (!commitment) return;

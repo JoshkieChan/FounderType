@@ -2,7 +2,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const root = path.join(process.cwd(), 'web-build');
+const root = path.resolve(process.env.WEB_OUTPUT_DIR || 'web-build');
 const port = Number(process.env.PORT || 4177);
 const host = process.env.HOST || '127.0.0.1';
 
@@ -22,11 +22,16 @@ const contentTypes = {
 };
 
 function resolveFile(urlPath) {
-  const decodedPath = decodeURIComponent(urlPath.split('?')[0]);
+  let decodedPath;
+  try {
+    decodedPath = decodeURIComponent(urlPath.split('?')[0]);
+  } catch {
+    return null;
+  }
   const requested = path.normalize(decodedPath).replace(/^(\.\.[/\\])+/, '');
   const filePath = path.join(root, requested);
 
-  if (!filePath.startsWith(root)) {
+  if (!filePath.startsWith(root + path.sep) && filePath !== root) {
     return null;
   }
 
@@ -34,7 +39,7 @@ function resolveFile(urlPath) {
     return filePath;
   }
 
-  return path.join(root, 'index.html');
+  return path.extname(requested) ? null : path.join(root, 'index.html');
 }
 
 const server = http.createServer((req, res) => {

@@ -116,7 +116,7 @@ export default function WeeklyReceiptCard({
               {emailOptIn && <Text style={styles.checkmark}>✓</Text>}
             </View>
             <Text style={styles.optInText}>
-              Email future weekly receipts automatically
+              Remember my email preference on this device
             </Text>
           </TouchableOpacity>
           <HCaptchaWrapper

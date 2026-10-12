@@ -7,5 +7,6 @@
       "@/*": ["./*"],
       "./context/*": ["./context/*"]
     }
-  }
+  },
+  "exclude": ["node_modules", "supabase/functions", "tests", "web-build"]
 }

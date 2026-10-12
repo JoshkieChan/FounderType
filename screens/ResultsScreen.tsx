@@ -4,17 +4,11 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useEffect, useState } from 'react';
-// import { RouteProp } from '@react-navigation/native';
-import { supabase, cachedSupabase } from '../lib/cachedSupabase';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { useEffect, useMemo } from 'react';
 import { saveProfile, getCurrentUserId } from '../lib/storage';
-
-const PROFILE_CACHE_KEY = 'foundertype_latest_profile';
 
 // Web polyfill for AsyncStorage
 const webAsyncStorage =
@@ -49,57 +43,23 @@ export default function ResultsScreen({
   const profile = currentProfile || route?.params?.profile;
   const answers = currentAnswers || route?.params?.answers;
 
-  let founderTypeData: any = null;
-  if (profile) {
-    if (typeof profile === 'string') {
-      try {
-        founderTypeData = JSON.parse(profile);
-      } catch {
-        founderTypeData = null;
+  const founderTypeData = useMemo(() => {
+    if (profile) {
+      if (typeof profile === 'string') {
+        try {
+          return JSON.parse(profile);
+        } catch {
+          return null;
+        }
+      } else {
+        return profile;
       }
-    } else {
-      founderTypeData = profile;
     }
-  }
-
-  const saveProfileToSupabase = async () => {
-    if (!founderTypeData) return;
-
-    try {
-      const userId = await getCurrentUserId();
-      if (!userId) return;
-
-      if (userId.startsWith('local-')) {
-        await webAsyncStorage.setItem(
-          PROFILE_CACHE_KEY,
-          JSON.stringify({
-            user_id: userId,
-            founder_type: founderTypeData.founderType,
-            profile_data: founderTypeData,
-            created_at: new Date().toISOString(),
-          })
-        );
-        return;
-      }
-
-      const error = await cachedSupabase.upsertProfile({
-        user_id: userId,
-        founder_type: founderTypeData.founderType,
-        profile_data: founderTypeData,
-        created_at: new Date().toISOString(),
-      });
-
-      if (error) {
-        console.error('Error saving profile:', error);
-      }
-    } catch (err) {
-      console.error('Error in saveProfileToSupabase:', err);
-    }
-  };
+    return null;
+  }, [profile]);
 
   useEffect(() => {
     if (founderTypeData) {
-      saveProfileToSupabase();
       // Store the latest profile for commitment posting context.
       const saveProfileData = async () => {
         if (answers && founderTypeData) {
@@ -127,7 +87,9 @@ export default function ResultsScreen({
         }
       };
 
-      saveProfileData();
+      void saveProfileData().catch(() =>
+        console.warn('Profile could not be saved.')
+      );
     }
   }, [founderTypeData]);
 
@@ -146,8 +108,7 @@ export default function ResultsScreen({
     );
   }
 
-  const { founderType, headline, truth, fits, quits, nextMove } =
-    founderTypeData;
+  const { headline, truth, fits, quits, nextMove } = founderTypeData;
 
   const Container = Platform.OS === 'web' ? View : SafeAreaView;
 

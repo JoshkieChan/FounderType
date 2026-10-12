@@ -26,7 +26,7 @@ export default function ProcessingScreen({
   setCurrentProfile: (profile: any) => void;
   setCurrentAnswers: (answers: any) => void;
 }) {
-  const { answers } = route.params;
+  const answers = route?.params?.answers;
 
   const [error, setError] = useState(false);
   const fadeAnim = useState(new Animated.Value(0))[0];
@@ -119,6 +119,7 @@ export default function ProcessingScreen({
     if (answers) {
       generateProfile();
     } else {
+      setError(true);
     }
 
     return () => {
@@ -261,10 +262,10 @@ export default function ProcessingScreen({
       <View style={styles.container}>
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           <Text style={styles.errorEmoji}>⚠️</Text>
-          <Text style={styles.errorTitle}>AI Service Unavailable</Text>
+          <Text style={styles.errorTitle}>Could Not Read Your Answers</Text>
           <Text style={styles.errorText}>
-            Our AI service is temporarily overloaded. Please try again in a few
-            minutes.
+            Your diagnostic answers could not be restored. Start over to answer
+            the seven questions again.
           </Text>
           <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
             <Text style={styles.retryButtonText}>Retry</Text>

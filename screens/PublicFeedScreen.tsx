@@ -100,15 +100,8 @@ function getHoursRemaining(item: Commitment): number {
 }
 
 export default function PublicFeedScreen({ navigation }: { navigation: any }) {
-  const {
-    commitments,
-    loading,
-    refreshing,
-    error,
-    hasMore,
-    loadCommitments,
-    loadMore,
-  } = usePublicFeed('active');
+  const { commitments, loading, refreshing, error, loadCommitments, loadMore } =
+    usePublicFeed(null);
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -325,7 +318,7 @@ export default function PublicFeedScreen({ navigation }: { navigation: any }) {
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
-              onRefresh={loadCommitments}
+              onRefresh={() => loadCommitments()}
             />
           }
           showsVerticalScrollIndicator={false}
@@ -365,6 +358,9 @@ const styles = StyleSheet.create({
     width: 60,
   },
   listContainer: {
+    width: '100%',
+    maxWidth: 800,
+    alignSelf: 'center',
     padding: 24,
     gap: 16,
   },

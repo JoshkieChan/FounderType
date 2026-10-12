@@ -88,7 +88,7 @@ export default function QuestionsScreen({
       await clearProgress();
       setCurrentAnswers(newAnswers);
       const answersString = JSON.stringify(newAnswers);
-      trackFunnelEvent('product_hunt_diagnostic_complete', {
+      trackFunnelEvent('diagnostic_complete', {
         answer_count: Object.keys(newAnswers).length,
       });
       // Store in global ref for synchronous access
@@ -167,6 +167,7 @@ export default function QuestionsScreen({
             (option: string, index: number) => (
               <TouchableOpacity
                 key={index}
+                testID={`diagnostic-option-${index}`}
                 style={styles.optionButton}
                 onPress={() => handleAnswer(option)}
                 activeOpacity={0.7}

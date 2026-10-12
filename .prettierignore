@@ -3,5 +3,7 @@ node_modules
 dist
 web-build
 coverage
+test-results
+playwright-report
 *.lock
 package-lock.json

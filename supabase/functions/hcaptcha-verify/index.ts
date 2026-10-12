@@ -1,87 +1,26 @@
-// @ts-nocheck - This is a Deno edge function, not regular TypeScript
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type',
-};
-
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+import { corsHeaders, json, readBody, verifyCaptcha } from '../_shared/http.ts';
+// Diagnostic endpoint only. A successful response does not authorize writes.
+// Supabase Auth verifies sign-up tokens; send-email verifies its own fresh token.
+Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS')
     return new Response('ok', { headers: corsHeaders });
-  }
-
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+  const secret = Deno.env.get('HCAPTCHA_SECRET_KEY');
+  const siteKey = Deno.env.get('HCAPTCHA_SITE_KEY');
+  if (!secret || !siteKey)
+    return json({ error: 'Security check unavailable' }, 503);
+  let body;
   try {
-    const { token } = await req.json();
-
-    if (!token) {
-      return new Response(JSON.stringify({ error: 'Missing hCaptcha token' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Get hCaptcha secret from environment variables
-    const hCaptchaSecret = Deno.env.get('HCAPTCHA_SECRET_KEY');
-    const hCaptchaSiteKey = Deno.env.get('HCAPTCHA_SITE_KEY');
-
-    if (!hCaptchaSecret || !hCaptchaSiteKey) {
-      return new Response(
-        JSON.stringify({ error: 'hCaptcha not configured' }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Verify token with hCaptcha API
-    const verifyResponse = await fetch('https://api.hcaptcha.com/siteverify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: `secret=${hCaptchaSecret}&response=${token}`,
-    });
-
-    const result = await verifyResponse.json();
-
-    if (!result.success) {
-      return new Response(
-        JSON.stringify({
-          error: 'Invalid hCaptcha token',
-          errorCodes: result['error-codes'],
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Return success and site key to frontend
-    return new Response(
-      JSON.stringify({
-        success: true,
-        siteKey: hCaptchaSiteKey,
-        verified: true,
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error: (error as Error).message || 'Internal server error',
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    body = await readBody(req);
+  } catch {
+    return json({ error: 'Invalid request' }, 400);
+  }
+  try {
+    const success = await verifyCaptcha(body.token, secret, siteKey);
+    return success
+      ? json({ success: true })
+      : json({ error: 'Invalid security check' }, 400);
+  } catch {
+    return json({ error: 'Security check unavailable' }, 502);
   }
 });

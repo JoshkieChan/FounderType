@@ -100,7 +100,7 @@ const LockoutRoute = withSuspense(LockoutScreen);
 const TermsRoute = withSuspense(TermsScreen);
 
 const linking = {
-  prefixes: ['https://foundertype.app', 'foundertype://'],
+  prefixes: ['foundertype://'],
   config: {
     screens: {
       onboarding: '',

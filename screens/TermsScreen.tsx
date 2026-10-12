@@ -28,7 +28,7 @@ export default function TermsScreen({ navigation }: TermsScreenProps) {
         contentContainerStyle={styles.contentContainer}
       >
         <Text style={styles.title}>Terms of Service</Text>
-        <Text style={styles.effectiveDate}>Effective: May 2, 2026</Text>
+        <Text style={styles.effectiveDate}>Updated: October 12, 2026</Text>
 
         <Text style={styles.sectionTitle}>Acceptance of Terms</Text>
         <Text style={styles.paragraph}>
@@ -79,9 +79,9 @@ export default function TermsScreen({ navigation }: TermsScreenProps) {
 
         <Text style={styles.sectionTitle}>Termination</Text>
         <Text style={styles.paragraph}>
-          You can request account-associated data deletion anytime by emailing
-          updates@signaldatasource.com. We can terminate accounts that violate
-          these terms without notice.
+          You can delete your commitments while signed into the originating
+          session. Full account deletion and recovery are not implemented in
+          this version.
         </Text>
 
         <Text style={styles.sectionTitle}>Changes to Terms</Text>
@@ -92,7 +92,8 @@ export default function TermsScreen({ navigation }: TermsScreenProps) {
 
         <Text style={styles.sectionTitle}>Contact</Text>
         <Text style={styles.paragraph}>
-          Questions? Email us at updates@signaldatasource.com
+          The operator of a hosted installation must provide an active private
+          support channel before accepting real user data.
         </Text>
 
         <View style={styles.footer}>

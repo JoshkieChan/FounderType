@@ -13,12 +13,14 @@ export default [
       'dist/**',
       'web-build/**',
       'coverage/**',
+      'test-results/**',
+      'playwright-report/**',
       'package-lock.json',
     ],
   },
   js.configs.recommended,
   {
-    files: ['**/*.{cjs,js,jsx,ts,tsx}'],
+    files: ['**/*.{cjs,mjs,js,jsx,ts,tsx}'],
     languageOptions: {
       parser: typescriptParser,
       parserOptions: {

@@ -11,11 +11,11 @@
         "keywords": [
           "founder,accountability,commitment,habits,startup,builder,goals,focus,productivity"
         ],
-        "releaseNotes": "Initial FounderType release with diagnostic, public 30-day commitments, daily check-ins, public feed, and accountability receipts.",
+        "releaseNotes": "Draft metadata: replace with verified release notes before submission.",
         "promoText": "Identify why you keep stopping, put your next commitment on record, and keep the record honest for 30 days.",
-        "privacyPolicyUrl": "https://project-zoaht.vercel.app/privacy",
-        "supportUrl": "https://project-zoaht.vercel.app",
-        "marketingUrl": "https://project-zoaht.vercel.app"
+        "privacyPolicyUrl": "https://example.com/privacy",
+        "supportUrl": "https://example.com/support",
+        "marketingUrl": "https://example.com"
       }
     },
     "advisory": {

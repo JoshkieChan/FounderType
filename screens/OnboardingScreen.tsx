@@ -70,7 +70,7 @@ export default function OnboardingScreen({
   const shellWidth = useWebShellWidth(40, 720);
 
   useEffect(() => {
-    trackFunnelEvent('product_hunt_onboarding_start');
+    trackFunnelEvent('onboarding_start');
   }, []);
 
   const handleNext = () => {

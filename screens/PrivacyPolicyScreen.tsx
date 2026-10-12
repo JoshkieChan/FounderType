@@ -17,8 +17,6 @@ interface PrivacyPolicyScreenProps {
 export default function PrivacyPolicyScreen({
   navigation,
 }: PrivacyPolicyScreenProps) {
-  const effectiveDate = 'May 2, 2026';
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -32,202 +30,64 @@ export default function PrivacyPolicyScreen({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
       >
-        <Text style={styles.title}>Privacy Policy</Text>
-        <Text style={styles.date}>Effective: {effectiveDate}</Text>
-
+        <Text style={styles.title}>Privacy and Data</Text>
+        <Text style={styles.date}>Updated: October 12, 2026</Text>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>What We Collect</Text>
+          <Text style={styles.sectionTitle}>Public content</Text>
           <Text style={styles.sectionText}>
-            We collect only what's necessary to run the diagnostic and public
-            accountability tracker:
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - Your answers to the 7 assessment questions
-          </Text>
-          <Text style={styles.bulletPoint}>- Your founder type result</Text>
-          <Text style={styles.bulletPoint}>
-            - Public commitment text, daily action, and check-in progress
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - Anonymous account identifiers used to keep your commitments tied
-            to your device/session
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - Optional email address if you choose to receive accountability
-            receipts
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - Basic technical diagnostics, security checks, and performance
-            events used to keep the app reliable
+            Commitment text, daily actions, status and check-in dates are
+            publicly visible when you post. Records include a pseudonymous
+            account identifier. Do not post sensitive or identifying
+            information.
           </Text>
         </View>
-
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>What We DON'T Collect</Text>
+          <Text style={styles.sectionTitle}>Your session and local data</Text>
           <Text style={styles.sectionText}>
-            We intentionally do not collect:
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - Your name or personal identity
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - Email address unless you explicitly opt in to receipt delivery
-          </Text>
-          <Text style={styles.bulletPoint}>- Location data</Text>
-          <Text style={styles.bulletPoint}>- Precise location data</Text>
-          <Text style={styles.bulletPoint}>
-            - Social media profiles or accounts
+            FounderType uses an anonymous account session to associate saved
+            records with you. Diagnostic progress, preferences and cached
+            receipts may be stored on this device. Clearing browser or app
+            storage can lose access to your anonymous account; account recovery
+            is not implemented.
           </Text>
         </View>
-
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>How We Use Your Data</Text>
+          <Text style={styles.sectionTitle}>Private records</Text>
           <Text style={styles.sectionText}>
-            Your data is used exclusively for:
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - Calculating your founder type locally from your answers
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - Showing your public 30-day commitment in the feed
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - Tracking daily check-ins and abandoned/completed status
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - Sending accountability receipt emails only when you opt in
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - Preventing automated abuse and diagnosing crashes or reliability
-            issues
+            Saved diagnostic profiles and accountability receipts are restricted
+            to their account owner by database policies. Public commitment
+            progress is visible with the commitment. A private commitment and
+            its progress are restricted to its owner.
           </Text>
         </View>
-
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Third-Party Services</Text>
+          <Text style={styles.sectionTitle}>Optional services</Text>
           <Text style={styles.sectionText}>
-            We use trusted third-party services:
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - <Text style={styles.bold}>Supabase</Text> - Secure data storage
-            and anonymous authentication
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - <Text style={styles.bold}>hCaptcha</Text> - Abuse prevention on
-            public commitment submission
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - <Text style={styles.bold}>Resend</Text> - Optional accountability
-            receipt email delivery
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - <Text style={styles.bold}>Sentry</Text> - Crash and error
-            diagnostics
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - <Text style={styles.bold}>Vercel</Text> - Web hosting,
-            performance, and aggregate analytics
+            If configured, hCaptcha processes challenges, Supabase stores
+            account and application data, Resend processes requested receipt
+            emails, and Sentry receives technical diagnostics. Email recipient
+            addresses and delivery attempts are logged on the server. Local
+            usage events are stored on this device; web analytics forwarding
+            depends on the hosting configuration.
           </Text>
         </View>
-
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Data Security</Text>
-          <Text style={styles.sectionText}>We protect your data with:</Text>
-          <Text style={styles.bulletPoint}>
-            - Encrypted network transport using HTTPS/TLS
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - Row-level security and owner-scoped access controls in Supabase
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - Limited data access to essential personnel only
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - Regular security audits and updates
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Rights</Text>
-          <Text style={styles.sectionText}>You have the right to:</Text>
-          <Text style={styles.bulletPoint}>- Access your data at any time</Text>
-          <Text style={styles.bulletPoint}>
-            - Request deletion of your data
-          </Text>
-          <Text style={styles.bulletPoint}>- Opt out of data collection</Text>
-          <Text style={styles.bulletPoint}>
-            - Export your data in portable format
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Data Deletion</Text>
+          <Text style={styles.sectionTitle}>Deleting data</Text>
           <Text style={styles.sectionText}>
-            You can request deletion of your account-associated data at any
-            time.
-          </Text>
-
-          <Text style={styles.bold}>What gets deleted:</Text>
-          <Text style={styles.bulletPoint}>
-            - All diagnostic answers and founder type results
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - All commitments (active, completed, or abandoned)
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - All check-in history and progress data
-          </Text>
-          <Text style={styles.bulletPoint}>
-            - Account information and preferences
-          </Text>
-
-          <Text style={[styles.bold, { marginTop: 12 }]}>
-            How to request deletion:
-          </Text>
-          <Text style={styles.bulletPoint}>
-            1. Email us at updates@signaldatasource.com with subject "Delete My
-            Data"
-          </Text>
-          <Text style={styles.bulletPoint}>
-            2. Include your account identifier or commitment text for
-            verification
-          </Text>
-          <Text style={styles.bulletPoint}>
-            3. We will process your request within 30 days
-          </Text>
-          <Text style={styles.bulletPoint}>
-            4. Once deleted, your data cannot be recovered
-          </Text>
-
-          <Text style={[styles.sectionText, { marginTop: 12 }]}>
-            <Text style={styles.bold}>Note:</Text> Deleted commitments will be
-            removed from the public feed. This action is permanent.
+            Owners can delete commitments from the app while signed into the
+            originating session. Full account deletion and recovery are not
+            available in this version. A deployment operator must provide a
+            private support channel and retention policy before accepting real
+            user data.
           </Text>
         </View>
-
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Us</Text>
+          <Text style={styles.sectionTitle}>About this notice</Text>
           <Text style={styles.sectionText}>
-            If you have questions about this privacy policy or how we handle
-            your data, please contact us at:
-          </Text>
-          <Text style={styles.contactEmail}>updates@signaldatasource.com</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Changes to This Policy</Text>
-          <Text style={styles.sectionText}>
-            We may update this privacy policy from time to time. We will notify
-            you of any changes by posting the new policy on this page and
-            updating the "Effective" date above.
-          </Text>
-        </View>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            This privacy policy is designed to be transparent and user-focused.
-            We believe in building trust through honesty about what data we
-            collect and why.
+            This notice describes the repository implementation. The services
+            enabled and retention practices of a hosted installation must be
+            disclosed by its operator. Use fictional information when evaluating
+            a development installation.
           </Text>
         </View>
       </ScrollView>

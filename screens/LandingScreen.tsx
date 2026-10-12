@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 // import { SafeAreaView } from 'react-native-safe-area-context';
 import { loadProfile } from '../lib/storage';
-import { supabase, cachedSupabase } from '../lib/cachedSupabase';
+import { supabase } from '../lib/supabase';
 import { usePublicFeed } from '../hooks/usePublicFeed';
 import { Commitment } from '../types/commitment';
 
@@ -155,7 +155,13 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
       'This will permanently remove your commitment from the feed. You can post a new one anytime.';
     const doDelete = async () => {
       try {
-        await cachedSupabase.deleteCommitment(item.id);
+        const { error } = await supabase
+          .from('commitments')
+          .delete()
+          .eq('id', item.id)
+          .select('id')
+          .single();
+        if (error) throw error;
         await loadCommitments(); // Refresh feed
         await refreshActiveCommitment(); // Sync context
       } catch (error) {

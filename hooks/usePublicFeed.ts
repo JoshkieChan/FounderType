@@ -1,134 +1,73 @@
-import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/cachedSupabase';
+import { useState, useRef } from 'react';
 import { PaginationService } from '../lib/apiPagination';
-import { Commitment } from '../types/commitment';
-
-const PAGE_SIZE = 20;
-
-export interface UsePublicFeedReturn {
-  commitments: Commitment[];
-  loading: boolean;
-  refreshing: boolean;
-  error: string | null;
-  hasMore: boolean;
-  loadCommitments: (
-    statusFilter?: 'active' | 'completed' | 'abandoned' | null
-  ) => Promise<void>;
-  loadMore: (
-    statusFilter?: 'active' | 'completed' | 'abandoned' | null
-  ) => Promise<void>;
-}
-
-export function usePublicFeed(
-  statusFilter: 'active' | 'completed' | 'abandoned' | null = 'active'
-): UsePublicFeedReturn {
+import { Commitment, CommitmentStatus } from '../types/commitment';
+type Filter = CommitmentStatus | null;
+export function usePublicFeed(statusFilter: Filter = 'active') {
   const [commitments, setCommitments] = useState<Commitment[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const statusRef = useRef(statusFilter);
-  statusRef.current = statusFilter;
-
-  const loadCommitments = async (
-    overrideStatus?: 'active' | 'completed' | 'abandoned' | null
-  ) => {
-    const filter =
-      overrideStatus !== undefined ? overrideStatus : statusRef.current;
+  const [hasMore, setHasMore] = useState(true);
+  const page = useRef(0);
+  const generation = useRef(0);
+  const fetchingMore = useRef(false);
+  const filterRef = useRef(statusFilter);
+  filterRef.current = statusFilter;
+  const loadCommitments = async (filter: Filter = filterRef.current) => {
+    const request = ++generation.current;
+    fetchingMore.current = false;
+    setLoading(true);
+    setRefreshing(true);
+    setError(null);
     try {
-      setError(null);
-      setLoading(true);
-
-      // Use pagination service with caching
       const response = await PaginationService.getCommitments(undefined, {
         page: 1,
-        limit: PAGE_SIZE,
-        sortBy: 'created_at',
-        sortOrder: 'desc',
+        limit: 20,
+        status: filter,
       });
-
-      let data = response.data || [];
-
-      // Apply status filter if needed
-      if (filter) {
-        data = data.filter((c: any) => c.status === filter);
+      if (request !== generation.current) return;
+      setCommitments(response.data);
+      setHasMore(response.pagination.hasNext);
+      page.current = 1;
+    } catch {
+      if (request === generation.current) {
+        setError('Could not load the public feed. Please retry.');
+        setHasMore(false);
       }
-
-      const cleaned = data.filter((c: any) => {
-        const t = c.commitment_text?.toLowerCase() || '';
-        if (t.includes('newsletter') || t.includes('onboarding flow'))
-          return false;
-        if (t.includes('test')) return false;
-        return true;
-      }) as Commitment[];
-
-      setCommitments(cleaned);
-      setHasMore(response.pagination?.hasNext || false);
-      setCursor(cleaned.length ? cleaned[cleaned.length - 1].created_at : null);
-    } catch (err) {
-      console.error('Error:', err);
-      setError('Something went wrong');
-      setHasMore(false);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (request === generation.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   };
-
-  const loadMore = async (
-    overrideStatus?: 'active' | 'completed' | 'abandoned' | null
-  ) => {
-    const filter =
-      overrideStatus !== undefined ? overrideStatus : statusRef.current;
-    if (!hasMore || isFetchingMore) return;
-
+  const loadMore = async (filter: Filter = filterRef.current) => {
+    if (!hasMore || fetchingMore.current || loading) return;
+    fetchingMore.current = true;
+    const request = generation.current;
+    setError(null);
     try {
-      setIsFetchingMore(true);
-      setError(null);
-
-      // Calculate current page based on loaded items
-      const currentPage = Math.ceil(commitments.length / PAGE_SIZE) + 1;
-
-      // Use pagination service with caching
       const response = await PaginationService.getCommitments(undefined, {
-        page: currentPage,
-        limit: PAGE_SIZE,
-        sortBy: 'created_at',
-        sortOrder: 'desc',
+        page: page.current + 1,
+        limit: 20,
+        status: filter,
       });
-
-      let data = response.data || [];
-
-      // Apply status filter if needed
-      if (filter) {
-        data = data.filter((c: any) => c.status === filter);
-      }
-
-      const cleaned = data.filter((c: any) => {
-        const t = c.commitment_text?.toLowerCase() || '';
-        if (t.includes('newsletter') || t.includes('onboarding flow'))
-          return false;
-        if (t.includes('test')) return false;
-        return true;
-      }) as Commitment[];
-
-      setCommitments((prev) => [...prev, ...cleaned]);
-      setHasMore(response.pagination?.hasNext || false);
-      setCursor(
-        cleaned.length ? cleaned[cleaned.length - 1].created_at : cursor
-      );
-    } catch (err) {
-      console.error('Error:', err);
-      setError('Something went wrong');
-      setHasMore(false);
+      if (request !== generation.current) return;
+      setCommitments((previous) => [
+        ...previous,
+        ...response.data.filter(
+          (item) => !previous.some((old) => old.id === item.id)
+        ),
+      ]);
+      page.current++;
+      setHasMore(response.pagination.hasNext);
+    } catch {
+      if (request === generation.current)
+        setError('Could not load more commitments. Please retry.');
     } finally {
-      setIsFetchingMore(false);
+      if (request === generation.current) fetchingMore.current = false;
     }
   };
-
   return {
     commitments,
     loading,

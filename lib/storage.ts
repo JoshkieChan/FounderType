@@ -7,7 +7,10 @@ const ACTIVE_COMMITMENT_KEY = 'foundertype_active_commitment';
 interface Profile {
   founderType?: string;
   founder_type?: string;
-  [key: string]: string | undefined;
+  summary?: string;
+  headline?: string;
+  matches?: unknown[];
+  [key: string]: unknown;
 }
 
 // Save profile for anonymous user
@@ -35,8 +38,8 @@ export async function saveProfile(
       user_id: userId,
       answers,
       founder_type: profile.founderType || profile.founder_type,
-      summary: profile.summary,
-      matches: profile.matches,
+      summary: profile.summary || profile.headline || '',
+      matches: profile.matches || [],
       created_at: new Date().toISOString(),
     });
 
@@ -108,91 +111,41 @@ export async function getLastAssessmentDate(
 }
 
 // Get current authenticated user ID
-export async function getCurrentUserId(): Promise<string | null> {
-  try {
-    // Check if already signed in
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user?.id) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('foundertype_supabase_user_id', user.id);
-      }
-      return user.id;
-    }
-
-    const { data, error } = await supabase.auth.signInAnonymously();
-    if (!error && data.user?.id) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('foundertype_supabase_user_id', data.user.id);
-      }
-      return data.user.id;
-    }
-
-    // Use local storage fallback only when Supabase anonymous auth is disabled.
-    const localUserId = `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-    // Store in localStorage for persistence
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('foundertype_local_user_id');
-      if (stored) return stored;
-      localStorage.setItem('foundertype_local_user_id', localUserId);
-    }
-
-    return localUserId;
-  } catch {
-    // Fallback to generated ID
-    return `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+export async function getCurrentUserId(
+  captchaToken?: string | null
+): Promise<string | null> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user?.id) return user.id;
+  // Reading a screen must not silently create accounts or bypass CAPTCHA.
+  if (captchaToken) {
+    const { data, error } = await supabase.auth.signInAnonymously({
+      options: { captchaToken },
+    });
+    if (error || !data.user)
+      throw new Error(
+        'Unable to create a secure session. Complete the security check again.'
+      );
+    return data.user.id;
   }
+  const existing = await AsyncStorage.getItem('foundertype_local_user_id');
+  if (existing) return existing;
+  const id = 'local-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  await AsyncStorage.setItem('foundertype_local_user_id', id);
+  return id;
 }
 
-// Update commitment check-in and return updated count
-export async function updateCommitmentCheckIn(
-  commitmentId: string,
-  userId: string
-): Promise<number> {
-  const today = new Date().toISOString().split('T')[0];
-
-  // Skip database operations for local commitments
-  if (commitmentId.startsWith('local-')) {
-    // Update local commitment in AsyncStorage
-    const cachedCommitment = await getCachedActiveCommitment();
-    if (cachedCommitment && cachedCommitment.id === commitmentId) {
-      const checkIns: string[] = cachedCommitment.check_ins || [];
-
-      if (!checkIns.includes(today)) {
-        const updated = [...checkIns, today];
-        cachedCommitment.check_ins = updated;
-        await AsyncStorage.setItem(
-          'foundertype_active_commitment',
-          JSON.stringify(cachedCommitment)
-        );
-        return updated.length;
-      }
-    }
-    return cachedCommitment?.check_ins?.length || 0;
-  }
-
-  const { data } = await supabase
-    .from('commitments')
-    .select('check_ins')
-    .eq('id', commitmentId)
-    .eq('user_id', userId)
-    .single();
-
-  const checkIns: string[] = data?.check_ins || [];
-
-  if (!checkIns.includes(today)) {
-    const updated = [...checkIns, today];
-    await supabase
-      .from('commitments')
-      .update({ check_ins: updated })
-      .eq('id', commitmentId)
-      .eq('user_id', userId);
-    return updated.length;
-  }
-
-  return checkIns.length;
+// A single database transaction persists progress and returns the authoritative row.
+export async function recordCheckIn(commitmentId: string): Promise<Commitment> {
+  const { data, error } = await supabase.rpc('record_check_in', {
+    target_id: commitmentId,
+  });
+  if (error || !data)
+    throw new Error(
+      'Could not save your check-in. Please retry when connected.'
+    );
+  return data as Commitment;
 }
 
 // Cache active commitment locally for quick access in App.tsx

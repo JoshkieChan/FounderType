@@ -10,8 +10,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase, cachedSupabase } from '../lib/cachedSupabase';
-import { getCurrentUserId } from '../lib/storage';
+import { supabase } from '../lib/supabase';
+import { getCurrentUserId, recordCheckIn } from '../lib/storage';
+import { getProgress } from '../lib/progress';
+import { useUserContext } from '../context/UserContext';
 import AccountabilityAgentCard from '../components/AccountabilityAgentCard';
 import WeeklyReceiptCard from '../components/WeeklyReceiptCard';
 import { Commitment } from '../types/commitment';
@@ -23,7 +25,6 @@ import {
   getReceiptEmailAddress,
   getReceiptEmailOptIn,
   isWeeklyReceiptDue,
-  maybeSendOptInReceiptEmail,
   saveAccountabilityReceipt,
   saveReceiptEmailAddress,
   saveReceiptEmailOptIn,
@@ -47,6 +48,12 @@ export default function DailyCheckInScreen({
   navigation: any;
   route: any;
 }) {
+  const { refreshActiveCommitment, activeCommitment: contextCommitment } =
+    useUserContext();
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [emailCaptchaToken, setEmailCaptchaToken] = useState<string | null>(
+    null
+  );
   const [checkInData, setCheckInData] = useState<CheckInData>({
     currentDay: 1,
     completedDays: [],
@@ -75,16 +82,19 @@ export default function DailyCheckInScreen({
   const [isSendingReceiptEmail, setIsSendingReceiptEmail] = useState(false);
 
   useEffect(() => {
-    loadCheckInData();
-    loadTodayAction();
-    loadActiveCommitment();
-  }, []);
+    void loadActiveCommitment().finally(() => setLoading(false));
+  }, [route?.params?.commitment, contextCommitment]);
 
   const loadActiveCommitment = async () => {
     // Get commitment from route params
-    const passedCommitment = route?.params?.commitment;
+    const routed = route?.params?.commitment;
+    const passedCommitment =
+      contextCommitment && (!routed || contextCommitment.id === routed.id)
+        ? contextCommitment
+        : routed;
     if (passedCommitment) {
       setActiveCommitment(passedCommitment as Commitment);
+      setCheckInData(getProgress(passedCommitment));
       setTodayAction(passedCommitment.daily_action || '');
       const today = new Date().toISOString().split('T')[0];
       setTodayAlreadyCheckedIn(
@@ -120,51 +130,6 @@ export default function DailyCheckInScreen({
     console.error('No commitment passed to DailyCheckIn screen');
   };
 
-  const loadCheckInData = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(CHECK_IN_KEY);
-      if (stored) {
-        const data = JSON.parse(stored);
-        const today = new Date().toDateString();
-        const lastDate = data.lastCheckInDate;
-
-        if (lastDate && lastDate !== today) {
-          const lastCheckIn = new Date(lastDate);
-          const daysDiff = Math.floor(
-            (new Date().getTime() - lastCheckIn.getTime()) /
-              (1000 * 60 * 60 * 24)
-          );
-          if (daysDiff > 1) {
-            data.streak = 0;
-          }
-        }
-
-        setCheckInData(data);
-      }
-    } catch (error) {
-      console.error('Error loading check-in data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadTodayAction = async () => {
-    try {
-      // Load daily_action from active commitment
-      const storedCommitment = await AsyncStorage.getItem(
-        'foundertype_active_commitment'
-      );
-      if (storedCommitment) {
-        const commitment = JSON.parse(storedCommitment);
-        if (commitment.daily_action) {
-          setTodayAction(commitment.daily_action);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading today action:', error);
-    }
-  };
-
   const handleEditCommitment = () => {
     const commitment = activeCommitment || route?.params?.commitment;
     navigation.navigate('commitment', {
@@ -174,15 +139,6 @@ export default function DailyCheckInScreen({
       initialDailyAction: todayAction || commitment?.daily_action || '',
       initialDeadline: commitment?.deadline,
     });
-  };
-
-  const saveCheckInData = async (newData: CheckInData) => {
-    try {
-      await AsyncStorage.setItem(CHECK_IN_KEY, JSON.stringify(newData));
-      setCheckInData(newData);
-    } catch (error) {
-      console.error('Error saving check-in data:', error);
-    }
   };
 
   const handleLogWeeklyReceipt = async () => {
@@ -203,7 +159,7 @@ export default function DailyCheckInScreen({
       setReceiptEmailStatus(
         saved.synced
           ? 'Receipt logged and synced.'
-          : 'Receipt logged locally. It will sync when available.'
+          : 'Receipt saved on this device only. Log it again when connected to sync.'
       );
       trackFunnelEvent(
         'accountability_receipt_logged',
@@ -214,40 +170,6 @@ export default function DailyCheckInScreen({
         },
         activeCommitment.user_id
       );
-
-      const emailResult = await maybeSendOptInReceiptEmail(
-        saved,
-        receiptEmail,
-        receiptEmailOptIn
-      );
-      if (!emailResult.skipped) {
-        if (emailResult.success) {
-          setReceiptEmailStatus('Receipt logged and emailed.');
-          trackFunnelEvent(
-            'accountability_receipt_email_sent',
-            {
-              week_number: saved.weekNumber,
-              mode: saved.agentMode,
-              automatic: true,
-            },
-            activeCommitment.user_id
-          );
-        } else {
-          setReceiptEmailStatus(
-            emailResult.error ||
-              'Receipt logged, but the email could not be sent.'
-          );
-          trackFunnelEvent(
-            'accountability_receipt_email_failed',
-            {
-              week_number: saved.weekNumber,
-              mode: saved.agentMode,
-              automatic: true,
-            },
-            activeCommitment.user_id
-          );
-        }
-      }
     } catch (error) {
       console.error('Error logging weekly accountability receipt:', error);
       const message = 'Failed to log accountability receipt. Please try again.';
@@ -271,7 +193,7 @@ export default function DailyCheckInScreen({
     setReceiptEmailOptIn(enabled);
     setReceiptEmailStatus(
       enabled
-        ? 'Future weekly receipts will be emailed when you log them.'
+        ? 'Email preference saved. Complete the security check before each send.'
         : 'Automatic weekly receipt emails are off.'
     );
     void saveReceiptEmailOptIn(enabled);
@@ -285,10 +207,11 @@ export default function DailyCheckInScreen({
     try {
       const result = await sendAccountabilityReceiptEmail(
         latestReceipt,
-        receiptEmail
+        receiptEmail,
+        emailCaptchaToken
       );
       if (result.success) {
-        setReceiptEmailStatus('Receipt email sent.');
+        setReceiptEmailStatus('Email provider accepted the receipt.');
         trackFunnelEvent(
           'accountability_receipt_email_sent',
           {
@@ -311,95 +234,33 @@ export default function DailyCheckInScreen({
         );
       }
     } finally {
+      setEmailCaptchaToken(null);
       setIsSendingReceiptEmail(false);
     }
   };
 
   const handleDoneToday = async () => {
-    const today = new Date().toDateString();
-    const newCompletedDays = [
-      ...checkInData.completedDays,
-      checkInData.currentDay,
-    ];
-    const newStreak = checkInData.streak + 1;
-    const nextDay = checkInData.currentDay + 1;
-
-    const newData: CheckInData = {
-      currentDay: nextDay > 30 ? 30 : nextDay,
-      completedDays: newCompletedDays,
-      streak: newStreak,
-      lastCheckInDate: today,
-    };
-
-    await saveCheckInData(newData);
-
-    // Update Supabase commitment check-ins
-    if (activeCommitment && !String(activeCommitment.id).startsWith('local-')) {
-      try {
-        const completedAt = new Date().toISOString();
-        const todayIso = completedAt.split('T')[0];
-        const updatedCheckIns = [
-          ...(activeCommitment.check_ins || []),
-          todayIso,
-        ];
-
-        await cachedSupabase.updateCommitment(activeCommitment.id, {
-          check_ins: updatedCheckIns,
-          days_completed: newCompletedDays.length,
-        });
-
-        await cachedSupabase.insertDailyProgress({
-          commitment_id: activeCommitment.id,
-          day_number: checkInData.currentDay,
-          completed: true,
-          completed_at: completedAt,
-        });
-
-        setActiveCommitment({
-          ...activeCommitment,
-          check_ins: updatedCheckIns,
-          days_completed: newCompletedDays.length,
-        });
-        setTodayAlreadyCheckedIn(true);
-      } catch (err) {
-        console.error('Error updating commitment check-in:', err);
-      }
-    }
-
-    // Simple milestone detection
-    if (newCompletedDays.length === 1) {
-      // Day 1 milestone
-    } else if (newCompletedDays.length === 7) {
-      // Week 1 milestone
-    }
-
-    if (nextDay > 30) {
-      // Day 30 reached — show completion prompt instead of auto-completing
-      if (Platform.OS === 'web') {
-        window.alert(
-          'Day 30 reached. Time to mark your commitment complete or abandon it.'
-        );
-      } else {
-        Alert.alert(
-          'Day 30',
-          'Time to mark your commitment complete or abandon it.'
-        );
-      }
-      return;
-    } else {
-      if (Platform.OS === 'web') {
-        window.alert(
-          'Day ' + checkInData.currentDay + ' done. Come back tomorrow.'
-        );
-      } else {
-        Alert.alert('Great job!', 'Come back tomorrow for your next action!');
-      }
+    if (!activeCommitment || isCheckingIn || todayAlreadyCheckedIn) return;
+    setIsCheckingIn(true);
+    try {
+      const updated = await recordCheckIn(activeCommitment.id);
+      setActiveCommitment(updated);
+      setCheckInData(getProgress(updated));
+      setTodayAlreadyCheckedIn(true);
+      await refreshActiveCommitment();
+    } catch {
+      const message =
+        'Your check-in was not saved. Check your connection and try again.';
+      if (Platform.OS === 'web') window.alert(message);
+      else Alert.alert('Check-in not saved', message);
+    } finally {
+      setIsCheckingIn(false);
     }
   };
 
   const handleAbandon = () => {
     const message =
-      'This will be marked as ABANDONED and stay visible in the public feed forever. Everyone will see you gave up.';
+      'This will be marked as ABANDONED and remain visible in the public feed until you delete it.';
     if (Platform.OS === 'web') {
       if (window.confirm(message + ' Are you sure?')) {
         doAbandon();
@@ -439,41 +300,13 @@ export default function DailyCheckInScreen({
         throw new Error('Unable to verify ownership. Please try again.');
       }
 
-      const isLocal = String(commitmentId).startsWith('local-');
-      const abandonedAt = new Date().toISOString();
-      const abandonedOnDay = daysSinceStart + 1;
-
-      let error;
-      if (isLocal) {
-        const { error: insertError } = await supabase
-          .from('commitments')
-          .insert({
-            commitment_text: commitmentText,
-            user_id: userId,
-            founder_type: activeCommitment?.founder_type || 'Founder',
-            status: 'abandoned',
-            abandoned: true,
-            abandoned_at: abandonedAt,
-            abandoned_on_day: abandonedOnDay,
-            deadline: activeCommitment?.deadline || new Date().toISOString(),
-            created_at:
-              activeCommitment?.created_at || new Date().toISOString(),
-          });
-        error = insertError;
-      } else {
-        const { error: updateError } = await supabase
-          .from('commitments')
-          .update({
-            status: 'abandoned',
-            abandoned: true,
-            abandoned_at: abandonedAt,
-            abandoned_on_day: abandonedOnDay,
-          })
-          .eq('id', commitmentId)
-          .eq('user_id', userId);
-        error = updateError;
-      }
-
+      const { error } = await supabase
+        .from('commitments')
+        .update({ status: 'abandoned' })
+        .eq('id', commitmentId)
+        .eq('user_id', userId)
+        .select('id')
+        .single();
       if (error) {
         console.error('Supabase abandon error:', error);
         throw error;
@@ -500,11 +333,12 @@ export default function DailyCheckInScreen({
 
       // Show success and redirect to feed
       if (Platform.OS === 'web') {
-        window.alert('Commitment marked as ABANDONED permanently');
+        window.alert('Commitment marked as ABANDONED');
       } else {
-        Alert.alert('Abandoned', 'Commitment marked as ABANDONED permanently');
+        Alert.alert('Abandoned', 'Commitment marked as ABANDONED');
       }
 
+      await refreshActiveCommitment();
       navigation.navigate('publicFeed');
     } catch (err) {
       console.error('Error abandoning commitment:', err);
@@ -522,44 +356,16 @@ export default function DailyCheckInScreen({
   const handleMarkComplete = async () => {
     if (!activeCommitment) return;
     try {
-      const isLocal = String(activeCommitment.id).startsWith('local-');
-      const completedAt = new Date().toISOString();
-
-      if (isLocal) {
-        const userId = await getCurrentUserId();
-        if (!userId) {
-          throw new Error('Unable to verify ownership. Please try again.');
-        }
-        // For local-only commitments, insert as a new completed record
-        const error = await cachedSupabase.insertCommitment({
-          user_id: userId,
-          commitment_text: activeCommitment.commitment_text,
-          daily_action: activeCommitment.daily_action,
-          founder_type: activeCommitment.founder_type,
-          status: 'completed',
-          completed: true,
-          completed_at: completedAt,
-          days_completed: 30,
-          deadline: activeCommitment.deadline,
-          created_at: activeCommitment.created_at || new Date().toISOString(),
-        });
-        if (error) throw error;
-      } else {
-        const userId = await getCurrentUserId();
-        if (!userId) {
-          throw new Error('Unable to verify ownership. Please try again.');
-        }
-        const { error } = await supabase
-          .from('commitments')
-          .update({
-            status: 'completed',
-            completed: true,
-            completed_at: completedAt,
-          })
-          .eq('id', activeCommitment.id)
-          .eq('user_id', userId);
-        if (error) throw error;
-      }
+      const userId = await getCurrentUserId();
+      const { error } = await supabase
+        .from('commitments')
+        .update({ status: 'completed' })
+        .eq('id', activeCommitment.id)
+        .eq('user_id', userId)
+        .select('id')
+        .single();
+      if (error) throw error;
+      await refreshActiveCommitment();
 
       // Set completion flag
       await AsyncStorage.setItem(
@@ -661,6 +467,9 @@ export default function DailyCheckInScreen({
           onLogReceipt={handleLogWeeklyReceipt}
           onEmailChange={handleReceiptEmailChange}
           onEmailOptInChange={handleReceiptEmailOptInChange}
+          emailCaptchaToken={emailCaptchaToken}
+          onEmailCaptchaVerify={setEmailCaptchaToken}
+          onEmailCaptchaReset={() => setEmailCaptchaToken(null)}
           onSendEmail={handleSendReceiptEmail}
         />
 
@@ -717,20 +526,22 @@ export default function DailyCheckInScreen({
               </TouchableOpacity>
             </View>
             <Text style={styles.decisionNote}>
-              24 hours to respond. No response = automatic abandon.
+              Choose an outcome to close this commitment.
             </Text>
           </View>
         )}
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
+            testID="daily-check-in"
+            accessibilityRole="button"
             style={[
               styles.doneButton,
               (todayAlreadyCheckedIn || !todayAction) &&
                 styles.doneButtonDisabled,
             ]}
             onPress={handleDoneToday}
-            disabled={todayAlreadyCheckedIn || !todayAction}
+            disabled={isCheckingIn || todayAlreadyCheckedIn || !todayAction}
           >
             <Text style={styles.doneButtonText}>
               {todayAlreadyCheckedIn
@@ -765,7 +576,13 @@ export default function DailyCheckInScreen({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0A0A0A' },
-  content: { padding: 20, paddingTop: 10 },
+  content: {
+    padding: 20,
+    paddingTop: 10,
+    width: '100%',
+    maxWidth: 800,
+    alignSelf: 'center',
+  },
   backButton: { alignSelf: 'flex-start', marginBottom: 20 },
   backText: { fontSize: 24, color: '#FFFFFF', fontWeight: 'bold' },
   loadingText: { color: '#FFFFFF', textAlign: 'center', marginTop: 100 },

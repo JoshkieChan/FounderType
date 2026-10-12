@@ -24,7 +24,7 @@ jobs:
 
   submit-android:
     type: submit
-    if: ${{ inputs.submit }}
+    if: ${{ inputs.submit && inputs.profile == 'production' }}
     needs:
       - build-android
     params:

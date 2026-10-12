@@ -37,25 +37,8 @@
     },
     "web": {
       "favicon": "./assets/foundertype-icon.png",
-      "bundler": "webpack",
-      "meta": {
-        "description": "FounderType identifies why you keep stopping, puts your next commitment on record publicly, and keeps the record honest for 30 days.",
-        "keywords": "founder, accountability, commitment, behavioral change, startup",
-        "author": "FounderType"
-      },
-      "analytics": {
-        "vercel": {
-          "speedInsights": {
-            "enabled": true
-          },
-          "webAnalytics": {
-            "enabled": true,
-            "attribution": true,
-            "autoTrack": true,
-            "debug": false
-          }
-        }
-      }
+      "bundler": "metro",
+      "output": "single"
     },
     "description": "FounderType identifies why you keep stopping, puts your next commitment on record publicly, and keeps the record honest for 30 days.",
     "plugins": [
@@ -69,11 +52,6 @@
       ],
       "expo-font",
       "expo-asset"
-    ],
-    "extra": {
-      "router": {
-        "origin": false
-      }
-    }
+    ]
   }
 }

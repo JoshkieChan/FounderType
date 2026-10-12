@@ -4,8 +4,9 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from 'react';
-import { supabase, cachedSupabase } from '../lib/cachedSupabase';
+import { supabase } from '../lib/supabase';
 import { Commitment } from '../types/commitment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -24,6 +25,7 @@ export interface UserContextValue {
 const UserContext = createContext<UserContextValue | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
+  const sessionUser = useRef<string | null>(null);
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [activeCommitment, setActiveCommitment] = useState<Commitment | null>(
     null
@@ -45,22 +47,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         .eq('status', 'active')
         .maybeSingle();
 
+      if (sessionUser.current !== userId) return;
       if (activeErr) throw activeErr;
 
       if (active) {
         setActiveCommitment(active as Commitment);
         setLastCycleResult('none'); // Reset history fallback if active exists
-
-        // Keep a lightweight first-commitment check for future receipt logic.
-        const { data: previousCommitments } = await supabase
-          .from('commitments')
-          .select('id')
-          .eq('user_id', userId)
-          .neq('id', active.id);
-
-        if (!previousCommitments || previousCommitments.length === 0) {
-          return;
-        }
       } else {
         setActiveCommitment(null);
         // 2. Fetch last result if none active to inform the Landing Page banners (cached)
@@ -73,43 +65,62 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           .limit(1)
           .maybeSingle();
 
+        if (sessionUser.current !== userId) return;
         if (lastErr) throw lastErr;
         setLastCycleResult((last?.status as any) || 'none');
 
         // Re-engagement is handled by the accountability receipt flow.
       }
     } catch (err) {
-      console.error('UserProvider fetchData error:', err);
-      setError((err as Error).message);
+      if (sessionUser.current !== userId) return;
+      setError(
+        'Could not load your commitment. Check your connection and retry.'
+      );
     }
   }, []);
 
   useEffect(() => {
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser({ id: session.user.id });
-        fetchData(session.user.id).finally(() => setIsLoading(false));
-      } else {
-        setIsLoading(false);
-      }
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser({ id: session.user.id });
-        fetchData(session.user.id);
-      } else {
-        setUser(null);
+    let mounted = true;
+    let receivedAuthEvent = false;
+    const applySession = (userId: string | null) => {
+      if (!mounted) return;
+      if (sessionUser.current !== userId) {
         setActiveCommitment(null);
         setLastCycleResult('none');
       }
+      sessionUser.current = userId;
+      setUser(userId ? { id: userId } : null);
+      if (userId) {
+        queueMicrotask(() => {
+          if (mounted && sessionUser.current === userId)
+            void fetchData(userId).finally(() => {
+              if (mounted) setIsLoading(false);
+            });
+        });
+      } else setIsLoading(false);
+    };
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      receivedAuthEvent = true;
+      applySession(session?.user.id || null);
     });
-
-    return () => subscription.unsubscribe();
+    void supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        if (!receivedAuthEvent) applySession(session?.user.id || null);
+      })
+      .catch(() => {
+        if (mounted) {
+          setError('Could not restore your session.');
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      mounted = false;
+      sessionUser.current = null;
+      subscription.unsubscribe();
+    };
   }, [fetchData]);
 
   const refreshActiveCommitment = async () => {
@@ -120,15 +131,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    // Explicit cleanup of keys we own
-    await AsyncStorage.multiRemove([
-      'foundertype_has_active_commitment',
-      'foundertype_active_commitment_text',
-      'foundertype_active_deadline',
-      'foundertype_active_commitment',
-      'foundertype_has_completed_commitment',
-    ]);
+    const { error: signOutError } = await supabase.auth.signOut();
+    if (signOutError) throw signOutError;
+    const keys = await AsyncStorage.getAllKeys();
+    await AsyncStorage.multiRemove(
+      keys.filter((key) => key.startsWith('foundertype_'))
+    );
   };
 
   const value: UserContextValue = {

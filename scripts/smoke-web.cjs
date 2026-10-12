@@ -1,8 +1,7 @@
 const http = require('node:http');
 const https = require('node:https');
 
-const baseUrl =
-  process.env.SMOKE_BASE_URL || 'https://project-zoaht.vercel.app';
+const baseUrl = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:4177';
 const requiredRoutes = [
   '/',
   '/home',
@@ -12,7 +11,6 @@ const requiredRoutes = [
   '/privacy',
   '/terms',
   '/manifest.json',
-  '/env.js',
 ];
 
 function request(url) {
@@ -51,18 +49,7 @@ function assertRoute(route, response) {
     throw new Error('/manifest.json does not include FounderType metadata');
   }
 
-  if (
-    route === '/env.js' &&
-    !response.body.includes('NEXT_PUBLIC_HCAPTCHA_SITE_KEY')
-  ) {
-    throw new Error('/env.js is missing hCaptcha public runtime config');
-  }
-
-  if (
-    !route.endsWith('.json') &&
-    route !== '/env.js' &&
-    !response.body.includes('<div id="root">')
-  ) {
+  if (!route.endsWith('.json') && !response.body.includes('<div id="root">')) {
     throw new Error(`${route} did not return the web app shell`);
   }
 }

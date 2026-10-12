@@ -1,11 +1,11 @@
 import { FreeAnalytics } from './freeAnalytics';
 
 type FunnelEventName =
-  | 'product_hunt_onboarding_start'
-  | 'product_hunt_diagnostic_complete'
-  | 'product_hunt_commitment_screen_reached'
-  | 'product_hunt_captcha_complete'
-  | 'product_hunt_commitment_posted'
+  | 'onboarding_start'
+  | 'diagnostic_complete'
+  | 'commitment_screen_reached'
+  | 'captcha_complete'
+  | 'commitment_posted'
   | 'accountability_receipt_logged'
   | 'accountability_receipt_email_sent'
   | 'accountability_receipt_email_failed';
@@ -26,7 +26,7 @@ export function trackFunnelEvent(
   userId?: string
 ) {
   const payload = {
-    funnel: 'product_hunt_web',
+    funnel: 'commitment',
     timestamp: Date.now(),
     ...properties,
   };

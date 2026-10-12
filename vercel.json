@@ -1,7 +1,7 @@
 {
   "buildCommand": "node scripts/export-web.cjs",
   "outputDirectory": "web-build",
-  "installCommand": "npm install",
+  "installCommand": "npm ci",
   "framework": null,
   "regions": ["iad1"],
   "headers": [
@@ -14,7 +14,7 @@
         },
         {
           "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
+          "value": "public, max-age=0, must-revalidate"
         }
       ]
     },
@@ -29,15 +29,6 @@
     },
     {
       "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/_next/static/(.*)",
       "headers": [
         {
           "key": "Cache-Control",

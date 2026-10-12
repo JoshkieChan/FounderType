@@ -13,7 +13,7 @@ on:
       changelog:
         type: string
         description: TestFlight "What to Test" notes
-        default: FounderType accountability and Product Hunt launch readiness build.
+        default: FounderType diagnostic and accountability development build.
 
 jobs:
   build-ios:
@@ -24,6 +24,7 @@ jobs:
 
   submit-testflight:
     type: testflight
+    if: ${{ inputs.profile == 'production' }}
     needs:
       - build-ios
     params:

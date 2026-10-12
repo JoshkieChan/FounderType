@@ -8,7 +8,8 @@ import { supabase } from './supabase';
 import { getCurrentUserId } from './storage';
 import Logger from './logger';
 
-const RECEIPTS_KEY = 'foundertype_accountability_receipts';
+const receiptsKey = async () =>
+  'foundertype_accountability_receipts:' + (await getCurrentUserId());
 const RECEIPT_EMAIL_KEY = 'foundertype_accountability_email';
 const RECEIPT_EMAIL_OPT_IN_KEY = 'foundertype_accountability_email_opt_in';
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -108,7 +109,7 @@ export async function getAccountabilityReceipts(
   }
 
   try {
-    const stored = await AsyncStorage.getItem(RECEIPTS_KEY);
+    const stored = await AsyncStorage.getItem(await receiptsKey());
     const receipts: AccountabilityReceipt[] = stored ? JSON.parse(stored) : [];
 
     if (!commitmentId) return receipts;
@@ -278,7 +279,7 @@ export async function saveAccountabilityReceipt(
     ...receipts.filter((existing) => existing.id !== syncedReceipt.id),
   ].slice(0, 24);
 
-  await AsyncStorage.setItem(RECEIPTS_KEY, JSON.stringify(nextReceipts));
+  await AsyncStorage.setItem(await receiptsKey(), JSON.stringify(nextReceipts));
   return syncedReceipt;
 }
 
@@ -295,7 +296,7 @@ export async function sendAccountabilityReceiptEmail(
   await saveReceiptEmailAddress(normalizedEmail);
 
   try {
-    const userId = await getCurrentUserId(captchaToken);
+    const userId = await getCurrentUserId();
     if (!userId || userId.startsWith('local-')) {
       return {
         success: false,
@@ -303,16 +304,19 @@ export async function sendAccountabilityReceiptEmail(
       };
     }
 
-    const message = buildAccountabilityMessage(receipt);
+    if (!receipt.synced || !captchaToken)
+      return {
+        success: false,
+        error: 'Sync this receipt and complete the security check first.',
+      };
     const { data, error } = await supabase.functions.invoke<{
       success?: boolean;
       error?: string;
     }>('send-email', {
       body: {
         to: normalizedEmail,
-        subject: message.subject,
-        html: message.html,
-        text: message.text,
+        receiptId: receipt.id,
+        captchaToken,
       },
     });
 
@@ -336,7 +340,9 @@ export async function sendAccountabilityReceiptEmail(
       };
     }
 
-    return { success: true };
+    return data?.success === true
+      ? { success: true }
+      : { success: false, error: 'Email was not accepted.' };
   } catch {
     Logger.warn('Accountability receipt email failed', {
       reason: 'unexpected_error',
@@ -410,7 +416,7 @@ async function syncAccountabilityReceipt(receipt: AccountabilityReceipt) {
 
 async function mergeLocalReceipts(receipts: AccountabilityReceipt[]) {
   try {
-    const stored = await AsyncStorage.getItem(RECEIPTS_KEY);
+    const stored = await AsyncStorage.getItem(await receiptsKey());
     const localReceipts: AccountabilityReceipt[] = stored
       ? JSON.parse(stored)
       : [];
@@ -421,7 +427,7 @@ async function mergeLocalReceipts(receipts: AccountabilityReceipt[]) {
       )
       .slice(0, 24);
 
-    await AsyncStorage.setItem(RECEIPTS_KEY, JSON.stringify(merged));
+    await AsyncStorage.setItem(await receiptsKey(), JSON.stringify(merged));
   } catch {
     // Local cache is best-effort.
   }

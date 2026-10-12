@@ -47,3 +47,14 @@ yarn-error.*
 /android
 
 .vercel
+
+# Local tooling and credentials
+.env*
+!.env.example
+supabase/.temp/
+supabase/.branches/
+.agents/
+skills-lock.json
+coverage/
+playwright-report/
+test-results/
